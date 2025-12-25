@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.util.Size
 import android.view.OrientationEventListener
@@ -51,12 +52,8 @@ class MotionDetectionService : LifecycleService() {
     }
 
     override fun onCreate() {
+        startAsForeground()
         super.onCreate()
-        createNotificationChannel()
-        startForeground(
-            NotificationId.MOTION.id,
-            createNotification()
-        )
         if (orientationListener.canDetectOrientation()) {
             orientationListener.enable()
         }
@@ -96,6 +93,26 @@ class MotionDetectionService : LifecycleService() {
         }
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        startAsForeground()
+        super.onStartCommand(intent, flags, startId)
+        return START_STICKY
+    }
+
+    private fun startAsForeground() {
+        createNotificationChannel()
+        val notification = createNotification()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                NotificationId.MOTION.id,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+            )
+        } else {
+            startForeground(NotificationId.MOTION.id, notification)
+        }
+    }
+
     private fun initializeCamera() = runCatching {
         ProcessCameraProvider.getInstance(this).apply {
             addListener({
@@ -131,8 +148,11 @@ class MotionDetectionService : LifecycleService() {
             val channel = NotificationChannel(
                 ChannelId.MOTION.id,
                 "Motion Detection",
-                NotificationManager.IMPORTANCE_LOW
-            )
+                NotificationManager.IMPORTANCE_MIN
+            ).apply {
+                lockscreenVisibility = NotificationCompat.VISIBILITY_SECRET
+                setShowBadge(false)
+            }
             getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
         }
     }.onFailure { e ->
@@ -142,12 +162,22 @@ class MotionDetectionService : LifecycleService() {
     private fun createNotification() = runCatching {
         NotificationCompat.Builder(this, ChannelId.MOTION.id)
             .setContentTitle("Monitoring front camera")
+            .setContentText("Running...")
             .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .build()
     }.onFailure { e ->
         e.printStackTrace()
-    }.getOrNull()
+    }.getOrElse {
+        NotificationCompat.Builder(
+            this,
+            ChannelId.MOTION.id
+        ).setSmallIcon(
+            R.mipmap.ic_launcher
+        ).build()
+    }
 
     companion object {
         fun start(context: Context) = runCatching {

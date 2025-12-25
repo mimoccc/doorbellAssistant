@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
 import org.mjdev.doorbellassistant.activity.AssistantActivity
+import org.mjdev.doorbellassistant.activity.base.BaseActivity
+import org.mjdev.doorbellassistant.activity.base.BaseActivity.Companion.startOrResume
 import org.mjdev.doorbellassistant.enums.IntentAction
 import org.mjdev.doorbellassistant.extensions.ComposeExt.registerMotionDetector
 
@@ -27,7 +29,7 @@ class MotionBroadcastReceiver : BroadcastReceiver() {
         val isMotionEvent = intent.action == IntentAction.MOTION_DETECTED.action
         val isNotActive = AssistantActivity.isMotionDetected.value.not()
         if (isMotionEvent && isNotActive) {
-            AssistantActivity.startOrResume(context)
+            startOrResume<AssistantActivity>(context)
             receivers.forEach { receiver ->
                 receiver.invoke(context)
             }

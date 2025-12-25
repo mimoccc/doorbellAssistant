@@ -23,6 +23,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.R
 
+// todo ai states, to keep conversation and end conversation
+// todo actions
 @Suppress("unused")
 @OptIn(PublicPreviewAPI::class)
 class AIManager(

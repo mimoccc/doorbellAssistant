@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.firebase.ai)
     implementation(libs.accompanist.permissions)
     implementation(libs.generativeai)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
