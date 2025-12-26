@@ -1,22 +1,18 @@
 package org.mjdev.doorbellassistant.ui.components
 
-import android.R.attr.onClick
-import android.net.nsd.NsdServiceInfo
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -24,35 +20,36 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.mjdev.doorbellassistant.extensions.ComposeExt.isDesignMode
+import org.mjdev.doorbellassistant.extensions.ComposeExt.currentSystemUser
+import org.mjdev.doorbellassistant.extensions.ComposeExt.currentWifiIP
+import org.mjdev.doorbellassistant.extensions.ComposeExt.currentWifiSSID
 import org.mjdev.doorbellassistant.helpers.Previews
-import org.mjdev.doorbellassistant.helpers.nsd.NsdTypes
-import org.mjdev.doorbellassistant.helpers.nsd.NsdTypes.UNSPECIFIED
 import org.mjdev.doorbellassistant.ui.theme.Black
 import org.mjdev.doorbellassistant.ui.theme.Border
-import org.mjdev.doorbellassistant.ui.theme.Item
 import org.mjdev.doorbellassistant.ui.theme.White
 
-@Suppress("DEPRECATION")
 @Previews
 @Composable
-fun NsdItem(
+fun TopBar(
     modifier: Modifier = Modifier,
-    serviceType: NsdTypes = UNSPECIFIED,
-    service: NsdServiceInfo? = null,
-    onCallClick: () -> Unit = {},
-    onDeviceClick: () -> Unit = {},
-    showCallButton: Boolean = isDesignMode
+    applicationContext: Context = LocalContext.current.applicationContext,
+    onClick: () -> Unit = {},
+    onClickSettings: () -> Unit = {},
 ) {
+    val userName: String = applicationContext.currentSystemUser
+    val currentWifiSsid = LocalContext.current.currentWifiSSID
+    val currentWifiIp = LocalContext.current.currentWifiIP
     Box(
-        modifier = modifier.wrapContentHeight(),
+        modifier = modifier.wrapContentHeight()
     ) {
         Column(
             modifier = Modifier
                 .background(
-                    color = Item,
+                    color = Border,
                     shape = CircleShape
                 )
                 .fillMaxWidth()
@@ -62,53 +59,50 @@ fun NsdItem(
         ) {
             Text(
                 color = Black,
-                text = serviceType.label,
+                text = userName,
                 fontSize = 13.sp
             )
             Text(
                 color = Black,
-                text = service?.host?.hostAddress ?: "-",
+                text = currentWifiSsid,
                 fontSize = 11.sp
             )
             Text(
                 color = Black,
-                text = service?.serviceName ?: serviceType.name,
+                text = currentWifiIp,
                 fontSize = 11.sp
             )
         }
         Icon(
             modifier = Modifier
-                .size(72.dp)
+                .size(80.dp)
                 .background(
-                    color = Item,
+                    color = Border,
                     shape = CircleShape
                 )
                 .border(
                     2.dp,
-                    White.copy(alpha = 0.6f),
+                    White.copy(alpha = 0.3f),
                     CircleShape
                 )
                 .clip(CircleShape)
-                .clickable(onClick = onDeviceClick)
-                .padding(8.dp),
+                .clickable(onClick = onClick),
             contentDescription = "",
-            imageVector = serviceType.imageVector
+            imageVector = Icons.Filled.AccountCircle
         )
-        if (showCallButton) Icon(
+        Icon(
             modifier = Modifier
                 .padding(end = 8.dp)
-                .size(40.dp)
+                .size(32.dp)
                 .background(
                     color = White.copy(alpha = 0.3f),
                     shape = CircleShape
                 )
                 .align(Alignment.CenterEnd)
                 .clip(CircleShape)
-                .padding(2.dp)
-                .clickable(onClick = onCallClick),
+                .clickable(onClick = onClickSettings),
             contentDescription = "",
-            imageVector = Icons.Filled.Call
+            imageVector = Icons.Filled.Settings
         )
     }
 }
-

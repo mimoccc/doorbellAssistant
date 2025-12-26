@@ -5,7 +5,6 @@ import android.net.nsd.NsdServiceInfo
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
@@ -36,7 +35,8 @@ fun rememberNsdServicesList(
     nsdManagerFlow: NsdManagerFlow = rememberNsdManagerFlow(),
     onError: (Throwable) -> Unit = {},
     types: List<NsdTypes> = listOf(DOOR_BELL_ASSISTANT, DOOR_BELL_CLIENT),
-) = remember {
+    filter: (NsdServiceInfo) -> Boolean = { true }
+): List<NsdServiceInfo> = remember {
     val services = mutableStateListOf<NsdServiceInfo>()
     val resolveMutex = Mutex()
     val serviceTypes = types.map { type -> DiscoveryConfiguration(type.serviceName) }
@@ -59,7 +59,9 @@ fun rememberNsdServicesList(
                                     .collect { resolveEvent ->
                                         when (resolveEvent) {
                                             is ResolveEvent.ServiceResolved -> {
-                                                services.add(resolveEvent.nsdServiceInfo)
+                                                if (filter(resolveEvent.nsdServiceInfo)) {
+                                                    services.add(resolveEvent.nsdServiceInfo)
+                                                }
                                             }
                                         }
                                     }

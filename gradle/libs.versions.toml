@@ -11,6 +11,7 @@ composeBom = "2025.12.01"
 lifecycleService = "2.10.0"
 material3 = "1.7.8"
 materialIconsExtended = "1.7.8"
+streamVideoAndroid = "1.18.2"
 ui = "1.10.0"
 media3 = "1.9.0"
 generativeai = "0.9.0"
@@ -39,6 +40,11 @@ firebase-ai = { module = "com.google.firebase:firebase-ai" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
+stream-video-android-filters-video = { module = "io.getstream:stream-video-android-filters-video", version.ref = "streamVideoAndroid" }
+stream-video-android-previewdata = { module = "io.getstream:stream-video-android-previewdata", version.ref = "streamVideoAndroid" }
+stream-video-android-ui-compose = { module = "io.getstream:stream-video-android-ui-compose", version.ref = "streamVideoAndroid" }
+stream-video-android-core = { module = "io.getstream:stream-video-android-core", version.ref = "streamVideoAndroid" }
+stream-video-android-ui-core = { module = "io.getstream:stream-video-android-ui-core", version.ref = "streamVideoAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

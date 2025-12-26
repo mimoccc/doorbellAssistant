@@ -32,9 +32,9 @@ enum class NsdTypes(
             get() = "_${uid}._tcp"
 
         operator fun invoke(
-            uid: String
+            uid: String?
         ) = entries.firstOrNull { entry ->
-            uid.contains(entry.serviceName)
+            uid?.contains(entry.serviceName) ?: false
         } ?: UNSPECIFIED
     }
 }

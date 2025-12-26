@@ -1,11 +1,12 @@
 package org.mjdev.doorbellassistant.activity.base
 
-import android.os.Bundle
 import org.mjdev.doorbellassistant.extensions.ComposeExt.dismissKeyguard
+import org.mjdev.doorbellassistant.extensions.ComposeExt.turnDisplayOn
 
 open class UnlockedActivity : BaseActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onResume() {
+        super.onResume()
         dismissKeyguard()
+        turnDisplayOn()
     }
 }

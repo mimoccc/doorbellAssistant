@@ -6,10 +6,15 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.content.IntentFilter
 import android.graphics.BitmapFactory
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
+import android.net.wifi.WifiInfo
+import android.net.wifi.WifiManager
 import android.os.Handler
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
+import android.provider.Settings
 import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -56,6 +61,68 @@ object ComposeExt {
         }.getOrNull()
         set(value) {
             window.decorView.setTag(TAG_WAKE_LOCK, value)
+        }
+
+    @Suppress("DEPRECATION")
+    val Context.currentWifiSSID: String
+        get() = run {
+            val wifiManager = (applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager)
+            var ssid = wifiManager?.connectionInfo?.ssid?.replace("\"", "")
+            if (ssid == null || ssid == "<unknown ssid>" || ssid == "unknown") {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+                    val network = connectivityManager?.activeNetwork
+                    val capabilities = connectivityManager?.getNetworkCapabilities(network)
+                    if (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) {
+                        val wifiInfo = capabilities.transportInfo as? WifiInfo
+                        ssid = wifiInfo?.ssid?.replace("\"", "")
+                    }
+                }
+            }
+            if (ssid == null || ssid == "<unknown ssid>") {
+                "unknown"
+            } else {
+                ssid
+            }
+        }
+
+    @Suppress("DEPRECATION")
+    val Context.currentWifiIP: String
+        get() = run {
+            val wifiManager = (applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager)
+            val ipAddress = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+                val network = connectivityManager?.activeNetwork
+                val capabilities = connectivityManager?.getNetworkCapabilities(network)
+                if (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) {
+                    val wifiInfo = capabilities.transportInfo as? WifiInfo
+                    wifiInfo?.ipAddress
+                } else {
+                    wifiManager?.connectionInfo?.ipAddress
+                }
+            } else {
+                wifiManager?.connectionInfo?.ipAddress
+            }
+            if (ipAddress != null && ipAddress != 0) {
+                String.format(
+                    java.util.Locale.ENGLISH,
+                    "%d.%d.%d.%d",
+                    ipAddress and 0xff,
+                    ipAddress shr 8 and 0xff,
+                    ipAddress shr 16 and 0xff,
+                    ipAddress shr 24 and 0xff
+                )
+            } else {
+                "..."
+            }
+        }
+
+    val Context.currentSystemUser: String
+        get() = try {
+            @Suppress("DEPRECATION")
+            Settings.Secure.getString(contentResolver, "user_name") ?: "Unknown user"
+        } catch (e: Exception) {
+            "System User"
         }
 
     val EmptyBitmap

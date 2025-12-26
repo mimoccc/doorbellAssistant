@@ -1,10 +1,14 @@
+@file:Suppress("unused")
+
 package org.mjdev.doorbellassistant.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val LightMD5 = Color(0xFFF2c040)
-val DarkMD5 = Color(0xFFF29000)
-val White = Color(0xFFFFFFFF)
-val Red = Color(0xFFFF0000)
+val LightMD5 = Color(0xfff2c040)
+val DarkMD5 = Color(0xfff29000)
+val White = Color(0xffffffff)
+val Red = Color(0xffff0000)
 val Transparent = Color(0x00000000)
-val Black = Color(0xFF000000)
+val Black = Color(0xff000000)
+val Border = Color(0xfff66400)
+val Item = Color(0xfff7bc66)

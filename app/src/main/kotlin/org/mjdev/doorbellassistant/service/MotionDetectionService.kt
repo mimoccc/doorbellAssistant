@@ -181,18 +181,21 @@ class MotionDetectionService : LifecycleService() {
 
     companion object {
         fun start(context: Context) = runCatching {
-            val intent = Intent(context, MotionDetectionService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
+            Intent(context, MotionDetectionService::class.java).also { intent ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
             }
         }.onFailure { e ->
             e.printStackTrace()
         }
 
         fun stop(context: Context) = runCatching {
-            context.stopService(Intent(context, MotionDetectionService::class.java))
+            Intent(context, MotionDetectionService::class.java).also { intent ->
+                context.stopService(intent)
+            }
         }.onFailure { e ->
             e.printStackTrace()
         }

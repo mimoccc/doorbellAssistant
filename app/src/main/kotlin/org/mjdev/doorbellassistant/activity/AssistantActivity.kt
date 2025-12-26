@@ -1,12 +1,14 @@
 package org.mjdev.doorbellassistant.activity
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import org.mjdev.doorbellassistant.activity.base.BaseActivity.Companion.isRunning
 import org.mjdev.doorbellassistant.activity.base.FullScreenActivity
 import org.mjdev.doorbellassistant.extensions.ComposeExt.acquireWakeLock
 import org.mjdev.doorbellassistant.extensions.ComposeExt.bringToFront
@@ -22,6 +24,11 @@ import org.mjdev.doorbellassistant.ui.screens.MainScreen
 class AssistantActivity : FullScreenActivity() {
     companion object {
         val isMotionDetected: MutableState<Boolean> = mutableStateOf(false)
+
+        val Context.isDoorBellAssistantRunning
+            get() = runCatching {
+                isRunning<AssistantActivity>()
+            }.getOrElse { false }
     }
 
     val delayHandler by lazy {

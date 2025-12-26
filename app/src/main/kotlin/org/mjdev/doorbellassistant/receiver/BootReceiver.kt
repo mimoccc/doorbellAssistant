@@ -12,8 +12,10 @@ class BootReceiver : BroadcastReceiver() {
     ) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             DoorbellNsdService.start(context)
+//            if (context.isAssistantEnabled) {
 //            MotionDetectionService.start(context)
 //            AssistantActivity.startOrResume(context)
+//            }
         }
     }
 }
