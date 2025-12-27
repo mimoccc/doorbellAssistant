@@ -65,8 +65,14 @@
             android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission
             android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission
+            android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission
+            android:name="android.permission.INTERNAL_SYSTEM_WINDOW"
+            tools:ignore="ProtectedPermissions" />
 
     <application
+            android:networkSecurityConfig="@xml/network_security_config"
             android:allowBackup="true"
             android:dataExtractionRules="@xml/data_extraction_rules"
             android:fullBackupContent="@xml/backup_rules"
@@ -81,7 +87,10 @@
                 android:name=".activity.IntercomActivity"
                 android:configChanges="orientation|screenSize"
                 android:launchMode="singleInstance"
-                android:exported="true">
+                android:showWhenLocked="true"
+                android:turnScreenOn="true"
+                android:exported="true"
+                tools:targetApi="27">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -100,7 +109,10 @@
                 android:name=".activity.AssistantActivity"
                 android:configChanges="orientation|screenSize"
                 android:launchMode="singleInstance"
-                android:exported="true">
+                android:showWhenLocked="true"
+                android:turnScreenOn="true"
+                android:exported="true"
+                tools:targetApi="27">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />

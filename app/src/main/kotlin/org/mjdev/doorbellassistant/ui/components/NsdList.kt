@@ -24,31 +24,31 @@ import org.mjdev.doorbellassistant.extensions.ComposeExt.applyIf
 import org.mjdev.doorbellassistant.extensions.ComposeExt.currentWifiIP
 import org.mjdev.doorbellassistant.extensions.ComposeExt.isDesignMode
 import org.mjdev.doorbellassistant.helpers.Previews
-import org.mjdev.doorbellassistant.helpers.nsd.NsdTypes
-import org.mjdev.doorbellassistant.helpers.nsd.NsdTypes.Companion.serviceName
-import org.mjdev.doorbellassistant.helpers.nsd.NsdTypes.DOOR_BELL_ASSISTANT
-import org.mjdev.doorbellassistant.helpers.nsd.NsdTypes.DOOR_BELL_CLIENT
-import org.mjdev.doorbellassistant.helpers.nsd.rememberNsdServicesList
+import org.mjdev.doorbellassistant.helpers.nsd.device.NsdDevice
+import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes
+import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes.DOOR_BELL_ASSISTANT
+import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes.DOOR_BELL_CLIENT
+import org.mjdev.doorbellassistant.helpers.nsd.device.rememberNsdDeviceList
 import org.mjdev.doorbellassistant.ui.theme.Black
 
+@Suppress("DEPRECATION")
 @OptIn(ExperimentalCoroutinesApi::class)
 @Previews
 @Composable
 fun NsdList(
     modifier: Modifier = Modifier,
     onError: (Throwable) -> Unit = {},
-    onCallClick: (NsdServiceInfo?) -> Unit = {},
+    onCallClick: (NsdDevice?) -> Unit = {},
     types: List<NsdTypes> = listOf(DOOR_BELL_ASSISTANT, DOOR_BELL_CLIENT),
 ) {
     val context = LocalContext.current
     val currentIP = context.currentWifiIP
     val isLandscape = LocalConfiguration.current.orientation == ORIENTATION_LANDSCAPE
-    val services = if (isDesignMode) (1..32).map { id ->
-        NsdServiceInfo().apply {
-            serviceName = "service - $id"
-            serviceType = types.first().serviceName
-        }
-    } else rememberNsdServicesList(
+    val devices = if (isDesignMode) (1..32).map { i ->
+        NsdDevice(NsdServiceInfo().apply {
+            serviceName = "sn-$i"
+        })
+    } else rememberNsdDeviceList(
         types = types,
         onError = onError,
         filter = { s ->
@@ -85,13 +85,12 @@ fun NsdList(
                 .weight(1f)
         ) {
             items(
-                items = services,
-                key = { service -> service.serviceName }
-            ) { service ->
+                items = devices.distinctBy { device -> device.serviceName ?: device.hashCode() },
+                key = { device -> device.serviceName ?: device.hashCode() }
+            ) { device ->
                 NsdItem(
-                    serviceType = NsdTypes(service.serviceType),
-                    service = service,
-                    onCallClick = { onCallClick(service) },
+                    device = device,
+                    onCallClick = { onCallClick(device) },
                     showCallButton = true,
                 )
             }

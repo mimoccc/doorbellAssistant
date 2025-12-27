@@ -1,23 +1,17 @@
 package org.mjdev.doorbellassistant.ui.components
 
-import android.R.attr.onClick
-import android.net.nsd.NsdServiceInfo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,10 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mjdev.doorbellassistant.extensions.ComposeExt.isDesignMode
 import org.mjdev.doorbellassistant.helpers.Previews
-import org.mjdev.doorbellassistant.helpers.nsd.NsdTypes
-import org.mjdev.doorbellassistant.helpers.nsd.NsdTypes.UNSPECIFIED
+import org.mjdev.doorbellassistant.helpers.nsd.device.NsdDevice
+import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes.UNSPECIFIED
 import org.mjdev.doorbellassistant.ui.theme.Black
-import org.mjdev.doorbellassistant.ui.theme.Border
 import org.mjdev.doorbellassistant.ui.theme.Item
 import org.mjdev.doorbellassistant.ui.theme.White
 
@@ -40,8 +33,7 @@ import org.mjdev.doorbellassistant.ui.theme.White
 @Composable
 fun NsdItem(
     modifier: Modifier = Modifier,
-    serviceType: NsdTypes = UNSPECIFIED,
-    service: NsdServiceInfo? = null,
+    device: NsdDevice? = null,
     onCallClick: () -> Unit = {},
     onDeviceClick: () -> Unit = {},
     showCallButton: Boolean = isDesignMode
@@ -57,22 +49,22 @@ fun NsdItem(
                 )
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .padding(start = 88.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
+                .padding(start = 80.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
                 .align(Alignment.Center)
         ) {
             Text(
                 color = Black,
-                text = serviceType.label,
+                text = device?.label ?: "-",
                 fontSize = 13.sp
             )
             Text(
                 color = Black,
-                text = service?.host?.hostAddress ?: "-",
+                text = device?.address ?: "-",
                 fontSize = 11.sp
             )
             Text(
                 color = Black,
-                text = service?.serviceName ?: serviceType.name,
+                text = device?.serviceName ?: "-",
                 fontSize = 11.sp
             )
         }
@@ -92,7 +84,7 @@ fun NsdItem(
                 .clickable(onClick = onDeviceClick)
                 .padding(8.dp),
             contentDescription = "",
-            imageVector = serviceType.imageVector
+            imageVector = device?.imageVector ?: UNSPECIFIED.imageVector
         )
         if (showCallButton) Icon(
             modifier = Modifier

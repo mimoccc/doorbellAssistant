@@ -4,8 +4,8 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.trySendBlocking
-import org.mjdev.doorbellassistant.helpers.nsd.RegistrationFailed
-import org.mjdev.doorbellassistant.helpers.nsd.UnregistrationFailed
+import org.mjdev.doorbellassistant.helpers.nsd.exception.RegistrationFailed
+import org.mjdev.doorbellassistant.helpers.nsd.exception.UnregistrationFailed
 
 internal class RegistrationListenerFlow(
     private val producerScope: ProducerScope<RegistrationEvent>

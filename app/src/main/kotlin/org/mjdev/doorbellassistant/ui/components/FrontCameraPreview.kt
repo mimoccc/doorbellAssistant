@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -38,11 +39,12 @@ fun FrontCameraPreview(
     imageState: MutableState<Bitmap?> = remember { mutableStateOf(null) },
     portraitWidthRatio: Float = 0.4f,
     portraitHeightRatio: Float = 0.3f,
-    landscapeWidthRatio: Float = 0.25f,
+    landscapeWidthRatio: Float = 0.3f,
     landscapeHeightRatio: Float = 1f,
+    onClick: () -> Unit = {}
 ) = DoorBellAssistantTheme {
     Box(
-        modifier = modifier,
+        modifier = modifier.clickable(onClick = onClick),
         contentAlignment = Alignment.BottomEnd
     ) {
         val config = LocalConfiguration.current
@@ -66,8 +68,7 @@ fun FrontCameraPreview(
                 .size(size)
                 .background(DarkMD5, shape)
                 .clip(shape)
-                .border(2.dp, DarkMD5, shape)
-                .shadow(4.dp, shape),
+                .border(2.dp, DarkMD5, shape),
             contentAlignment = Alignment.Center
         ) {
             Image(

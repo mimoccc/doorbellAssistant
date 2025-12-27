@@ -1,4 +1,4 @@
-package org.mjdev.doorbellassistant.helpers
+package org.mjdev.doorbellassistant.helpers.views
 
 import android.content.Context
 import android.graphics.Color

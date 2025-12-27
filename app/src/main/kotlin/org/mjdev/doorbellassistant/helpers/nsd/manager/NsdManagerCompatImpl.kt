@@ -1,4 +1,4 @@
-package org.mjdev.doorbellassistant.helpers.nsd
+package org.mjdev.doorbellassistant.helpers.nsd.manager
 
 import android.content.Context
 import android.net.nsd.NsdManager

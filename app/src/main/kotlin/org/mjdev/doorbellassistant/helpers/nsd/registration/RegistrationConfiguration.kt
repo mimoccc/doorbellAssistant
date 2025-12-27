@@ -2,7 +2,7 @@ package org.mjdev.doorbellassistant.helpers.nsd.registration
 
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
-import org.mjdev.doorbellassistant.helpers.nsd.ProtocolType
+import org.mjdev.doorbellassistant.helpers.nsd.manager.ProtocolType
 
 data class RegistrationConfiguration(
     val nsdServiceInfo: NsdServiceInfo,

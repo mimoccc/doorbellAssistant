@@ -1,10 +1,12 @@
 package org.mjdev.doorbellassistant.service
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.content.res.Configuration
 import android.os.Build
 import android.util.Size
 import android.view.OrientationEventListener
@@ -12,15 +14,15 @@ import android.view.Surface
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
-import org.mjdev.doorbellassistant.enums.NotificationId
 import org.mjdev.doorbellassistant.R
 import org.mjdev.doorbellassistant.enums.ChannelId
+import org.mjdev.doorbellassistant.enums.NotificationId
 import org.mjdev.doorbellassistant.helpers.MotionDetector
 import java.util.concurrent.Executors
-import kotlin.onFailure
 
 class MotionDetectionService : LifecycleService() {
     private val motionDetector by lazy {
@@ -52,6 +54,7 @@ class MotionDetectionService : LifecycleService() {
     }
 
     override fun onCreate() {
+        isRunning.value = true
         startAsForeground()
         super.onCreate()
         if (orientationListener.canDetectOrientation()) {
@@ -60,7 +63,9 @@ class MotionDetectionService : LifecycleService() {
         initializeCamera()
     }
 
-    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+    override fun onConfigurationChanged(
+        newConfig: Configuration
+    ) {
         super.onConfigurationChanged(newConfig)
         runCatching {
             cameraProvider?.unbindAll()
@@ -76,6 +81,7 @@ class MotionDetectionService : LifecycleService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        isRunning.value = false
         runCatching {
             cameraProvider?.unbindAll()
         }.onFailure { e ->
@@ -93,12 +99,7 @@ class MotionDetectionService : LifecycleService() {
         }
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startAsForeground()
-        super.onStartCommand(intent, flags, startId)
-        return START_STICKY
-    }
-
+    @SuppressLint("InlinedApi")
     private fun startAsForeground() {
         createNotificationChannel()
         val notification = createNotification()
@@ -144,17 +145,17 @@ class MotionDetectionService : LifecycleService() {
     }
 
     private fun createNotificationChannel() = runCatching {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                ChannelId.MOTION.id,
-                "Motion Detection",
-                NotificationManager.IMPORTANCE_MIN
-            ).apply {
-                lockscreenVisibility = NotificationCompat.VISIBILITY_SECRET
-                setShowBadge(false)
-            }
-            getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            ChannelId.MOTION.id,
+            "Motion Detection",
+            NotificationManager.IMPORTANCE_MIN
+        ).apply {
+            lockscreenVisibility = NotificationCompat.VISIBILITY_SECRET
+            setShowBadge(false)
         }
+        getSystemService(
+            NotificationManager::class.java
+        )?.createNotificationChannel(channel)
     }.onFailure { e ->
         e.printStackTrace()
     }
@@ -180,20 +181,25 @@ class MotionDetectionService : LifecycleService() {
     }
 
     companion object {
+        private val TAG = MotionDetectionService::class.simpleName
+        private val isRunning = mutableStateOf(false)
+
         fun start(context: Context) = runCatching {
-            Intent(context, MotionDetectionService::class.java).also { intent ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(intent)
-                } else {
-                    context.startService(intent)
-                }
+            if (isRunning.value.not()) Intent(
+                context,
+                MotionDetectionService::class.java
+            ).also { intent ->
+                context.startForegroundService(intent)
             }
         }.onFailure { e ->
             e.printStackTrace()
         }
 
         fun stop(context: Context) = runCatching {
-            Intent(context, MotionDetectionService::class.java).also { intent ->
+            if (isRunning.value) Intent(
+                context,
+                MotionDetectionService::class.java
+            ).also { intent ->
                 context.stopService(intent)
             }
         }.onFailure { e ->

@@ -1,4 +1,4 @@
-package org.mjdev.doorbellassistant.helpers
+package org.mjdev.doorbellassistant.helpers.manager
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -44,11 +44,11 @@ class AIManager(
     val model by lazy {
         runCatching {
             Firebase.ai(
-                backend = GenerativeBackend.googleAI()
+                backend = GenerativeBackend.Companion.googleAI()
             ).liveModel(
                 modelName = modelName,
                 generationConfig = liveGenerationConfig {
-                    responseModality = ResponseModality.AUDIO
+                    responseModality = ResponseModality.Companion.AUDIO
                     speechConfig = SpeechConfig(
                         voice = Voice(voiceName),
                     )
@@ -66,15 +66,15 @@ class AIManager(
     @SuppressLint("MissingPermission")
     fun startConversation() = scope.launch {
         runCatching {
-            val m = model ?: throw IllegalStateException("Model not initialized")
-            session = m.connect().apply {
-                startAudioConversation(
-                    enableInterruptions = true,
-                    transcriptHandler = { u, m ->
-                        Log.d(TAG, "Transcript received - User: ${u?.text}, Model: ${m?.text}")
-                        handleTranscript(u, m)
-                    },
-                )
+//            val m = model ?: throw IllegalStateException("Model not initialized")
+//            session = m.connect().apply {/
+//                startAudioConversation(
+//                    enableInterruptions = true,
+//                    transcriptHandler = { u, m ->
+//                        Log.d(TAG, "Transcript received - User: ${u?.text}, Model: ${m?.text}")
+//                        handleTranscript(u, m)
+//                    },
+//                )
 //                scope.launch {
 //                    runCatching {
                         // error
@@ -85,7 +85,8 @@ class AIManager(
 //                        onError(e)
 //                    }
 //                }
-            }
+//            }
+            throw RuntimeException("Do not use ai during tests.")
         }.onFailure { e -> onError(e) }
     }
 

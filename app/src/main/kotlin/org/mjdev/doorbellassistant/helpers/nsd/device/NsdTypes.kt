@@ -1,13 +1,17 @@
-package org.mjdev.doorbellassistant.helpers.nsd
+package org.mjdev.doorbellassistant.helpers.nsd.device
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraRear
 import androidx.compose.material.icons.filled.ConnectedTv
 import androidx.compose.material.icons.filled.DeviceUnknown
 import androidx.compose.ui.graphics.vector.ImageVector
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
+@Serializable
 enum class NsdTypes(
-    val imageVector: ImageVector,
+    @Transient
+    val imageVector: ImageVector = Icons.Filled.DeviceUnknown,
     val uid: String,
     val label : String
 ) {

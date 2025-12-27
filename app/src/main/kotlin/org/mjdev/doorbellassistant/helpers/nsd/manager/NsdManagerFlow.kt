@@ -1,4 +1,4 @@
-package org.mjdev.doorbellassistant.helpers.nsd
+package org.mjdev.doorbellassistant.helpers.nsd.manager
 
 import android.content.Context
 import android.net.nsd.NsdManager
@@ -7,6 +7,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import org.mjdev.doorbellassistant.helpers.nsd.manager.ProtocolType
 import org.mjdev.doorbellassistant.helpers.nsd.discovery.DiscoveryConfiguration
 import org.mjdev.doorbellassistant.helpers.nsd.discovery.DiscoveryEvent
 import org.mjdev.doorbellassistant.helpers.nsd.discovery.DiscoveryListenerFlow

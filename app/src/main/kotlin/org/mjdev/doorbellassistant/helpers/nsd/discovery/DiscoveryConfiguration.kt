@@ -1,7 +1,7 @@
 package org.mjdev.doorbellassistant.helpers.nsd.discovery
 
 import android.net.nsd.NsdManager
-import org.mjdev.doorbellassistant.helpers.nsd.ProtocolType
+import org.mjdev.doorbellassistant.helpers.nsd.manager.ProtocolType
 
 data class DiscoveryConfiguration(
     val type: String,

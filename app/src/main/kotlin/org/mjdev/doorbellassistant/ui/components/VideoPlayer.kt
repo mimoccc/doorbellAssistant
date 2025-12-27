@@ -26,7 +26,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import org.mjdev.doorbellassistant.extensions.ComposeExt.applyIf
 import org.mjdev.doorbellassistant.extensions.ComposeExt.rememberExoPlayer
-import org.mjdev.doorbellassistant.helpers.CustomPlayerView
+import org.mjdev.doorbellassistant.helpers.views.CustomPlayerView
 import org.mjdev.doorbellassistant.helpers.Previews
 
 @Suppress("unused")

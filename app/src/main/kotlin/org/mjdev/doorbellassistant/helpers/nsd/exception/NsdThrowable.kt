@@ -1,4 +1,4 @@
-package org.mjdev.doorbellassistant.helpers.nsd
+package org.mjdev.doorbellassistant.helpers.nsd.exception
 
 import android.net.nsd.NsdServiceInfo
 

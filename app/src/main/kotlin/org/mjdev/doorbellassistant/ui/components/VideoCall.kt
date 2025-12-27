@@ -51,7 +51,8 @@ import org.mjdev.doorbellassistant.BuildConfig
 import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantRunning
 import org.mjdev.doorbellassistant.extensions.ComposeExt.currentWifiSSID
 import org.mjdev.doorbellassistant.extensions.ComposeExt.isDesignMode
-import org.mjdev.doorbellassistant.helpers.nsd.NsdTypes
+import org.mjdev.doorbellassistant.helpers.nsd.device.NsdDevice
+import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes
 import org.mjdev.doorbellassistant.ui.theme.DarkMD5
 
 @Suppress("DEPRECATION")
@@ -59,7 +60,7 @@ import org.mjdev.doorbellassistant.ui.theme.DarkMD5
 @Composable
 fun VideoCall(
     modifier: Modifier = Modifier,
-    device: NsdServiceInfo? = null,
+    device: NsdDevice? = null,
     applicationContext: Context = LocalContext.current.applicationContext,
     callId: String = applicationContext.currentWifiSSID,
     userId: String = device?.serviceName ?: "user-id",
@@ -210,8 +211,7 @@ fun VideoCall(
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     NsdItem(
-                        serviceType = NsdTypes(device?.serviceType),
-                        service = device,
+                        device = device,
                     )
                 }
             },

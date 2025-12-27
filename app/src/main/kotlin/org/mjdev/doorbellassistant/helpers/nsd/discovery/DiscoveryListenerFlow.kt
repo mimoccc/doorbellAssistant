@@ -5,8 +5,8 @@ import android.net.nsd.NsdServiceInfo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.trySendBlocking
-import org.mjdev.doorbellassistant.helpers.nsd.DiscoveryStartFailed
-import org.mjdev.doorbellassistant.helpers.nsd.DiscoveryStopFailed
+import org.mjdev.doorbellassistant.helpers.nsd.exception.DiscoveryStartFailed
+import org.mjdev.doorbellassistant.helpers.nsd.exception.DiscoveryStopFailed
 
 @ExperimentalCoroutinesApi
 internal data class DiscoveryListenerFlow(

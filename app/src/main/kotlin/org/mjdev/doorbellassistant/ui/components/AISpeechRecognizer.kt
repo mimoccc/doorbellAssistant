@@ -29,8 +29,8 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.firebase.ai.type.PublicPreviewAPI
 import org.mjdev.doorbellassistant.extensions.ComposeExt.isDesignMode
-import org.mjdev.doorbellassistant.helpers.AIManager.Companion.TAG
-import org.mjdev.doorbellassistant.helpers.AIManager.Companion.rememberAiManager
+import org.mjdev.doorbellassistant.helpers.manager.AIManager.Companion.TAG
+import org.mjdev.doorbellassistant.helpers.manager.AIManager.Companion.rememberAiManager
 import org.mjdev.doorbellassistant.helpers.Previews
 import org.mjdev.doorbellassistant.ui.theme.DoorBellAssistantTheme
 import org.mjdev.doorbellassistant.ui.theme.Red

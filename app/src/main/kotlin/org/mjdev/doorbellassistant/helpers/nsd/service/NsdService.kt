@@ -1,12 +1,10 @@
-package org.mjdev.doorbellassistant.helpers.nsd
+package org.mjdev.doorbellassistant.helpers.nsd.service
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
-import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
@@ -15,34 +13,49 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.R
 import org.mjdev.doorbellassistant.enums.ChannelId
 import org.mjdev.doorbellassistant.enums.NotificationId
-import org.mjdev.doorbellassistant.helpers.nsd.NsdTypes.Companion.serviceName
+import org.mjdev.doorbellassistant.extensions.ComposeExt.ANDROID_ID
+import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes
+import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes.Companion.serviceName
+import org.mjdev.doorbellassistant.helpers.nsd.manager.NsdManagerFlow
 import org.mjdev.doorbellassistant.helpers.nsd.registration.RegistrationEvent
+import org.mjdev.doorbellassistant.helpers.nsd.rpc.EmptyRPCServer
+import org.mjdev.doorbellassistant.helpers.nsd.rpc.INsdServerRPC
 import kotlin.uuid.ExperimentalUuidApi
 
 @SuppressLint("HardwareIds")
 @OptIn(ExperimentalUuidApi::class, ExperimentalCoroutinesApi::class)
 abstract class NsdService : LifecycleService() {
-    private val serviceID: String by lazy {
-        Settings.Secure.getString(
-            baseContext.contentResolver,
-            Settings.Secure.ANDROID_ID
-        )
-    }
-    private var registrationJob: Job? = null
     private val nsdManagerFlow by lazy {
         NsdManagerFlow(this)
     }
-    open val serviceType: NsdTypes  = NsdTypes.UNSPECIFIED
+    private var registrationJob: Job? = null
+
+    open val serviceType: NsdTypes = NsdTypes.UNSPECIFIED
     open val port: Int = 0
+    open val rpcServer: INsdServerRPC by lazy { EmptyRPCServer(baseContext) }
 
     override fun onCreate() {
         startAsForeground()
         super.onCreate()
         if (port > 0) {
             registerNsdService()
+            startRpcServer()
+        }
+    }
+
+    private fun startRpcServer() {
+        lifecycleScope.launch {
+            rpcServer.start()
+        }
+    }
+
+    private fun stopRpcServer() {
+        lifecycleScope.launch {
+            rpcServer.stop()
         }
     }
 
@@ -61,19 +74,17 @@ abstract class NsdService : LifecycleService() {
     }
 
     private fun createNotificationChannel() = runCatching {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                ChannelId.NSD.id,
-                "NSD Service",
-                NotificationManager.IMPORTANCE_MIN
-            ).apply {
-                description = "NSD Service notification"
-                lockscreenVisibility = NotificationCompat.VISIBILITY_SECRET
-                setShowBadge(false)
-            }
-            getSystemService(NotificationManager::class.java)
-                ?.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            ChannelId.NSD.id,
+            "NSD Service",
+            NotificationManager.IMPORTANCE_MIN
+        ).apply {
+            description = "NSD Service notification"
+            lockscreenVisibility = NotificationCompat.VISIBILITY_SECRET
+            setShowBadge(false)
         }
+        getSystemService(NotificationManager::class.java)
+            ?.createNotificationChannel(channel)
     }.onFailure { e ->
         e.printStackTrace()
     }
@@ -98,23 +109,25 @@ abstract class NsdService : LifecycleService() {
         onRegistered: (RegistrationEvent) -> Unit = {}
     ) {
         if (port <= 0) {
-            Log.e("NsdService", "Cannot register NSD service: port is $port")
+            Log.e(TAG, "Cannot register NSD service: port is $port")
             return
         }
-        val name = serviceID
-        Log.d("NsdService", "Registering NSD service: $name, $serviceType, $port")
+        Log.d(TAG, "Registering NSD service: $ANDROID_ID, $serviceType, $port")
         registrationJob?.cancel()
         registrationJob = nsdManagerFlow
             .registerService(
-                serviceName = name,
+                serviceName = ANDROID_ID,
                 serviceType = serviceType.serviceName,
                 port = port
             )
             .onEach { event ->
-                Log.d("NsdService", "NSD Registration event: $event")
+                Log.d(TAG, "NSD Registration event: $event")
                 if (event is RegistrationEvent.ServiceRegistered) {
-                    if (event.nsdServiceInfo.serviceName != name) {
-                        Log.d("NsdService", "Service name changed from $name to ${event.nsdServiceInfo.serviceName}")
+                    if (event.nsdServiceInfo.serviceName != ANDROID_ID) {
+                        Log.d(
+                            TAG,
+                            "Service name changed from $ANDROID_ID to ${event.nsdServiceInfo.serviceName}"
+                        )
                     }
                 }
                 onRegistered(event)
@@ -123,6 +136,11 @@ abstract class NsdService : LifecycleService() {
 
     override fun onDestroy() {
         registrationJob?.cancel()
+        stopRpcServer()
         super.onDestroy()
+    }
+
+    companion object {
+        private val TAG = NsdService::class.simpleName
     }
 }

@@ -4,7 +4,7 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.trySendBlocking
-import org.mjdev.doorbellassistant.helpers.nsd.ResolveFailed
+import org.mjdev.doorbellassistant.helpers.nsd.exception.ResolveFailed
 
 internal class ResolveListenerFlow(
     private val producerScope: ProducerScope<ResolveEvent>

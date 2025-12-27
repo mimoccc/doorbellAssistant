@@ -5,12 +5,15 @@ import android.app.ActivityManager
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Handler
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
@@ -20,9 +23,12 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -35,17 +41,30 @@ import androidx.core.graphics.createBitmap
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.mjdev.doorbellassistant.BuildConfig
 import org.mjdev.doorbellassistant.R
 import org.mjdev.doorbellassistant.enums.IntentAction
+import org.mjdev.doorbellassistant.helpers.nsd.device.NsdDevice
 import org.mjdev.doorbellassistant.receiver.MotionBroadcastReceiver
+import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc.Companion.getFrame
 import org.mjdev.doorbellassistant.service.MotionDetectionService
 import org.mjdev.doorbellassistant.ui.theme.DarkMD5
+import kotlin.coroutines.CoroutineContext
 import androidx.compose.ui.graphics.Color as ComposeColor
 
 @Suppress("MemberVisibilityCanBePrivate", "DEPRECATION", "unused")
@@ -63,14 +82,23 @@ object ComposeExt {
             window.decorView.setTag(TAG_WAKE_LOCK, value)
         }
 
+    val Context.ANDROID_ID: String
+        @SuppressLint("HardwareIds")
+        get() {
+            return Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        }
+
     @Suppress("DEPRECATION")
     val Context.currentWifiSSID: String
         get() = run {
-            val wifiManager = (applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager)
+            val wifiManager =
+                (applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager)
             var ssid = wifiManager?.connectionInfo?.ssid?.replace("\"", "")
             if (ssid == null || ssid == "<unknown ssid>" || ssid == "unknown") {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                    val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val connectivityManager = getSystemService(
+                        Context.CONNECTIVITY_SERVICE
+                    ) as? ConnectivityManager
                     val network = connectivityManager?.activeNetwork
                     val capabilities = connectivityManager?.getNetworkCapabilities(network)
                     if (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) {
@@ -89,9 +117,12 @@ object ComposeExt {
     @Suppress("DEPRECATION")
     val Context.currentWifiIP: String
         get() = run {
-            val wifiManager = (applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager)
-            val ipAddress = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            val wifiManager =
+                (applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager)
+            val ipAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val connectivityManager = getSystemService(
+                    Context.CONNECTIVITY_SERVICE
+                ) as? ConnectivityManager
                 val network = connectivityManager?.activeNetwork
                 val capabilities = connectivityManager?.getNetworkCapabilities(network)
                 if (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) {
@@ -316,7 +347,7 @@ object ComposeExt {
         MotionDetectionService.stop(this)
     }
 
-    @OptIn(UnstableApi::class)
+    @androidx.annotation.OptIn(UnstableApi::class)
     @Composable
     fun rememberExoPlayer(
         videoUri: Uri = Uri.EMPTY,
@@ -386,4 +417,114 @@ object ComposeExt {
         }
         return exoPlayer
     }
+
+    @Composable
+    fun LaunchPermissions(
+        onPermissionsResult: ((Map<String, Boolean>) -> Unit)? = null,
+        onAllPermissionsGranted: (suspend () -> Unit)? = null,
+    ) {
+        val permissionsState = rememberPermissionsState(
+            onPermissionsResult = onPermissionsResult,
+            onAllPermissionsGranted = onAllPermissionsGranted,
+        )
+        LaunchedEffect(
+            permissionsState,
+            permissionsState.allPermissionsGranted,
+            permissionsState.shouldShowRationale
+        ) {
+            permissionsState.launchPermissionRequest()
+        }
+    }
+
+    @Composable
+    private fun getPermissions(): List<String> {
+        val context = LocalContext.current
+        return remember(context) {
+            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(
+                    context.packageName,
+                    PackageManager.PackageInfoFlags.of(
+                        PackageManager.GET_PERMISSIONS.toLong()
+                    )
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(
+                    context.packageName,
+                    PackageManager.GET_PERMISSIONS
+                )
+            }
+            packageInfo.requestedPermissions?.toList() ?: emptyList()
+        }
+    }
+
+    internal val fakePermissionsState = object : PermissionsState {
+        override val allPermissionsGranted: Boolean = false
+        override val shouldShowRationale: Boolean = false
+        override fun launchPermissionRequest() = Unit
+    }
+
+    @Stable
+    interface PermissionsState {
+        val allPermissionsGranted: Boolean
+        val shouldShowRationale: Boolean
+        fun launchPermissionRequest()
+    }
+
+    @OptIn(ExperimentalPermissionsApi::class)
+    @Composable
+    fun rememberPermissionsState(
+        permissions: List<String> = getPermissions(),
+        onPermissionsResult: ((Map<String, Boolean>) -> Unit)? = null,
+        onAllPermissionsGranted: (suspend () -> Unit)? = null,
+    ): PermissionsState = if (LocalInspectionMode.current) return fakePermissionsState else {
+        val permissionState = rememberMultiplePermissionsState(permissions) {
+            onPermissionsResult?.invoke(it)
+        }
+        val allPermissionsGranted = permissionState.allPermissionsGranted
+        LaunchedEffect(allPermissionsGranted) {
+            if (allPermissionsGranted) {
+                onAllPermissionsGranted?.invoke()
+            }
+        }
+        return remember(permissions) {
+            object : PermissionsState {
+                override val allPermissionsGranted: Boolean
+                    get() = permissionState.allPermissionsGranted
+                override val shouldShowRationale: Boolean
+                    get() = permissionState.shouldShowRationale
+
+                override fun launchPermissionRequest() {
+                    permissionState.launchMultiplePermissionRequest()
+                }
+            }
+        }
+    }
+
+    fun LifecycleOwner.launchOnLifecycle(
+        scope: LifecycleCoroutineScope = lifecycleScope,
+        context: CoroutineContext = Dispatchers.Main,
+        block: suspend CoroutineScope.() -> Unit
+    ) = scope.launch(
+        context = context,
+        block = block
+    )
+
+    @Composable
+    fun rememberDeviceCapture(
+        device: NsdDevice,
+        lifecycleScope: LifecycleCoroutineScope
+    ): MutableState<Bitmap?> = remember(device) {
+        val image: MutableState<Bitmap?> = mutableStateOf(null)
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                while (true) {
+                    image.value = device.getFrame()
+                    delay(10)
+                }
+            }
+        }
+        image
+    }
+
 }
