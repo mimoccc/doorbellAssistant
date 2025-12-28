@@ -1,5 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">DoorBellAssistant</string>
+    <string name="app_name_call">Call</string>
     <string name="wake_lock">DoorBellAssistantWakeLock</string>
     <string name="ai_model" tools:ignore="TypographyDashes">gemini-2.5-flash-native-audio-preview-12-2025</string>
     <string name="ai_voice_model">Rasalgethi</string>

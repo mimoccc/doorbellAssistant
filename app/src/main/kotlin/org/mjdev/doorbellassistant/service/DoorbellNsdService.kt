@@ -10,15 +10,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantRunning
+import org.mjdev.doorbellassistant.activity.VideoCallActivity.Companion.startCall
 import org.mjdev.doorbellassistant.extensions.ComposeExt.launchOnLifecycle
 import org.mjdev.doorbellassistant.extensions.ComposeExt.rememberDeviceCapture
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdDevice
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes.DOOR_BELL_ASSISTANT
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes.DOOR_BELL_CLIENT
-import org.mjdev.doorbellassistant.helpers.nsd.rpc.INsdServerRPC
-import org.mjdev.doorbellassistant.helpers.nsd.service.NsdService
+import org.mjdev.doorbellassistant.nsd.device.NsdDevice
+import org.mjdev.doorbellassistant.nsd.device.NsdTypes
+import org.mjdev.doorbellassistant.nsd.device.NsdTypes.DOOR_BELL_ASSISTANT
+import org.mjdev.doorbellassistant.nsd.device.NsdTypes.DOOR_BELL_CLIENT
+import org.mjdev.doorbellassistant.nsd.rpc.INsdServerRPC
+import org.mjdev.doorbellassistant.nsd.service.NsdService
 import org.mjdev.doorbellassistant.rpc.DoorBellAction
+import org.mjdev.doorbellassistant.rpc.DoorBellAction.DoorBellActionCall
+import org.mjdev.doorbellassistant.rpc.DoorBellAction.DoorBellActionMotionUnDetected
+import org.mjdev.doorbellassistant.rpc.DoorBellAction.DoorBellActionMotionDetected
 import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc
 import org.mjdev.doorbellassistant.ui.components.FrontCameraPreview
 import org.mjdev.doorbellassistant.ui.window.ComposeFloatingWindow
@@ -93,7 +97,6 @@ class DoorbellNsdService : NsdService() {
     }
 
     override fun onDestroy() {
-
         super.onDestroy()
         isRunning.value = false
     }
@@ -102,12 +105,16 @@ class DoorbellNsdService : NsdService() {
         action: DoorBellAction
     ) {
         when (action) {
-            is DoorBellAction.DoorBellActionMotionDetected -> {
-                showAlert(action.device)
+            is DoorBellActionMotionDetected -> {
+                showAlert(action.device!!)
             }
 
-            is DoorBellAction.DoorBellActionMotionUnDetected -> {
-                hideAlert(action.device)
+            is DoorBellActionMotionUnDetected -> {
+                hideAlert(action.device!!)
+            }
+
+            is DoorBellActionCall -> {
+                baseContext.startCall(null, caller = action.caller)
             }
         }
     }

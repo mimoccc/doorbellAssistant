@@ -4,11 +4,16 @@ import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.KeyguardManager
 import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.VectorDrawable
 import android.net.ConnectivityManager
+import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.net.wifi.WifiInfo
@@ -19,10 +24,12 @@ import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.provider.Settings
 import android.util.Log
+import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -34,8 +41,10 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toColorLong
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.view.WindowCompat
@@ -56,21 +65,100 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.ClassDiscriminatorMode
+import kotlinx.serialization.json.Json
 import org.mjdev.doorbellassistant.BuildConfig
 import org.mjdev.doorbellassistant.R
 import org.mjdev.doorbellassistant.enums.IntentAction
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdDevice
+import org.mjdev.doorbellassistant.nsd.device.NsdDevice
+import org.mjdev.doorbellassistant.nsd.device.NsdDevice.Companion.TAG
 import org.mjdev.doorbellassistant.receiver.MotionBroadcastReceiver
 import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc.Companion.getFrame
 import org.mjdev.doorbellassistant.service.MotionDetectionService
 import org.mjdev.doorbellassistant.ui.theme.DarkMD5
+import java.net.Inet4Address
+import java.net.InetAddress
+import java.net.NetworkInterface
 import kotlin.coroutines.CoroutineContext
 import androidx.compose.ui.graphics.Color as ComposeColor
 
-@Suppress("MemberVisibilityCanBePrivate", "DEPRECATION", "unused")
+@Suppress("MemberVisibilityCanBePrivate", "DEPRECATION", "unused", "UnusedReceiverParameter")
 object ComposeExt {
 
     private val TAG_WAKE_LOCK: Int = R.string.wake_lock
+
+    @OptIn(ExperimentalSerializationApi::class)
+    val json = Json {
+        classDiscriminatorMode = ClassDiscriminatorMode.ALL_JSON_OBJECTS
+        prettyPrint = true
+        isLenient = true
+        encodeDefaults = true
+        ignoreUnknownKeys = true
+        classDiscriminator = "type"
+//        explicitNulls = true
+//        coerceInputValues = true
+//        decodeEnumsCaseInsensitive = true
+//        allowStructuredMapKeys = true
+    }
+
+    inline fun <reified T : Any> T.asJson(): String {
+        val json = json.encodeToString<T>(this)
+        Log.d(TAG, "Device json : $json")
+        return json
+    }
+
+    inline fun <reified T> String.fromJson(): T = runCatching {
+        val result = json.decodeFromString<T>(this)
+        Log.d(TAG, "Device from json : $json, $result")
+        return result
+    }.getOrNull() as T
+
+    fun String.toInetAddress(): InetAddress? = when {
+        isValidIpAddress() -> InetAddress.getByAddress(toByteArray())
+        else -> {
+            Exception("Invalid ip address: $this.").printStackTrace()
+            null
+        }
+    }
+
+    fun String.isValidIpAddress(): Boolean =
+        split(".").let { parts ->
+            parts.size == 4 && parts.all { it.toIntOrNull() in 0..255 }
+        }
+
+    fun String.toByteArray(): ByteArray =
+        split(".").map { it.toInt().toByte() }.toByteArray()
+
+    fun ImageVector.toDrawable(
+        context: Context,
+        width: Int,
+        height: Int
+    ): BitmapDrawable {
+        val computedWidth = if (width < 1) 1 else width
+        val computedHeight = if (height < 1) 1 else height
+        val bitmap = createBitmap(computedWidth, computedHeight)
+        val canvas = Canvas(bitmap)
+        val vectorDrawable = VectorDrawable()
+        vectorDrawable.setBounds(0, 0, computedWidth, computedHeight)
+        vectorDrawable.draw(canvas)
+        return BitmapDrawable(context.resources, bitmap)
+    }
+
+    fun ImageVector.toDrawable(
+        view: View,
+        width: Int = view.width,
+        height: Int = view.height
+    ): BitmapDrawable {
+        val computedWidth = if (width < 1) 1 else width
+        val computedHeight = if (height < 1) 1 else height
+        val bitmap = createBitmap(computedWidth, computedHeight)
+        val canvas = Canvas(bitmap)
+        val vectorDrawable = VectorDrawable()
+        vectorDrawable.setBounds(0, 0, computedWidth, computedHeight)
+        vectorDrawable.draw(canvas)
+        return BitmapDrawable(view.context.resources, bitmap)
+    }
 
     var ComponentActivity.wakeLock: WakeLock?
         get() = runCatching {
@@ -114,39 +202,44 @@ object ComposeExt {
             }
         }
 
-    @Suppress("DEPRECATION")
+    val Context.wifiManager
+        get() = getSystemService(Context.WIFI_SERVICE) as? WifiManager
+
+    val Context.connectivityManager
+        get() = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+
+    val Context.allNetworks: Map<Network, NetworkCapabilities?>
+        get() = connectivityManager?.allNetworks?.associate { n ->
+            n to connectivityManager?.getNetworkCapabilities(n)
+        } ?: emptyMap()
+
+//    val Context.currentPublicIP: String
+//        get() = NetworkInterface.getNetworkInterfaces()
+//            .toList()
+//            .asSequence()
+//            .filter { n ->
+//                n.isUp && !n.isLoopback
+//            }
+//            .flatMap { n ->
+//                n.inetAddresses.asSequence()
+//            }
+//            .firstOrNull { n ->
+//                n is Inet4Address && !n.isLoopbackAddress
+//            }?.hostAddress ?: "..."
+
     val Context.currentWifiIP: String
-        get() = run {
-            val wifiManager =
-                (applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager)
-            val ipAddress = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val connectivityManager = getSystemService(
-                    Context.CONNECTIVITY_SERVICE
-                ) as? ConnectivityManager
-                val network = connectivityManager?.activeNetwork
-                val capabilities = connectivityManager?.getNetworkCapabilities(network)
-                if (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) {
-                    val wifiInfo = capabilities.transportInfo as? WifiInfo
-                    wifiInfo?.ipAddress
-                } else {
-                    wifiManager?.connectionInfo?.ipAddress
-                }
-            } else {
-                wifiManager?.connectionInfo?.ipAddress
+        get() = NetworkInterface.getNetworkInterfaces()
+            .toList()
+            .firstOrNull { n ->
+                n.name.startsWith("wlan") && n.isUp
             }
-            if (ipAddress != null && ipAddress != 0) {
-                String.format(
-                    java.util.Locale.ENGLISH,
-                    "%d.%d.%d.%d",
-                    ipAddress and 0xff,
-                    ipAddress shr 8 and 0xff,
-                    ipAddress shr 16 and 0xff,
-                    ipAddress shr 24 and 0xff
-                )
-            } else {
-                "..."
-            }
-        }
+            ?.inetAddresses
+            ?.toList()
+            ?.filterIsInstance<Inet4Address>()
+            ?.firstOrNull { n ->
+                n.isSiteLocalAddress
+            }?.hostAddress ?: "..."
+
 
     val Context.currentSystemUser: String
         get() = try {
@@ -162,6 +255,10 @@ object ComposeExt {
     val isDesignMode
         @Composable
         get() = LocalInspectionMode.current
+
+    inline fun <reified T> Context.intent(
+        block: Intent.() -> Unit
+    ): Intent = Intent(applicationContext, T::class.java).apply(block)
 
     fun postDelayed(
         timeout: Long,
@@ -330,7 +427,7 @@ object ComposeExt {
 
     fun Context.registerMotionDetector(
         motionReceiver: MotionBroadcastReceiver
-    ) {
+    ) = runCatching {
         MotionDetectionService.start(this)
         ContextCompat.registerReceiver(
             this,
@@ -338,14 +435,14 @@ object ComposeExt {
             IntentFilter(IntentAction.MOTION_DETECTED.action),
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
-    }
+    }.onFailure { e -> e.printStackTrace() }
 
     fun Context.unregisterMotionDetector(
         motionReceiver: MotionBroadcastReceiver
-    ) {
+    ) = runCatching {
         unregisterReceiver(motionReceiver)
         MotionDetectionService.stop(this)
-    }
+    }.onFailure { e -> e.printStackTrace() }
 
     @androidx.annotation.OptIn(UnstableApi::class)
     @Composable
@@ -440,21 +537,23 @@ object ComposeExt {
     private fun getPermissions(): List<String> {
         val context = LocalContext.current
         return remember(context) {
-            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.packageManager.getPackageInfo(
-                    context.packageName,
-                    PackageManager.PackageInfoFlags.of(
-                        PackageManager.GET_PERMISSIONS.toLong()
+            runCatching {
+                val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    context.packageManager.getPackageInfo(
+                        context.packageName,
+                        PackageManager.PackageInfoFlags.of(
+                            PackageManager.GET_PERMISSIONS.toLong()
+                        )
                     )
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                context.packageManager.getPackageInfo(
-                    context.packageName,
-                    PackageManager.GET_PERMISSIONS
-                )
-            }
-            packageInfo.requestedPermissions?.toList() ?: emptyList()
+                } else {
+                    @Suppress("DEPRECATION")
+                    context.packageManager.getPackageInfo(
+                        context.packageName,
+                        PackageManager.GET_PERMISSIONS
+                    )
+                }
+                packageInfo.requestedPermissions?.toList()
+            }.getOrNull() ?: emptyList()
         }
     }
 
@@ -462,6 +561,22 @@ object ComposeExt {
         override val allPermissionsGranted: Boolean = false
         override val shouldShowRationale: Boolean = false
         override fun launchPermissionRequest() = Unit
+    }
+
+    operator fun PaddingValues.plus(other: PaddingValues) = object : PaddingValues {
+        override fun calculateLeftPadding(layoutDirection: LayoutDirection) =
+            this@plus.calculateLeftPadding(layoutDirection) +
+                    other.calculateLeftPadding(layoutDirection)
+
+        override fun calculateTopPadding() =
+            this@plus.calculateTopPadding() + other.calculateTopPadding()
+
+        override fun calculateRightPadding(layoutDirection: LayoutDirection) =
+            this@plus.calculateRightPadding(layoutDirection) +
+                    other.calculateRightPadding(layoutDirection)
+
+        override fun calculateBottomPadding() =
+            this@plus.calculateBottomPadding() + other.calculateBottomPadding()
     }
 
     @Stable

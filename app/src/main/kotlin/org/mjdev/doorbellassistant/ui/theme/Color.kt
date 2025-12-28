@@ -12,3 +12,7 @@ val Transparent = Color(0x00000000)
 val Black = Color(0xff000000)
 val Border = Color(0xfff66400)
 val Item = Color(0xfff7bc66)
+
+val Caller = Color(0xf8bd7100)
+val Callee = Color(0xffb62400)
+val Controls = Color(0xfff66400)

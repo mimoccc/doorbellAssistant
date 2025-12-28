@@ -21,9 +21,8 @@ import org.mjdev.doorbellassistant.extensions.ComposeExt.dismissWakeLock
 import org.mjdev.doorbellassistant.extensions.ComposeExt.turnDisplayOff
 import org.mjdev.doorbellassistant.extensions.ComposeExt.turnDisplayOn
 import org.mjdev.doorbellassistant.helpers.DelayHandler
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdDevice
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes.DOOR_BELL_ASSISTANT
+import org.mjdev.doorbellassistant.nsd.device.NsdDevice
+import org.mjdev.doorbellassistant.nsd.device.NsdTypes.DOOR_BELL_ASSISTANT
 import org.mjdev.doorbellassistant.receiver.MotionBroadcastReceiver.Companion.rememberMotionDetector
 import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc.Companion.sendMotionDetected
 import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc.Companion.sendMotionUnDetected
@@ -87,7 +86,7 @@ class AssistantActivity : FullScreenActivity() {
             isMotionDetected.value = true
         }
 //        if (context.isAssistantEnabled) {
-            startOrResume<AssistantActivity>(this)
+        startOrResume<AssistantActivity>(this)
 //        }
         bringToFront()
         turnDisplayOn()
@@ -120,7 +119,6 @@ class AssistantActivity : FullScreenActivity() {
         }
         turnDisplayOff()
         dismissWakeLock()
-
         CoroutineScope(Dispatchers.IO).launch {
             NsdDevice.fromData(
                 address = currentWifiIP,

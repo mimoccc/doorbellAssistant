@@ -26,8 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import org.mjdev.doorbellassistant.enums.VideoSources
 import org.mjdev.doorbellassistant.extensions.ComposeExt.isDesignMode
-import org.mjdev.doorbellassistant.helpers.manager.AIManager.Companion.TAG
 import org.mjdev.doorbellassistant.helpers.Previews
+import org.mjdev.doorbellassistant.manager.AIManager.Companion.TAG
 import org.mjdev.doorbellassistant.ui.components.AISpeechRecognizer
 import org.mjdev.doorbellassistant.ui.components.BrushedBox
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayer

@@ -13,18 +13,8 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.enums.IntentAction
-import org.mjdev.doorbellassistant.extensions.ComposeExt.ANDROID_ID
-import org.mjdev.doorbellassistant.extensions.ComposeExt.currentWifiIP
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdDevice
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes
 import org.mjdev.doorbellassistant.receiver.MotionBroadcastReceiver
-import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc.Companion.sendMotionDetected
-import org.mjdev.doorbellassistant.service.DoorbellNsdService
-import kotlin.jvm.java
 import kotlin.math.abs
 
 class MotionDetector(

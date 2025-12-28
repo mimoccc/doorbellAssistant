@@ -9,8 +9,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.install
+import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -21,33 +21,34 @@ import io.ktor.server.routing.routing
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.ClassDiscriminatorMode
-import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.logging.HttpLoggingInterceptor.Level
+import org.mjdev.doorbellassistant.extensions.ComposeExt.json
 import org.mjdev.doorbellassistant.helpers.MotionDetector
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdDevice
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes.DOOR_BELL_CLIENT
-import org.mjdev.doorbellassistant.helpers.nsd.device.nsdDeviceListFlow
-import org.mjdev.doorbellassistant.helpers.nsd.rpc.INsdServerRPC
+import org.mjdev.doorbellassistant.nsd.device.NsdDevice
+import org.mjdev.doorbellassistant.nsd.device.NsdTypes
+import org.mjdev.doorbellassistant.nsd.device.NsdTypes.DOOR_BELL_CLIENT
+import org.mjdev.doorbellassistant.nsd.device.nsdDeviceListFlow
+import org.mjdev.doorbellassistant.nsd.rpc.INsdServerRPC
 import java.io.ByteArrayOutputStream
 import org.mjdev.doorbellassistant.rpc.DoorBellAction.DoorBellActionMotionDetected
+import org.mjdev.doorbellassistant.rpc.DoorBellAction.DoorBellActionCall
+import org.mjdev.doorbellassistant.rpc.DoorBellAction.DoorBellActionMotionUnDetected
 
 @Suppress("unused", "RedundantSuspendModifier")
 @OptIn(ExperimentalCoroutinesApi::class)
 class DoorBellAssistantServerRpc(
     context: Context,
-    port: Int = 8888,
+    val port: Int = 8888,
     val onAction: (DoorBellAction) -> Unit = {}
-) : INsdServerRPC(context, port) {
+) : INsdServerRPC(context) {
     @OptIn(ExperimentalSerializationApi::class)
     private val server by lazy {
-        embeddedServer(Netty, port = port) {
+        embeddedServer(CIO, port = port) {
             install(ContentNegotiation) {
                 json(json)
             }
@@ -96,19 +97,6 @@ class DoorBellAssistantServerRpc(
     companion object {
         val TAG = NsdDevice::class.simpleName
 
-        val json = Json {
-            prettyPrint = true
-            isLenient = true
-            encodeDefaults = true
-            ignoreUnknownKeys = true
-            classDiscriminator = "type"
-//            explicitNulls = true
-//            coerceInputValues = true
-//            classDiscriminatorMode = ClassDiscriminatorMode.ALL_JSON_OBJECTS
-//            decodeEnumsCaseInsensitive = true
-//            allowStructuredMapKeys = true
-        }
-
         suspend inline fun <reified T : DoorBellAction> NsdDevice.sendAction(
             action: T
         ) {
@@ -126,7 +114,8 @@ class DoorBellAssistantServerRpc(
                 })
                 .build()
                 .newCall(request)
-                .execute().use { response ->
+                .execute()
+                .use { response ->
                     if (response.isSuccessful.not()) {
                         Log.e(TAG, "Failed to send action: ${response.code} to $address")
                         Log.e(TAG, "Url: $url")
@@ -198,7 +187,15 @@ class DoorBellAssistantServerRpc(
             types,
             onError,
             filter,
-            DoorBellAction.DoorBellActionMotionUnDetected(sender)
+            DoorBellActionMotionUnDetected(sender)
         )
+
+        @Suppress("UnusedReceiverParameter")
+        suspend fun Context.makeCall(
+            caller: NsdDevice?,
+            callee: NsdDevice,
+        ) {
+            callee.sendAction(DoorBellActionCall(caller, callee))
+        }
     }
 }

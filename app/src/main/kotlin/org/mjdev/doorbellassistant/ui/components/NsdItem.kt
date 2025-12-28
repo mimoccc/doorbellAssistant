@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mjdev.doorbellassistant.extensions.ComposeExt.isDesignMode
 import org.mjdev.doorbellassistant.helpers.Previews
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdDevice
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes.UNSPECIFIED
+import org.mjdev.doorbellassistant.nsd.device.NsdDevice
+import org.mjdev.doorbellassistant.nsd.device.NsdTypes.UNSPECIFIED
 import org.mjdev.doorbellassistant.ui.theme.Black
 import org.mjdev.doorbellassistant.ui.theme.Item
 import org.mjdev.doorbellassistant.ui.theme.White

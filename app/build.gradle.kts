@@ -156,20 +156,16 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation(libs.generativeai)
 
-    implementation(libs.stream.video.android.core)
-    implementation(libs.stream.video.android.ui.compose)
-    implementation(libs.stream.video.android.ui.core)
-    implementation(libs.stream.video.android.filters.video)
-    implementation(libs.stream.video.android.previewdata)
-
     implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.cio)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
+
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
-//    implementation(libs.gson)
+
+    implementation(libs.stream.webrtc.android)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

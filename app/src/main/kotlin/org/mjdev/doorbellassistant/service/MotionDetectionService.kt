@@ -24,6 +24,7 @@ import org.mjdev.doorbellassistant.enums.NotificationId
 import org.mjdev.doorbellassistant.helpers.MotionDetector
 import java.util.concurrent.Executors
 
+@Suppress("unused")
 class MotionDetectionService : LifecycleService() {
     private val motionDetector by lazy {
         MotionDetector(

@@ -24,11 +24,11 @@ import org.mjdev.doorbellassistant.extensions.ComposeExt.applyIf
 import org.mjdev.doorbellassistant.extensions.ComposeExt.currentWifiIP
 import org.mjdev.doorbellassistant.extensions.ComposeExt.isDesignMode
 import org.mjdev.doorbellassistant.helpers.Previews
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdDevice
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes.DOOR_BELL_ASSISTANT
-import org.mjdev.doorbellassistant.helpers.nsd.device.NsdTypes.DOOR_BELL_CLIENT
-import org.mjdev.doorbellassistant.helpers.nsd.device.rememberNsdDeviceList
+import org.mjdev.doorbellassistant.nsd.device.NsdDevice
+import org.mjdev.doorbellassistant.nsd.device.NsdTypes
+import org.mjdev.doorbellassistant.nsd.device.NsdTypes.DOOR_BELL_ASSISTANT
+import org.mjdev.doorbellassistant.nsd.device.NsdTypes.DOOR_BELL_CLIENT
+import org.mjdev.doorbellassistant.nsd.device.rememberNsdDeviceList
 import org.mjdev.doorbellassistant.ui.theme.Black
 
 @Suppress("DEPRECATION")
