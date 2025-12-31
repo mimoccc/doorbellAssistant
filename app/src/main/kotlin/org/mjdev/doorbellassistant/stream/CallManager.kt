@@ -3,6 +3,7 @@ package org.mjdev.doorbellassistant.stream
 import android.content.Context
 import android.media.AudioManager
 import android.util.Log
+import org.mjdev.doorbellassistant.BuildConfig
 import org.webrtc.AudioSource
 import org.webrtc.AudioTrack
 import org.webrtc.Camera2Enumerator
@@ -24,6 +25,7 @@ import org.webrtc.SurfaceTextureHelper
 import org.webrtc.VideoSource
 import org.webrtc.VideoTrack
 
+// todo multiple clients & bussy
 @Suppress("DEPRECATION", "USELESS_CAST")
 class CallManager(
     private val context: Context,
@@ -32,10 +34,11 @@ class CallManager(
     private val enableIntelVp8Encoder: Boolean = true,
     private val enableH264HighProfile: Boolean = true,
     private val signallingPort: Int = 8889,
-    private val onLocalTrackReady: (VideoTrack) -> Unit = {},
-    private val onRemoteTrackReady: (VideoTrack) -> Unit = {},
-    private val onCallEnded: (CallEndReason) -> Unit = {},
-    private val onCallStarted: (SessionDescription) -> Unit = {},
+    private val onLocalTrackReady: CallManager.(VideoTrack) -> Unit = {},
+    private val onRemoteTrackReady: CallManager.(VideoTrack) -> Unit = {},
+    private val onAcceptCall: CallManager.() -> Unit = {},
+    private val onCallEnded: CallManager.(CallEndReason) -> Unit = {},
+    private val onCallStarted: CallManager.(SessionDescription) -> Unit = {},
 ) : PeerConnection.Observer {
     companion object {
         private val TAG = CallManager::class.simpleName
@@ -145,6 +148,9 @@ class CallManager(
             },
             onDismissReceived = { reason ->
                 onCallEnded(reason)
+            },
+            onAcceptReceived = {
+                onAcceptCall()
             }
         )
     }
@@ -225,7 +231,7 @@ class CallManager(
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions
                 .builder(context)
-                .setEnableInternalTracer(true)
+                .setEnableInternalTracer(BuildConfig.DEBUG)
                 .createInitializationOptions()
         )
         peerConnectionFactory = PeerConnectionFactory.builder()
@@ -331,7 +337,13 @@ class CallManager(
         })
     }
 
-    fun dismiss(fromButton: Boolean) {
+    fun sendCallAccepted() {
+        signalingClient.sendAccept(
+            peerConnection?.localDescription?.description ?: ""
+        )
+    }
+
+    fun dismissCall(fromButton: Boolean) {
         signalingClient.sendDismiss(
             peerConnection?.localDescription?.description ?: ""
         )
@@ -354,6 +366,14 @@ class CallManager(
 
     fun toggleSpeaker(enable: Boolean) {
         audioManager.isSpeakerphoneOn = enable
+    }
+
+    fun mute() {
+        audioManager.isMicrophoneMute = true
+    }
+
+    fun unmute() {
+        audioManager.isMicrophoneMute = false
     }
 
     fun release(reason: CallEndReason) = runCatching {

@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -27,9 +26,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import org.mjdev.doorbellassistant.extensions.ComposeExt.isDesignMode
-import org.mjdev.doorbellassistant.extensions.ComposeExt.rememberAssetImage
 import org.mjdev.doorbellassistant.helpers.Previews
-import org.mjdev.doorbellassistant.ui.components.BrushedBox
+import org.mjdev.doorbellassistant.ui.components.BackgroundLayout
 import org.mjdev.doorbellassistant.ui.theme.DoorBellAssistantTheme
 import org.mjdev.doorbellassistant.ui.theme.White
 
@@ -53,15 +51,10 @@ fun LauncherScreen(
                 .background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                modifier = Modifier
+            BackgroundLayout(
+                Modifier
                     .fillMaxSize()
-                    .alpha(0.5f),
-                bitmap = rememberAssetImage("avatar_transparent.png"),
-                contentDescription = "",
-            )
-            BrushedBox(
-                modifier = Modifier.fillMaxSize(),
+                    .alpha(0.5f)
             )
             Button(
                 modifier = Modifier

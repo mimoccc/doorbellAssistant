@@ -162,6 +162,10 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
 
+//    implementation(libs.ipfslite)
+//    implementation("io.ipfs:java-ipfs-http-client:1.4.4")
+//    implementation(libs.ice4j)
+
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
 

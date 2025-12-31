@@ -5,6 +5,8 @@ import androidx.compose.material.icons.filled.CameraRear
 import androidx.compose.material.icons.filled.ConnectedTv
 import androidx.compose.material.icons.filled.DeviceUnknown
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.text.toLowerCase
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
@@ -38,7 +40,9 @@ enum class NsdTypes(
         operator fun invoke(
             uid: String?
         ) = entries.firstOrNull { entry ->
-            uid?.contains(entry.serviceName) ?: false
+            uid?.toLowerCase(Locale.current)
+                ?.contains(entry.serviceName.toLowerCase(Locale.current))
+                ?: false
         } ?: UNSPECIFIED
     }
 }

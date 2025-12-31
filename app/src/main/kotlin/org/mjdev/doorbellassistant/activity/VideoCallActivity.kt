@@ -29,6 +29,8 @@ import org.mjdev.doorbellassistant.stream.CallEndReason
 import org.mjdev.doorbellassistant.ui.components.CallScreen
 import org.mjdev.doorbellassistant.ui.theme.DoorBellAssistantTheme
 
+// todo speaker due type of device
+@Suppress("unused")
 class VideoCallActivity : UnlockedActivity() {
     private val callee: MutableState<NsdDevice?> = mutableStateOf(null)
     private val caller: MutableState<NsdDevice?> = mutableStateOf(null)
@@ -58,15 +60,7 @@ class VideoCallActivity : UnlockedActivity() {
     private fun handleCallEnd(
         reason: CallEndReason
     ) {
-//        when (reason) {
-//            CallEndReason.REMOTE_PARTY_END -> {
-//                // todo
-//            }
-//
-//            else -> {
-                finish()
-//            }
-//        }
+        finish()
     }
 
     @Previews
@@ -79,7 +73,8 @@ class VideoCallActivity : UnlockedActivity() {
                 .navigationBarsPadding()
                 .displayCutoutPadding()
                 .fillMaxSize(),
-            remoteDevice = callee.value,
+            callerDevice = callee.value,
+            calleeDevice = caller.value,
             onEndCall = onEndCall
         )
     }

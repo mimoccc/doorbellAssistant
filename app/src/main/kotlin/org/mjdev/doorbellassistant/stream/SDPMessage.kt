@@ -53,4 +53,12 @@ sealed class SDPMessage {
         val type: String = "dismiss"
     }
 
+    @Serializable
+    @SerialName("SDPAccept")
+    data class SDPAccept(
+        val sdp: String,
+    ) : SDPMessage() {
+        val type: String = "accept"
+    }
+
 }

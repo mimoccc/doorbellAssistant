@@ -21,7 +21,8 @@ class UdpSignalingClient(
     private var onOfferReceived: (String) -> Unit = {},
     private var onAnswerReceived: (String) -> Unit = {},
     private var onIceCandidateReceived: (IceCandidate) -> Unit = {},
-    private val onDismissReceived: (CallEndReason) -> Unit = {}
+    private val onDismissReceived: (CallEndReason) -> Unit = {},
+    private val onAcceptReceived: () -> Unit = {},
 ) {
     companion object {
         private val TAG = UdpSignalingClient::class.simpleName
@@ -79,6 +80,7 @@ class UdpSignalingClient(
                     Log.e(TAG, "Failed to add ICE candidate", e)
                 }
 
+                "accept" -> onAcceptReceived()
                 "dismiss" -> onDismissReceived(CallEndReason.REMOTE_PARTY_END)
             }
 
@@ -119,6 +121,10 @@ class UdpSignalingClient(
     fun sendDismiss(
         sdp: String
     ) = sendMessage(SDPDismiss(sdp))
+
+    fun sendAccept(
+        sdp: String
+    ) = sendMessage(SDPMessage.SDPAccept(sdp))
 
     fun release() {
         listenerThread?.release()

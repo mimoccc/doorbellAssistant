@@ -1,7 +1,6 @@
 package org.mjdev.doorbellassistant.ui.components
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeDown
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
@@ -20,7 +19,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import org.mjdev.doorbellassistant.helpers.Previews
 import org.mjdev.doorbellassistant.stream.CallManager
 import org.mjdev.doorbellassistant.ui.theme.Red
@@ -36,7 +34,7 @@ fun VideoCallControls(
     var isVideoEnabled by remember { mutableStateOf(true) }
     var isSpeakerOn by remember { mutableStateOf(false) }
     Row(
-        modifier = modifier.padding(horizontal = 16.dp),
+        modifier = modifier, //.padding(horizontal = 16.dp),
     ) {
         IconButton(
             onClick = {
@@ -84,7 +82,7 @@ fun VideoCallControls(
         }
         IconButton(
             onClick = {
-                webRtcManager?.dismiss(true)
+                webRtcManager?.dismissCall(true)
             },
             colors = IconButtonDefaults.iconButtonColors(containerColor = Red)
         ) {

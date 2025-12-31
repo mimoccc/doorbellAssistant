@@ -12,14 +12,16 @@ import org.mjdev.doorbellassistant.stream.CallEndReason
 @Composable
 fun CallScreen(
     modifier: Modifier = Modifier,
-    remoteDevice: NsdDevice? = null,
+    callerDevice: NsdDevice? = null,
+    calleeDevice: NsdDevice? = null,
     onEndCall: (CallEndReason) -> Unit = {}
 ) = Box(
     modifier = modifier
 ) {
     VideoCall(
         modifier = Modifier.fillMaxSize(),
-        callerDevice = remoteDevice,
+        callerDevice = callerDevice,
+        calleeDevice = calleeDevice,
         onEndCall = { reason ->
             onEndCall(reason)
         }

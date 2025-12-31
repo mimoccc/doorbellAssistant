@@ -4,6 +4,8 @@ agp = "9.1.0-alpha02"
 cameraCamera2 = "1.5.2"
 coreKtx = "1.17.0"
 firebaseBom = "34.7.0"
+ipfslite = "1.0.0"
+ice4j = "3.0-24-g34c2ce5"
 lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.12.2"
 kotlin = "2.3.0"
@@ -43,6 +45,8 @@ firebase-ai = { module = "com.google.firebase:firebase-ai" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
+ice4j = { module = "org.ice4j:ice4j", version.ref = "ice4j" }
+ipfslite = { module = "io.textile:ipfslite", version.ref = "ipfslite" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-cio= { module = "io.ktor:ktor-server-cio", version.ref = "ktor" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }

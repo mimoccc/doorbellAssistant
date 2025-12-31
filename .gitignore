@@ -19,21 +19,14 @@ output-metadata.json
 # IntelliJ
 *.iml
 .idea/
-.kotlin/
-.kotlin
-/.kotlin
-/.kotlin/
-.kotlin/sessions
-/.kotlin/sessions
-.kotlin/sessions/
-/.kotlin/sessions/
-.kotlin/errors
-.kotlin/errors/
-/.kotlin/errors
-/.kotlin/errors/
 misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
+
+# kotlin
+/.kotlin/
+/.kotlin
+.kotlin/*
 
 # Keystore files
 *.jks

@@ -27,6 +27,7 @@ import org.mjdev.doorbellassistant.helpers.Previews
 import org.mjdev.doorbellassistant.nsd.device.NsdDevice
 import org.mjdev.doorbellassistant.stream.CallEndReason
 import org.mjdev.doorbellassistant.stream.CallManager
+import org.mjdev.doorbellassistant.ui.screens.IncomingCallScreen
 import org.mjdev.doorbellassistant.ui.theme.Callee
 import org.mjdev.doorbellassistant.ui.theme.Caller
 import org.mjdev.doorbellassistant.ui.theme.Controls
@@ -37,11 +38,12 @@ import org.webrtc.VideoTrack
 @Composable
 fun VideoCall(
     modifier: Modifier = Modifier,
-    callerDevice: NsdDevice? = null,
-    callerIp: String? = callerDevice?.address,
+    callerDevice: NsdDevice? = NsdDevice.EMPTY,
+    calleeDevice: NsdDevice? = NsdDevice.EMPTY,
     calleeVisible: Boolean = true,
     callerVisible: Boolean = true,
     callControlsVisible: Boolean = true,
+    autoAnswerCall: Boolean = false,
     callerAlignment: Alignment = Alignment.Center,
     calleeAlignment: Alignment = Alignment.BottomEnd,
     controlsAlignment: Alignment = Alignment.BottomCenter,
@@ -60,17 +62,22 @@ fun VideoCall(
     calleeShape: Shape = RoundedCornerShape(16.dp),
     controlsShape: Shape = CircleShape,
     onStartCall: (SessionDescription) -> Unit = {},
-    onEndCall: (CallEndReason) -> Unit = {}
+    onEndCall: (CallEndReason) -> Unit = {},
 ) {
     var localVideoTrack by remember { mutableStateOf<VideoTrack?>(null) }
     var remoteVideoTrack by remember { mutableStateOf<VideoTrack?>(null) }
+    var isAccepted by remember { mutableStateOf(autoAnswerCall) }
     val rtcManager = rememberRtcManager(
-        callerIp = callerIp,
+        callerIp = callerDevice?.address,
         onLocalTrackReady = { track ->
             localVideoTrack = track
         },
         onRemoteTrackReady = { track ->
             remoteVideoTrack = track
+        },
+        onAcceptCall = {
+            unmute()
+            isAccepted = true
         },
         onCallStarted = { sdp ->
             onStartCall(sdp)
@@ -126,9 +133,29 @@ fun VideoCall(
                 webRtcManager = rtcManager,
             )
         }
+        if ((callerDevice != null || calleeDevice != null) && !isAccepted) {
+            if (autoAnswerCall.not()) {
+                IncomingCallScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    caller = callerDevice,
+                    callee = calleeDevice,
+                    onAccept = {
+                        isAccepted = true
+                        rtcManager?.sendCallAccepted()
+                        rtcManager?.unmute()
+                    },
+                    onDeny = {
+                        rtcManager?.dismissCall(true)
+                    }
+                )
+            }
+        }
     }
     DisposableEffect(rtcManager) {
-        rtcManager?.initialize()
+        rtcManager?.apply {
+            initialize()
+            mute()
+        }
         onDispose {
             rtcManager?.release(CallEndReason.LOCAL_END)
         }
@@ -140,10 +167,11 @@ fun rememberRtcManager(
     callerIp: String?,
     context: Context = LocalContext.current,
     isDesign: Boolean = isDesignMode,
-    onLocalTrackReady: (VideoTrack) -> Unit = {},
-    onRemoteTrackReady: (VideoTrack) -> Unit = {},
-    onCallEnded: (CallEndReason) -> Unit = {},
-    onCallStarted: (SessionDescription) -> Unit
+    onLocalTrackReady: CallManager.(VideoTrack) -> Unit = {},
+    onRemoteTrackReady: CallManager.(VideoTrack) -> Unit = {},
+    onAcceptCall: CallManager.() -> Unit = {},
+    onCallEnded: CallManager.(CallEndReason) -> Unit = {},
+    onCallStarted: CallManager.(SessionDescription) -> Unit = {}
 ) = remember(callerIp) {
     runCatching {
         if (isDesign) null
@@ -154,6 +182,7 @@ fun rememberRtcManager(
                 isCaller = callerIp.isNullOrEmpty().not(),
                 onLocalTrackReady = onLocalTrackReady,
                 onRemoteTrackReady = onRemoteTrackReady,
+                onAcceptCall = onAcceptCall,
                 onCallStarted = onCallStarted,
                 onCallEnded = onCallEnded
             )
