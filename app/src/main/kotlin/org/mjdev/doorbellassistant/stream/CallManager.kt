@@ -35,7 +35,7 @@ class CallManager(
     private val onLocalTrackReady: (VideoTrack) -> Unit = {},
     private val onRemoteTrackReady: (VideoTrack) -> Unit = {},
     private val onCallEnded: (CallEndReason) -> Unit = {},
-    private val onCallStarted: () -> Unit = {},
+    private val onCallStarted: (SessionDescription) -> Unit = {},
 ) : PeerConnection.Observer {
     companion object {
         private val TAG = CallManager::class.simpleName
@@ -145,12 +145,6 @@ class CallManager(
             },
             onDismissReceived = { reason ->
                 onCallEnded(reason)
-//                when (reason) {
-//                    CallEndReason.REMOTE_PARTY_END -> {
-//
-//                    }
-//                    else -> this@CallManager.release(reason)
-//                }
             }
         )
     }
@@ -318,6 +312,7 @@ class CallManager(
                 peerConnection?.setLocalDescription(SimpleSdpObserver(), sdp)
                 signalingClient.sendAnswer(sdp.description)
                 Log.d(TAG, "Callee: Answer sent")
+                onCallStarted(sdp)
             }
 
             override fun onSetSuccess() {
@@ -362,6 +357,9 @@ class CallManager(
     }
 
     fun release(reason: CallEndReason) = runCatching {
+        signalingClient.sendDismiss(
+            peerConnection?.localDescription?.description ?: ""
+        )
         onCallEnded(reason)
         peerConnection?.apply {
             close()

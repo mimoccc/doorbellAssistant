@@ -30,6 +30,7 @@ import org.mjdev.doorbellassistant.stream.CallManager
 import org.mjdev.doorbellassistant.ui.theme.Callee
 import org.mjdev.doorbellassistant.ui.theme.Caller
 import org.mjdev.doorbellassistant.ui.theme.Controls
+import org.webrtc.SessionDescription
 import org.webrtc.VideoTrack
 
 @Previews
@@ -58,7 +59,7 @@ fun VideoCall(
     callerShape: Shape = RoundedCornerShape(16.dp),
     calleeShape: Shape = RoundedCornerShape(16.dp),
     controlsShape: Shape = CircleShape,
-    onStartCall: () -> Unit = {},
+    onStartCall: (SessionDescription) -> Unit = {},
     onEndCall: (CallEndReason) -> Unit = {}
 ) {
     var localVideoTrack by remember { mutableStateOf<VideoTrack?>(null) }
@@ -71,8 +72,8 @@ fun VideoCall(
         onRemoteTrackReady = { track ->
             remoteVideoTrack = track
         },
-        onCallStarted = {
-            onStartCall()
+        onCallStarted = { sdp ->
+            onStartCall(sdp)
         },
         onCallEnded = { reason ->
             remoteVideoTrack = null
@@ -142,7 +143,7 @@ fun rememberRtcManager(
     onLocalTrackReady: (VideoTrack) -> Unit = {},
     onRemoteTrackReady: (VideoTrack) -> Unit = {},
     onCallEnded: (CallEndReason) -> Unit = {},
-    onCallStarted: () -> Unit
+    onCallStarted: (SessionDescription) -> Unit
 ) = remember(callerIp) {
     runCatching {
         if (isDesign) null

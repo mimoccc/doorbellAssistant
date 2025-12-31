@@ -1,6 +1,5 @@
 package org.mjdev.doorbellassistant.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -38,7 +37,6 @@ fun VideoCallControls(
     var isSpeakerOn by remember { mutableStateOf(false) }
     Row(
         modifier = modifier.padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         IconButton(
             onClick = {
