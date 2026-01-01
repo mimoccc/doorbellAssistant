@@ -137,6 +137,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.androidx.ui)
 
+    implementation(libs.accompanist.permissions)
+
     implementation(libs.androidx.activity.compose)
 
     implementation(libs.androidx.compose.ui)
@@ -153,7 +155,7 @@ dependencies {
     implementation(libs.camera.lifecycle)
 
     implementation(libs.firebase.ai)
-    implementation(libs.accompanist.permissions)
+
     implementation(libs.generativeai)
 
     implementation(libs.ktor.server.core)
@@ -161,6 +163,9 @@ dependencies {
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
+
+    implementation(libs.kodein.di)
+    implementation(libs.kodein.di.framework.compose)
 
 //    implementation(libs.ipfslite)
 //    implementation("io.ipfs:java-ipfs-http-client:1.4.4")

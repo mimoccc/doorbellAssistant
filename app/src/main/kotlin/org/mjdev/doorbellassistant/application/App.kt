@@ -2,9 +2,14 @@ package org.mjdev.doorbellassistant.application
 
 import android.app.Application
 import android.util.Log
+import org.kodein.di.DIAware
+import org.kodein.di.LazyDI
+import org.mjdev.doorbellassistant.di.mainDI
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
 
-class App : Application() {
+class App : Application(), DIAware {
+    override val di: LazyDI by mainDI(this@App)
+
     companion object {
         private val TAG = App::class.simpleName
         private const val TAG_CRASH = "Crash"

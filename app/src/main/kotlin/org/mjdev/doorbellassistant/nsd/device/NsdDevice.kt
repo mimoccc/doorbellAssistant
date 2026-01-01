@@ -48,12 +48,12 @@ open class NsdDevice(
         @Transient
         val TAG = NsdDevice::class.simpleName
 
-        val EMPTY get() = fromData()
+        val EMPTY get() = fromData("192.168.1.1","Test")
 
         fun fromData(
-            address: String="Unknown",
+            address: String,
+            serviceName: String,
             serviceType: NsdTypes = NsdTypes.DOOR_BELL_ASSISTANT,
-            serviceName: String? = "Unknown",
             port: Int = 8888,
         ) = NsdDevice(NsdServiceInfo().apply {
             this.port = port

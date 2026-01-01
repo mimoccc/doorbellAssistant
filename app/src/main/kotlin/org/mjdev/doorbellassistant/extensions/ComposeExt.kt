@@ -28,7 +28,9 @@ import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -50,8 +52,11 @@ import androidx.core.graphics.createBitmap
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
@@ -87,6 +92,19 @@ import androidx.compose.ui.graphics.Color as ComposeColor
 object ComposeExt {
 
     private val TAG_WAKE_LOCK: Int = R.string.wake_lock
+
+    val isPreview
+        @Composable
+        get()= LocalInspectionMode.current
+
+    val isInPreviewMode: Boolean
+        get() = isLayoutLib()
+
+    fun isLayoutLib(): Boolean {
+        val device = android.os.Build.DEVICE
+        val product = android.os.Build.PRODUCT
+        return device == "layoutlib" || product == "layoutlib"
+    }
 
     @OptIn(ExperimentalSerializationApi::class)
     val json = Json {
@@ -515,21 +533,70 @@ object ComposeExt {
         return exoPlayer
     }
 
+    @SuppressLint("UseKtx")
     @Composable
     fun LaunchPermissions(
         onPermissionsResult: ((Map<String, Boolean>) -> Unit)? = null,
         onAllPermissionsGranted: (suspend () -> Unit)? = null,
     ) {
+        val context = LocalContext.current
+        val permissions = getPermissions()
+        val lifecycleOwner = LocalLifecycleOwner.current
+        val hasOverlayPermission = android.Manifest.permission.SYSTEM_ALERT_WINDOW in permissions
+        val overlayGranted = remember { mutableStateOf(Settings.canDrawOverlays(context)) }
+        val regularPermissions = remember(permissions) {
+            permissions.filter { it != android.Manifest.permission.SYSTEM_ALERT_WINDOW }
+        }
+        val overlayLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) {
+            overlayGranted.value = Settings.canDrawOverlays(context)
+        }
+        DisposableEffect(lifecycleOwner) {
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME && hasOverlayPermission) {
+                    overlayGranted.value = Settings.canDrawOverlays(context)
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
         val permissionsState = rememberPermissionsState(
-            onPermissionsResult = onPermissionsResult,
-            onAllPermissionsGranted = onAllPermissionsGranted,
+            permissions = regularPermissions,
+            onPermissionsResult = { results ->
+                val allResults = if (hasOverlayPermission) {
+                    results + (android.Manifest.permission.SYSTEM_ALERT_WINDOW to overlayGranted.value)
+                } else {
+                    results
+                }
+                onPermissionsResult?.invoke(allResults)
+            },
+            onAllPermissionsGranted = {
+                if (!hasOverlayPermission || overlayGranted.value) {
+                    onAllPermissionsGranted?.invoke()
+                }
+            },
         )
         LaunchedEffect(
             permissionsState,
             permissionsState.allPermissionsGranted,
-            permissionsState.shouldShowRationale
+            permissionsState.shouldShowRationale,
+            overlayGranted.value
         ) {
-            permissionsState.launchPermissionRequest()
+            if (hasOverlayPermission && !overlayGranted.value) {
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:${context.packageName}")
+                )
+                overlayLauncher.launch(intent)
+            }
+            if (regularPermissions.isNotEmpty()) {
+                permissionsState.launchPermissionRequest()
+            } else if (!hasOverlayPermission) {
+                onAllPermissionsGranted?.invoke()
+            }
         }
     }
 
@@ -592,7 +659,7 @@ object ComposeExt {
         permissions: List<String> = getPermissions(),
         onPermissionsResult: ((Map<String, Boolean>) -> Unit)? = null,
         onAllPermissionsGranted: (suspend () -> Unit)? = null,
-    ): PermissionsState = if (LocalInspectionMode.current) return fakePermissionsState else {
+    ): PermissionsState = if (LocalInspectionMode.current) fakePermissionsState else {
         val permissionState = rememberMultiplePermissionsState(permissions) {
             onPermissionsResult?.invoke(it)
         }
@@ -602,7 +669,7 @@ object ComposeExt {
                 onAllPermissionsGranted?.invoke()
             }
         }
-        return remember(permissions) {
+        remember(permissions) {
             object : PermissionsState {
                 override val allPermissionsGranted: Boolean
                     get() = permissionState.allPermissionsGranted
@@ -641,5 +708,4 @@ object ComposeExt {
         }
         image
     }
-
 }

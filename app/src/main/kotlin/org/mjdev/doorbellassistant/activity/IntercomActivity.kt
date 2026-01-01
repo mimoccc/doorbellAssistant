@@ -14,21 +14,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.activity.VideoCallActivity.Companion.startCall
 import org.mjdev.doorbellassistant.activity.base.UnlockedActivity
-import org.mjdev.doorbellassistant.extensions.ComposeExt.ANDROID_ID
 import org.mjdev.doorbellassistant.extensions.ComposeExt.LaunchPermissions
-import org.mjdev.doorbellassistant.extensions.ComposeExt.currentWifiIP
 import org.mjdev.doorbellassistant.helpers.Previews
-import org.mjdev.doorbellassistant.nsd.device.NsdDevice
 import org.mjdev.doorbellassistant.nsd.device.NsdTypes.DOOR_BELL_ASSISTANT
 import org.mjdev.doorbellassistant.nsd.device.NsdTypes.DOOR_BELL_CLIENT
-import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc.Companion.makeCall
-import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc.Companion.sendMotionUnDetected
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
+import org.mjdev.doorbellassistant.ui.components.BackgroundLayout
 import org.mjdev.doorbellassistant.ui.components.NsdList
 
 @Suppress("AssignedValueIsNeverRead")
@@ -72,7 +65,10 @@ class IntercomActivity : UnlockedActivity() {
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                // permissions
+                BackgroundLayout(
+                    modifier = Modifier.fillMaxSize()
+                )
+                // todo permissions screen
             }
             LaunchPermissions(
                 onPermissionsResult = { pms ->
