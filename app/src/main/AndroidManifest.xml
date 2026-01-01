@@ -90,10 +90,12 @@
                 android:showWhenLocked="true"
                 android:turnScreenOn="true"
                 android:exported="true"
+                android:banner="@mipmap/ic_launcher"
                 tools:targetApi="27">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <intent-filter android:priority="1">
