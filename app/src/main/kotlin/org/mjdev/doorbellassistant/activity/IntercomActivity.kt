@@ -23,6 +23,7 @@ import org.mjdev.doorbellassistant.nsd.device.NsdTypes.DOOR_BELL_CLIENT
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
 import org.mjdev.doorbellassistant.ui.components.BackgroundLayout
 import org.mjdev.doorbellassistant.ui.components.NsdList
+import org.mjdev.doorbellassistant.ui.theme.DoorBellAssistantTheme
 
 @Suppress("AssignedValueIsNeverRead")
 class IntercomActivity : UnlockedActivity() {
@@ -40,7 +41,7 @@ class IntercomActivity : UnlockedActivity() {
 
     @Previews
     @Composable
-    fun MainScreen() {
+    fun MainScreen()  {
         var arePermissionsGranted by remember { mutableStateOf(false) }
         if (arePermissionsGranted) {
             Box(

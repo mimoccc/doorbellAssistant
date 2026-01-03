@@ -19,6 +19,7 @@ import org.kodein.di.bindSingleton
 import org.kodein.di.instance
 import org.mjdev.doorbellassistant.BuildConfig
 import org.mjdev.doorbellassistant.extensions.ComposeExt.isInPreviewMode
+import org.mjdev.doorbellassistant.manager.AppNotificationManager
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -83,9 +84,8 @@ val appModule = DI.Module("appModule") {
         instance<Context>()
             .getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
     }
-    bindSingleton<NotificationManager> {
-        instance<Context>()
-            .getSystemService(NotificationManager::class.java) as NotificationManager
+    bindSingleton<AppNotificationManager> {
+        AppNotificationManager(instance())
     }
     bindSingleton<WindowManager> {
         instance<Context>()

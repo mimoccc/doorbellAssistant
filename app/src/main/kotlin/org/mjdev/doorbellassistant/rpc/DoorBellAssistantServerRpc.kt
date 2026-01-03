@@ -99,21 +99,22 @@ class DoorBellAssistantServerRpc(
 
         suspend inline fun <reified T : DoorBellAction> NsdDevice.sendAction(
             action: T
-        ) {
-            val address = address ?: return
+        ) = runCatching {
+            val address = address ?: return@runCatching
             val url = "http://$address:$port/action"
             val jsonString = json.encodeToString(action)
             val body = jsonString.toRequestBody("application/json".toMediaType())
-            val request = Request.Builder()
-                .url(url)
-                .post(body)
-                .build()
             OkHttpClient.Builder()
                 .addInterceptor(HttpLoggingInterceptor().apply {
                     level = Level.BODY
                 })
                 .build()
-                .newCall(request)
+                .newCall(
+                    Request.Builder()
+                        .url(url)
+                        .post(body)
+                        .build()
+                )
                 .execute()
                 .use { response ->
                     if (response.isSuccessful.not()) {
@@ -126,6 +127,8 @@ class DoorBellAssistantServerRpc(
                         Log.d(TAG, "Data: $jsonString")
                     }
                 }
+        }.onFailure { e ->
+            e.printStackTrace()
         }
 
         suspend fun NsdDevice.getFrame(): Bitmap? {

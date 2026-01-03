@@ -27,7 +27,6 @@ import org.mjdev.doorbellassistant.nsd.device.NsdTypes.DOOR_BELL_ASSISTANT
 import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc.Companion.makeCall
 import org.mjdev.doorbellassistant.stream.CallEndReason
 import org.mjdev.doorbellassistant.ui.components.CallScreen
-import org.mjdev.doorbellassistant.ui.theme.DoorBellAssistantTheme
 
 // todo speaker due type of device
 @Suppress("unused")
@@ -67,7 +66,7 @@ class VideoCallActivity : UnlockedActivity() {
     @Composable
     fun MainScreen(
         onEndCall: (CallEndReason) -> Unit = {}
-    ) = DoorBellAssistantTheme {
+    )  {
         CallScreen(
             modifier = Modifier
                 .navigationBarsPadding()

@@ -171,6 +171,11 @@ dependencies {
 //    implementation("io.ipfs:java-ipfs-http-client:1.4.4")
 //    implementation(libs.ice4j)
 
+    implementation(libs.pcap4j.core)
+    implementation(libs.pcap4j.packetfactory.static)
+    implementation(libs.dnsjava.dnsjava)
+    implementation(libs.gson)
+
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
 

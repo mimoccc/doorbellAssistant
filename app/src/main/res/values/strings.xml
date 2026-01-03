@@ -1,8 +1,43 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">DoorBellAssistant</string>
     <string name="app_name_call">Call</string>
+    <string name="app_name_vpn">VPN</string>
+
     <string name="wake_lock">DoorBellAssistantWakeLock</string>
+
     <string name="ai_model" tools:ignore="TypographyDashes">gemini-2.5-flash-native-audio-preview-12-2025</string>
     <string name="ai_voice_model">Rasalgethi</string>
     <string name="ai_system_prompt" tools:ignore="TypographyEllipsis">Jsi užitečný asistent mluvící česky...</string>
+
+    <string name="notification_starting">vpn starting</string>
+    <string name="notification_running">vpn running</string>
+    <string name="notification_stopping">vpn stopping</string>
+    <string name="notification_waiting_for_net">vpn awaiting network connection</string>
+    <string name="notification_reconnecting">vpn reconnecting</string>
+    <string name="notification_reconnecting_error">vpn reconnect error</string>
+    <string name="notification_stopped">vpn stopped</string>
+    <string name="notification_action_pause">vpn pause</string>
+    <string name="notification_paused_title">vpn paused</string>
+    <string name="notification_paused_text">vpn paused</string>
+    <string name="cannot_read_config">vpn config read fail: %s</string>
+    <string name="cannot_restore_previous_config">vpn config restore fail</string>
+    <string name="cannot_load_default_config">vpn default config read fail</string>
+    <string name="cannot_write_config">vpn can not write config file: %s</string>
+    <string name="notifications_group_service">vpn service</string>
+    <string name="notifications_group_updates">vpn updates</string>
+    <string name="notifications_running">vpn running</string>
+    <string name="notifications_running_desc">vpn guard</string>
+    <string name="notifications_paused">vpn paused</string>
+    <string name="notifications_paused_desc">vpn guard</string>
+    <string name="notifications_update">vpn updating</string>
+    <string name="notifications_update_desc">vpn updating</string>
+    <string name="could_not_update_all_hosts">vpn could not update all hosts</string>
+    <string name="updating_n_host_files">vpn updating hosts %i</string>
+    <string name="updating_hostfiles">vpn updating hosts</string>
+    <string name="invalid_url_s">vpn invalid url %s</string>
+    <string name="permission_denied">vpn permission denied</string>
+    <string name="file_not_found">vpn file not found</string>
+    <string name="unknown_error_s">vpn unknown error: %s</string>
+    <string name="requested_timed_out">request timeout</string>
+    <string name="host_update_error_item">vpn host item update error: [%i] %s</string>
 </resources>

@@ -38,8 +38,8 @@ import org.webrtc.VideoTrack
 @Composable
 fun VideoCall(
     modifier: Modifier = Modifier,
-    callerDevice: NsdDevice? = NsdDevice.EMPTY,
-    calleeDevice: NsdDevice? = NsdDevice.EMPTY,
+    callerDevice: NsdDevice? = null, // NsdDevice.EMPTY,
+    calleeDevice: NsdDevice? = null, //NsdDevice.EMPTY,
     calleeVisible: Boolean = true,
     callerVisible: Boolean = true,
     callControlsVisible: Boolean = true,
