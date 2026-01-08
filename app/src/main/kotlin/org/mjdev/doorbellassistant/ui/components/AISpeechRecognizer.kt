@@ -28,13 +28,13 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.firebase.ai.type.PublicPreviewAPI
-import org.mjdev.doorbellassistant.extensions.ComposeExt.isDesignMode
-import org.mjdev.doorbellassistant.helpers.Previews
 import org.mjdev.doorbellassistant.manager.AIManager.Companion.TAG
 import org.mjdev.doorbellassistant.manager.AIManager.Companion.rememberAiManager
 import org.mjdev.doorbellassistant.ui.theme.DoorBellAssistantTheme
 import org.mjdev.doorbellassistant.ui.theme.Red
 import org.mjdev.doorbellassistant.ui.theme.White
+import org.mjdev.phone.extensions.CustomExtensions.isPreview
+import org.mjdev.phone.helpers.Previews
 
 @Suppress("unused")
 @Previews
@@ -43,14 +43,14 @@ import org.mjdev.doorbellassistant.ui.theme.White
 @Composable
 fun AISpeechRecognizer(
     modifier: Modifier = Modifier,
-    speechState: MutableState<Boolean> = mutableStateOf(isDesignMode),
+    speechState: MutableState<Boolean> = mutableStateOf(isPreview),
     onConversationEnds: () -> Unit = {},
     onVoiceDetected: () -> Unit = {},
     onConversationResponded: (String) -> Unit = {},
     onInterruptions: () -> Unit = {},
     onCommand: (String) -> Boolean = { false },
     onError: (Throwable) -> Unit = { e -> Log.e(TAG, "Error in ai.", e) }
-) = DoorBellAssistantTheme {
+) {
     val micPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
     val aiManager = rememberAiManager(
         onCommand = onCommand,

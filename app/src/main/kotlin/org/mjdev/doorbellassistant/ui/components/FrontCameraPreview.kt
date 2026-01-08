@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -19,17 +20,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import org.mjdev.doorbellassistant.extensions.ComposeExt.EmptyBitmap
-import org.mjdev.doorbellassistant.helpers.Previews
 import org.mjdev.doorbellassistant.ui.theme.Black
 import org.mjdev.doorbellassistant.ui.theme.DarkMD5
 import org.mjdev.doorbellassistant.ui.theme.DoorBellAssistantTheme
+import org.mjdev.phone.helpers.Previews
 
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Previews
@@ -41,10 +42,13 @@ fun FrontCameraPreview(
     portraitHeightRatio: Float = 0.3f,
     landscapeWidthRatio: Float = 0.3f,
     landscapeHeightRatio: Float = 1f,
-    onClick: () -> Unit = {}
-) = DoorBellAssistantTheme {
+    onClick: () -> Unit = {},
+    backgroundColor: Color = Color.Transparent,
+) {
     Box(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier
+            .background(backgroundColor)
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.BottomEnd
     ) {
         val config = LocalConfiguration.current

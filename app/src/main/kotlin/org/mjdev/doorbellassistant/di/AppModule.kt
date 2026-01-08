@@ -2,7 +2,6 @@ package org.mjdev.doorbellassistant.di
 
 import android.app.Application
 import android.app.KeyguardManager
-import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.CONNECTIVITY_SERVICE
 import android.net.ConnectivityManager
@@ -18,8 +17,8 @@ import org.kodein.di.bindProvider
 import org.kodein.di.bindSingleton
 import org.kodein.di.instance
 import org.mjdev.doorbellassistant.BuildConfig
-import org.mjdev.doorbellassistant.extensions.ComposeExt.isInPreviewMode
 import org.mjdev.doorbellassistant.manager.AppNotificationManager
+import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -64,7 +63,7 @@ val appModule = DI.Module("appModule") {
     }
     bindProvider<OkHttpClient> {
         val logging: HttpLoggingInterceptor = instance()
-        if (isInPreviewMode) {
+        if (isPreview) {
             OkHttpClient.Builder()
                 .followRedirects(true)
                 .addInterceptor(logging)

@@ -1,61 +1,60 @@
 package org.mjdev.doorbellassistant.service
 
 import android.content.Context
-import android.content.Intent
-import android.graphics.Bitmap
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantRunning
-import org.mjdev.doorbellassistant.activity.VideoCallActivity.Companion.startCall
-import org.mjdev.doorbellassistant.extensions.ComposeExt.launchOnLifecycle
 import org.mjdev.doorbellassistant.extensions.ComposeExt.rememberDeviceCapture
-import org.mjdev.doorbellassistant.nsd.device.NsdDevice
-import org.mjdev.doorbellassistant.nsd.device.NsdTypes
-import org.mjdev.doorbellassistant.nsd.device.NsdTypes.DOOR_BELL_ASSISTANT
-import org.mjdev.doorbellassistant.nsd.device.NsdTypes.DOOR_BELL_CLIENT
-import org.mjdev.doorbellassistant.nsd.rpc.INsdServerRPC
-import org.mjdev.doorbellassistant.nsd.service.NsdService
-import org.mjdev.doorbellassistant.rpc.DoorBellAction
-import org.mjdev.doorbellassistant.rpc.DoorBellAction.DoorBellActionCall
-import org.mjdev.doorbellassistant.rpc.DoorBellAction.DoorBellActionMotionUnDetected
-import org.mjdev.doorbellassistant.rpc.DoorBellAction.DoorBellActionMotionDetected
+import org.mjdev.doorbellassistant.rpc.DoorBellActions
 import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc
 import org.mjdev.doorbellassistant.ui.components.FrontCameraPreview
 import org.mjdev.doorbellassistant.ui.window.ComposeFloatingWindow
 import org.mjdev.doorbellassistant.ui.window.ComposeFloatingWindow.Companion.alertLayoutParams
+import org.mjdev.phone.activity.IntercomActivity
+import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
+import org.mjdev.phone.nsd.device.NsdDevice
+import org.mjdev.phone.nsd.device.NsdTypes
+import org.mjdev.phone.nsd.rpc.INsdServerRPC
+import org.mjdev.phone.rpc.NsdAction
+import org.mjdev.phone.service.CallNsdService
 
 // todo automatic user login with wifi access
-class DoorbellNsdService : NsdService() {
-    override val port: Int = 8888
-
+class DoorbellNsdService : CallNsdService() {
     override val serviceType: NsdTypes
-        get() = if (baseContext.isDoorBellAssistantRunning) DOOR_BELL_ASSISTANT else DOOR_BELL_CLIENT
+        get() = if (baseContext.isDoorBellAssistantRunning) NsdTypes.DOOR_BELL_ASSISTANT
+        else NsdTypes.DOOR_BELL_CLIENT
 
     override val rpcServer: INsdServerRPC by lazy {
         DoorBellAssistantServerRpc(
             context = baseContext,
-            port = port,
             onAction = ::onRpcAction
         )
     }
 
+    init {
+        IntercomActivity.registerService(this)
+    }
+
+    override fun onStarted(address: String, port: Int) {
+        super.onStarted(address, port)
+        nsdPort = port
+    }
+
     private fun showAlert(
-        device: NsdDevice,
+        device: NsdDevice?,
         context: Context = applicationContext,
-    ) = launchOnLifecycle {
+    ) = CoroutineScope(Dispatchers.Main).launch {
         ComposeFloatingWindow(
             context = context,
             windowParams = alertLayoutParams(context),
         ) {
             setContent {
-                val imageState: MutableState<Bitmap?> = rememberDeviceCapture(
-                    device,
-                    lifecycleScope
-                )
+                val imageState = rememberDeviceCapture(device, lifecycleScope)
                 FrontCameraPreview(
                     modifier = Modifier
                         .fillMaxSize()
@@ -64,14 +63,11 @@ class DoorbellNsdService : NsdService() {
                     onClick = { hide() }
                 )
             }
-            device.serviceName?.let { name ->
-                lastAlerts.filter { w ->
-                    w.key == name
-                }.map { d ->
-                    d.value
-                }.forEach { w ->
-                    w.hide()
-                }
+            device?.serviceName?.let { name ->
+                lastAlerts
+                    .filter { w -> w.key == name }
+                    .map { d -> d.value }
+                    .forEach { w -> w.hide() }
                 lastAlerts[name] = this
                 show()
             }
@@ -79,9 +75,9 @@ class DoorbellNsdService : NsdService() {
     }
 
     fun hideAlert(
-        device: NsdDevice
-    ) = launchOnLifecycle {
-        device.serviceName?.let { name ->
+        device: NsdDevice?
+    ) = CoroutineScope(Dispatchers.Main).launch {
+        device?.serviceName?.let { name ->
             lastAlerts.filter { w ->
                 w.key == name
             }.forEach { d ->
@@ -91,62 +87,28 @@ class DoorbellNsdService : NsdService() {
         }
     }
 
-    override fun onCreate() {
-        isRunning.value = true
-        super.onCreate()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        isRunning.value = false
-    }
-
-    fun onRpcAction(
-        action: DoorBellAction
+    override fun onRpcAction(
+        action: NsdAction
     ) {
+        super.onRpcAction(action)
         when (action) {
-            is DoorBellActionMotionDetected -> {
-                showAlert(action.device!!)
+            is DoorBellActions.DoorBellActionMotionDetected -> {
+                if (action.device?.address != currentWifiIP) {
+                    showAlert(action.device)
+                }
             }
 
-            is DoorBellActionMotionUnDetected -> {
-                hideAlert(action.device!!)
-            }
-
-            is DoorBellActionCall -> {
-                baseContext.startCall(null, caller = action.caller)
+            is DoorBellActions.DoorBellActionMotionUnDetected -> {
+                hideAlert(action.device)
             }
         }
     }
 
     companion object {
-        private val isRunning = mutableStateOf(false)
+        @Volatile
+        var nsdPort: Int = 8888
+            internal set
+
         private var lastAlerts = mutableMapOf<String, ComposeFloatingWindow>()
-
-        fun start(
-            context: Context
-        ) = runCatching {
-            if (isRunning.value.not()) Intent(
-                context,
-                DoorbellNsdService::class.java
-            ).also { intent ->
-                context.startForegroundService(intent)
-            }
-        }.onFailure { e ->
-            e.printStackTrace()
-        }
-
-        fun stop(
-            context: Context
-        ) = runCatching {
-            if (isRunning.value) Intent(
-                context,
-                DoorbellNsdService::class.java
-            ).also { intent ->
-                context.stopService(intent)
-            }
-        }.onFailure { e ->
-            e.printStackTrace()
-        }
     }
 }

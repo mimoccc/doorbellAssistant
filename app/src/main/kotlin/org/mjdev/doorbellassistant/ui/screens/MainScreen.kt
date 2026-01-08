@@ -5,17 +5,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import org.mjdev.doorbellassistant.extensions.ComposeExt.isDesignMode
 import org.mjdev.doorbellassistant.helpers.MotionDetector
-import org.mjdev.doorbellassistant.helpers.Previews
 import org.mjdev.doorbellassistant.ui.theme.DoorBellAssistantTheme
+import org.mjdev.phone.extensions.CustomExtensions.isPreview
+import org.mjdev.phone.helpers.Previews
 
 @Previews
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
-    motionState: MutableState<Boolean> = mutableStateOf(isDesignMode),
-    speechState: MutableState<Boolean> = mutableStateOf(isDesignMode),
+    motionState: MutableState<Boolean> = mutableStateOf(isPreview),
+    speechState: MutableState<Boolean> = mutableStateOf(isPreview),
     onStartClick: () -> Unit = {},
     onDismiss: () -> Unit = {},
     onWelcomeVideoFinished: () -> Unit = {},

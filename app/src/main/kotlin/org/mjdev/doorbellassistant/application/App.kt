@@ -2,10 +2,14 @@ package org.mjdev.doorbellassistant.application
 
 import android.app.Application
 import android.util.Log
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.conscrypt.Conscrypt
 import org.kodein.di.DIAware
 import org.kodein.di.LazyDI
 import org.mjdev.doorbellassistant.di.mainDI
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
+import org.mjdev.phone.service.CallNsdService.Companion.start
+import java.security.Security
 
 class App : Application(), DIAware {
     override val di: LazyDI by mainDI(this@App)
@@ -18,7 +22,9 @@ class App : Application(), DIAware {
     override fun onCreate() {
         super.onCreate()
         setupExceptionHandler()
-        DoorbellNsdService.start(this)
+        Security.insertProviderAt(Conscrypt.newProvider(), 1)
+        Security.addProvider(BouncyCastleProvider())
+        start<DoorbellNsdService>()
     }
 
     private fun setupExceptionHandler() {

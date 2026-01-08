@@ -1,7 +1,9 @@
 [versions]
 accompanistPermissions = "0.37.3"
-agp = "9.1.0-alpha02"
+agp = "9.1.0-alpha03"
+bcprovJdk18on = "1.83"
 cameraCamera2 = "1.5.2"
+conscryptAndroid = "2.5.3"
 coreKtx = "1.17.0"
 dnsjavaVersion = "3.6.3"
 firebaseBom = "34.7.0"
@@ -34,6 +36,8 @@ androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.r
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-service = { module = "androidx.lifecycle:lifecycle-service", version.ref = "lifecycleService" }
 androidx-ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
+bcprov-jdk18on = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bcprovJdk18on" }
+bctls-jdk18on = { module = "org.bouncycastle:bctls-jdk18on", version.ref = "bcprovJdk18on" }
 camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraCamera2" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
@@ -46,6 +50,7 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-material-icons-core = { module = "androidx.compose.material:material-icons-core", version.ref = "material3" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
+conscrypt-android = { module = "org.conscrypt:conscrypt-android", version.ref = "conscryptAndroid" }
 dnsjava-dnsjava = { module = "dnsjava:dnsjava", version.ref = "dnsjavaVersion" }
 firebase-ai = { module = "com.google.firebase:firebase-ai" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }

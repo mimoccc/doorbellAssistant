@@ -27,13 +27,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import org.mjdev.doorbellassistant.activity.base.UnlockedActivity
-import org.mjdev.doorbellassistant.helpers.Previews
 import org.mjdev.doorbellassistant.ui.components.VPNControls
 import org.mjdev.doorbellassistant.ui.theme.Controls
-import org.mjdev.doorbellassistant.ui.theme.DoorBellAssistantTheme
 import org.mjdev.doorbellassistant.vpn.AdVpnService
+import org.mjdev.phone.activity.base.UnlockedActivity
+import org.mjdev.phone.helpers.Previews
 
+@Suppress("unused")
 class VPNActivity : UnlockedActivity() {
     companion object {
         private val TAG = VPNActivity::class.simpleName

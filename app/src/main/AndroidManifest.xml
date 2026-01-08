@@ -75,7 +75,7 @@
             android:theme="@style/Theme.DoorBellAssistant">
 
         <activity
-                android:name=".activity.IntercomActivity"
+                android:name="org.mjdev.phone.activity.IntercomActivity"
                 android:configChanges="orientation|screenSize"
                 android:launchMode="singleInstance"
                 android:showWhenLocked="true"
@@ -131,7 +131,7 @@
 
         <activity
                 android:label="@string/app_name_call"
-                android:name=".activity.VideoCallActivity"
+                android:name="org.mjdev.phone.activity.VideoCallActivity"
                 android:launchMode="singleInstance"
                 android:configChanges="orientation|screenSize|keyboardHidden"
                 android:exported="true">

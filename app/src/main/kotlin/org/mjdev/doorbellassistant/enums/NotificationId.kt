@@ -4,5 +4,4 @@ enum class NotificationId(
     val id: Int
 ) {
     MOTION(1001),
-    NSD(1002)
 }

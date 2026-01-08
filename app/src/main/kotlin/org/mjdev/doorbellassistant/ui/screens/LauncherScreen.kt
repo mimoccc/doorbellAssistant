@@ -25,17 +25,17 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
-import org.mjdev.doorbellassistant.extensions.ComposeExt.isDesignMode
-import org.mjdev.doorbellassistant.helpers.Previews
-import org.mjdev.doorbellassistant.ui.components.BackgroundLayout
 import org.mjdev.doorbellassistant.ui.theme.DoorBellAssistantTheme
 import org.mjdev.doorbellassistant.ui.theme.White
+import org.mjdev.phone.extensions.CustomExtensions.isPreview
+import org.mjdev.phone.helpers.Previews
+import org.mjdev.phone.ui.components.BackgroundLayout
 
 @Previews
 @Composable
 fun LauncherScreen(
     modifier: Modifier = Modifier,
-    visibleState: MutableState<Boolean> = mutableStateOf(!isDesignMode),
+    visibleState: MutableState<Boolean> = mutableStateOf(!isPreview),
     onStartClicked: () -> Unit = {},
     onDismiss: () -> Unit = {},
 ) = DoorBellAssistantTheme {

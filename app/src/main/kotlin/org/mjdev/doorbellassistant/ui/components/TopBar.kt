@@ -20,26 +20,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.mjdev.doorbellassistant.extensions.ComposeExt.currentSystemUser
-import org.mjdev.doorbellassistant.extensions.ComposeExt.currentWifiIP
-import org.mjdev.doorbellassistant.extensions.ComposeExt.currentWifiSSID
-import org.mjdev.doorbellassistant.helpers.Previews
 import org.mjdev.doorbellassistant.ui.theme.Black
 import org.mjdev.doorbellassistant.ui.theme.Border
 import org.mjdev.doorbellassistant.ui.theme.White
+import org.mjdev.phone.extensions.CustomExtensions.currentSystemUser
+import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
+import org.mjdev.phone.extensions.CustomExtensions.currentWifiSSID
+import org.mjdev.phone.helpers.Previews
 
 @Previews
 @Composable
 fun TopBar(
     modifier: Modifier = Modifier,
-    applicationContext: Context = LocalContext.current.applicationContext,
     onClick: () -> Unit = {},
     onClickSettings: () -> Unit = {},
 ) {
+    val applicationContext: Context = LocalContext.current.applicationContext
     val userName: String = applicationContext.currentSystemUser
     val currentWifiSsid = LocalContext.current.currentWifiSSID
     val currentWifiIp = LocalContext.current.currentWifiIP

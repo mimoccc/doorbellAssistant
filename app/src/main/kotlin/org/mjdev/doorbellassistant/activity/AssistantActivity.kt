@@ -11,34 +11,29 @@ import androidx.compose.ui.Modifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.mjdev.doorbellassistant.activity.base.FullScreenActivity
-import org.mjdev.doorbellassistant.extensions.ComposeExt.ANDROID_ID
 import org.mjdev.doorbellassistant.extensions.ComposeExt.acquireWakeLock
-import org.mjdev.doorbellassistant.extensions.ComposeExt.bringToFront
-import org.mjdev.doorbellassistant.extensions.ComposeExt.currentWifiIP
-import org.mjdev.doorbellassistant.extensions.ComposeExt.dismissKeyguard
 import org.mjdev.doorbellassistant.extensions.ComposeExt.dismissWakeLock
-import org.mjdev.doorbellassistant.extensions.ComposeExt.turnDisplayOff
-import org.mjdev.doorbellassistant.extensions.ComposeExt.turnDisplayOn
 import org.mjdev.doorbellassistant.helpers.DelayHandler
-import org.mjdev.doorbellassistant.nsd.device.NsdDevice
-import org.mjdev.doorbellassistant.nsd.device.NsdTypes.DOOR_BELL_ASSISTANT
 import org.mjdev.doorbellassistant.receiver.MotionBroadcastReceiver.Companion.rememberMotionDetector
-import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc.Companion.sendMotionDetected
-import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc.Companion.sendMotionUnDetected
+import org.mjdev.doorbellassistant.rpc.CaptureRoute.sendMotionDetected
+import org.mjdev.doorbellassistant.rpc.CaptureRoute.sendMotionUnDetected
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
 import org.mjdev.doorbellassistant.ui.screens.MainScreen
+import org.mjdev.phone.activity.base.FullScreenActivity
+import org.mjdev.phone.extensions.CustomExtensions.ANDROID_ID
+import org.mjdev.phone.extensions.CustomExtensions.bringToFront
+import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
+import org.mjdev.phone.extensions.CustomExtensions.dismissKeyguard
+import org.mjdev.phone.extensions.CustomExtensions.isRunning
+import org.mjdev.phone.extensions.CustomExtensions.startOrResume
+import org.mjdev.phone.extensions.CustomExtensions.turnDisplayOff
+import org.mjdev.phone.extensions.CustomExtensions.turnDisplayOn
+import org.mjdev.phone.nsd.device.NsdDevice
+import org.mjdev.phone.nsd.device.NsdTypes
+import org.mjdev.phone.service.CallNsdService.Companion.nsdDevice
+import org.mjdev.phone.service.CallNsdService.Companion.start
 
 class AssistantActivity : FullScreenActivity() {
-    companion object {
-        val isMotionDetected: MutableState<Boolean> = mutableStateOf(false)
-
-        val Context.isDoorBellAssistantRunning
-            get() = runCatching {
-                isRunning<AssistantActivity>()
-            }.getOrElse { false }
-    }
-
     val delayHandler by lazy {
         DelayHandler(60000L) {
             handleMotionLost()
@@ -47,7 +42,7 @@ class AssistantActivity : FullScreenActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent @androidx.annotation.RequiresPermission(android.Manifest.permission.RECORD_AUDIO) {
+        setContent {
             rememberMotionDetector(
                 onNoMotionDetected = {
                     handleMotionLost()
@@ -78,7 +73,7 @@ class AssistantActivity : FullScreenActivity() {
 
     override fun onResume() {
         super.onResume()
-        DoorbellNsdService.start(this)
+        start<DoorbellNsdService>()
     }
 
     private fun handleMotionDetected() {
@@ -92,13 +87,9 @@ class AssistantActivity : FullScreenActivity() {
         turnDisplayOn()
         dismissKeyguard()
         acquireWakeLock()
-        CoroutineScope(Dispatchers.IO).launch {
-            NsdDevice.fromData(
-                address = currentWifiIP,
-                serviceType = DOOR_BELL_ASSISTANT,
-                serviceName = ANDROID_ID
-            ).also { d ->
-                sendMotionDetected(d)
+        nsdDevice<DoorbellNsdService> { device ->
+            CoroutineScope(Dispatchers.IO).launch {
+                sendMotionDetected(device)
             }
         }
     }
@@ -122,11 +113,21 @@ class AssistantActivity : FullScreenActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             NsdDevice.fromData(
                 address = currentWifiIP,
-                serviceType = DOOR_BELL_ASSISTANT,
-                serviceName = ANDROID_ID
+                serviceType = NsdTypes.DOOR_BELL_ASSISTANT,
+                serviceName = ANDROID_ID,
+                port = DoorbellNsdService.nsdPort
             ).also { d ->
                 sendMotionUnDetected(d)
             }
         }
+    }
+
+    companion object {
+        val isMotionDetected: MutableState<Boolean> = mutableStateOf(false)
+
+        val Context.isDoorBellAssistantRunning
+            get() = runCatching {
+                isRunning<AssistantActivity>()
+            }.getOrElse { false }
     }
 }

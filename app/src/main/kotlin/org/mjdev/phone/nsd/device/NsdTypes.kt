@@ -1,0 +1,54 @@
+package org.mjdev.phone.nsd.device
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraRear
+import androidx.compose.material.icons.filled.ConnectedTv
+import androidx.compose.material.icons.filled.DeviceUnknown
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.text.toLowerCase
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+
+@Serializable
+enum class NsdTypes(
+    @Transient
+    val imageVector: ImageVector = Icons.Filled.DeviceUnknown,
+    val uid: String,
+    val label : String
+) {
+    UNSPECIFIED(
+        imageVector = Icons.Filled.DeviceUnknown,
+        uid = "unspecified",
+        label = "Unknown device"
+    ),
+    DOOR_BELL_ASSISTANT(
+        imageVector = Icons.Filled.CameraRear,
+        uid = "db-assistant",
+        label = "Doorbell Assistant"
+    ),
+    DOOR_BELL_CLIENT(
+        imageVector = Icons.Filled.ConnectedTv,
+        uid = "db-client",
+        label = "Doorbell Assistant Client"
+    ),
+    SAFEDIALER(
+        imageVector = Icons.Filled.PhoneAndroid,
+        uid = "phone",
+        label = "Phone"
+    );
+
+    companion object {
+        val NsdTypes.serviceName
+            get() = "_${uid}._tcp"
+
+        operator fun invoke(
+            uid: String?
+        ) = entries.firstOrNull { entry ->
+            uid?.toLowerCase(Locale.current)
+                ?.contains(entry.serviceName.toLowerCase(Locale.current))
+                ?: false
+        } ?: UNSPECIFIED
+    }
+}

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import org.mjdev.doorbellassistant.vpn.AdVpnService
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
+import org.mjdev.phone.service.CallNsdService.Companion.start
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(
@@ -12,8 +13,10 @@ class BootReceiver : BroadcastReceiver() {
         intent: Intent
     ) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            DoorbellNsdService.start(context)
+            context.start<DoorbellNsdService>()
+            context.start<DoorbellNsdService>()
             AdVpnService.checkStartVpnOnBoot(context)
+
 //            if (context.isAssistantEnabled) {
 //            MotionDetectionService.start(context)
 //            AssistantActivity.startOrResume(context)
