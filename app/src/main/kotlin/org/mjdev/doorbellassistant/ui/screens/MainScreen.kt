@@ -6,9 +6,9 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import org.mjdev.doorbellassistant.helpers.MotionDetector
-import org.mjdev.doorbellassistant.ui.theme.DoorBellAssistantTheme
 import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import org.mjdev.phone.helpers.Previews
+import org.mjdev.phone.ui.theme.base.PhoneTheme
 
 @Previews
 @Composable
@@ -20,7 +20,7 @@ fun MainScreen(
     onDismiss: () -> Unit = {},
     onWelcomeVideoFinished: () -> Unit = {},
     onConversationContinued: () -> Unit = {},
-) = DoorBellAssistantTheme {
+) = PhoneTheme {
     Box {
         LauncherScreen(
             modifier = modifier,

@@ -9,29 +9,12 @@ import android.net.VpnService
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.displayCutoutPadding
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import org.mjdev.doorbellassistant.ui.components.VPNControls
-import org.mjdev.doorbellassistant.ui.theme.Controls
+import org.mjdev.doorbellassistant.ui.screens.VPNScreen
 import org.mjdev.doorbellassistant.vpn.AdVpnService
 import org.mjdev.phone.activity.base.UnlockedActivity
-import org.mjdev.phone.helpers.Previews
 
 @Suppress("unused")
 class VPNActivity : UnlockedActivity() {
@@ -64,7 +47,11 @@ class VPNActivity : UnlockedActivity() {
         vpnState.value = getSharedPreferences("state", MODE_PRIVATE)
             .getBoolean("isActive", false)
         setContent {
-            MainScreen(vpnState = vpnState)
+            VPNScreen(
+                vpnState = vpnState,
+                checkAndStartVpn = { checkAndStartVpn() },
+                stopVpnService = { stopVpnService() },
+            )
         }
     }
 
@@ -104,35 +91,4 @@ class VPNActivity : UnlockedActivity() {
             putExtra("COMMAND", 2)
         }
     )
-
-    @Previews
-    @Composable
-    fun MainScreen(
-        vpnState: MutableState<Boolean> = mutableStateOf(true)
-    ) {
-        val controlsBackgroundColor: Color = Controls
-        val controlsShape: Shape = CircleShape
-        Box(
-            modifier = Modifier
-                .navigationBarsPadding()
-                .displayCutoutPadding()
-                .fillMaxSize()
-        ) {
-            VPNControls(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .clip(controlsShape)
-                    .background(controlsBackgroundColor, controlsShape),
-                state = vpnState,
-                onStart = {
-                    checkAndStartVpn()
-                },
-                onStop = {
-                    stopVpnService()
-                }
-            )
-        }
-    }
 }

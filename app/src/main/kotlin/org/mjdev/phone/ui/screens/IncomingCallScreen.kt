@@ -1,4 +1,4 @@
-package org.mjdev.phone.ui
+package org.mjdev.phone.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Blue
 import androidx.compose.ui.graphics.Color.Companion.Green
 import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.graphics.Color.Companion.White
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.ui.components.BackgroundLayout
+import org.mjdev.phone.ui.theme.base.PhoneTheme
 
 // todo caller no calle details
 @Previews
@@ -50,7 +52,7 @@ fun IncomingCallScreen(
     backgroundColor: Color = MaterialTheme.colorScheme.background,
     onAccept: () -> Unit = {},
     onDeny: () -> Unit = {}
-) {
+) = PhoneTheme {
     Box(
         modifier.background(backgroundColor)
     ) {

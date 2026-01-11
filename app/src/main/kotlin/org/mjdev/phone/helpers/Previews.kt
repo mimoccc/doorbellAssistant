@@ -2,45 +2,69 @@
 
 package org.mjdev.phone.helpers
 
+import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_TYPE_TELEVISION
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.Wallpapers.GREEN_DOMINATED_EXAMPLE
 
 @Preview(
     uiMode = UI_MODE_TYPE_TELEVISION,
-    showBackground = true,
-    device = Devices.TV_720p,
+    showBackground = false,
     showSystemUi = false,
-    backgroundColor = 0xFF444444,
-    wallpaper = GREEN_DOMINATED_EXAMPLE,
+    device = Devices.TV_720p,
 )
 annotation class TvPreview
 
 @Preview(
-    name = "Portrait",
+    name = "Portrait Light",
     group = "device",
-    showBackground = true,
+    showBackground = false,
+    showSystemUi = false,
     device = Devices.AUTOMOTIVE_1024p,
-    backgroundColor = 0xFF444444,
     widthDp = 480,
     heightDp = 800,
-    wallpaper = GREEN_DOMINATED_EXAMPLE,
+    uiMode = Configuration.UI_MODE_TYPE_NORMAL,
 )
-annotation class PreviewPortrait
+annotation class PreviewPortraitLight
 
 @Preview(
-    name = "Landscape",
+    name = "Portrait Dark",
+    group = "device",
+    showBackground = false,
+    showSystemUi = false,
+    device = Devices.AUTOMOTIVE_1024p,
+    widthDp = 480,
+    heightDp = 800,
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL,
+)
+annotation class PreviewPortraitDark
+
+@Preview(
+    name = "Landscape Light",
     group = "device",
     device = Devices.AUTOMOTIVE_1024p,
-    showBackground = true,
-    backgroundColor = 0xFF444444,
+    showBackground = false,
+    showSystemUi = false,
     widthDp = 800,
     heightDp = 480,
-    wallpaper = GREEN_DOMINATED_EXAMPLE,
+    uiMode = Configuration.UI_MODE_TYPE_NORMAL,
 )
-annotation class PreviewLandscape
+annotation class PreviewLandscapeLight
 
-@PreviewPortrait
-@PreviewLandscape
+@Preview(
+    name = "Landscape Dark",
+    group = "device",
+    device = Devices.AUTOMOTIVE_1024p,
+    showBackground = false,
+    showSystemUi = false,
+    widthDp = 800,
+    heightDp = 480,
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL,
+)
+annotation class PreviewLandscapeDark
+
+@PreviewPortraitLight
+@PreviewPortraitDark
+@PreviewLandscapeLight
+@PreviewLandscapeDark
 annotation class Previews

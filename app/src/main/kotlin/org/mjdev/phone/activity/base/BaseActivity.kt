@@ -5,10 +5,14 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent as overrideSetContent
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionContext
 import androidx.compose.ui.graphics.Color
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import org.mjdev.phone.extensions.CustomExtensions.enableEdgeToEdge
+import org.mjdev.phone.ui.theme.base.PhoneTheme
 
 open class BaseActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,6 +23,9 @@ open class BaseActivity : ComponentActivity() {
         )
         super.onCreate(savedInstanceState)
         checkAndRequestPermissions()
+        setContent {
+
+        }
     }
 
     private fun checkAndRequestPermissions() {
@@ -40,4 +47,13 @@ open class BaseActivity : ComponentActivity() {
             ActivityCompat.requestPermissions(this, missingPermissions.toTypedArray(), 100)
         }
     }
+
+    fun setContent(
+        parent: CompositionContext? = null,
+        content: @Composable () -> Unit,
+    ) = overrideSetContent(parent, {
+        PhoneTheme {
+            content()
+        }
+    })
 }

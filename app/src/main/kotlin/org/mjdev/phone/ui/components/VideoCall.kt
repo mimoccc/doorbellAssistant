@@ -1,32 +1,33 @@
-package org.mjdev.phone.ui
+package org.mjdev.phone.ui.components
 
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
+import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
 import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.stream.CallEndReason
 import org.mjdev.phone.stream.CallManager
+import org.mjdev.phone.ui.screens.IncomingCallScreen
+import org.mjdev.phone.ui.theme.base.PhoneTheme
+import org.mjdev.phone.ui.theme.base.phoneAlignments
+import org.mjdev.phone.ui.theme.base.phoneColors
+import org.mjdev.phone.ui.theme.base.phonePaddings
+import org.mjdev.phone.ui.theme.base.phoneShapes
 import org.webrtc.SessionDescription
 import org.webrtc.VideoTrack
 
@@ -40,31 +41,17 @@ fun VideoCall(
     callerVisible: Boolean = true,
     callControlsVisible: Boolean = true,
     autoAnswerCall: Boolean = false,
-    callerAlignment: Alignment = Alignment.Center,
-    calleeAlignment: Alignment = Alignment.BottomEnd,
-    controlsAlignment: Alignment = Alignment.BottomCenter,
     callerAspectRatio: Float = 0.4f,
     calleeAspectRatio: Float = 0.98f,
-    callerPadding: PaddingValues = PaddingValues(0.dp),
-    calleePadding: PaddingValues = PaddingValues(
-        end = 16.dp,
-        bottom = 16.dp
-    ),
-    controlsPadding: PaddingValues = PaddingValues(16.dp),
-    callerBackgroundColor: Color = Color.White.copy(0.3f), // todo
-    calleeBackgroundColor: Color = Color.White.copy(0.3f), // todo
-    controlsBackgroundColor: Color = Color.White.copy(0.3f), // todo
-    callerShape: Shape = RoundedCornerShape(16.dp),
-    calleeShape: Shape = RoundedCornerShape(16.dp),
-    controlsShape: Shape = CircleShape,
     onStartCall: (SessionDescription) -> Unit = {},
     onEndCall: (CallEndReason) -> Unit = {},
-) {
+) = PhoneTheme {
+    val context = LocalContext.current
     var localVideoTrack by remember { mutableStateOf<VideoTrack?>(null) }
     var remoteVideoTrack by remember { mutableStateOf<VideoTrack?>(null) }
     var isAccepted by remember { mutableStateOf(autoAnswerCall) }
     val rtcManager = rememberRtcManager(
-        callerIp = callerDevice?.address,
+        calleeIp = calleeDevice?.address,
         onLocalTrackReady = { track ->
             localVideoTrack = track
         },
@@ -87,49 +74,47 @@ fun VideoCall(
         if (callerVisible) {
             Box(
                 modifier = Modifier
-                    .padding(callerPadding)
+                    .padding(phonePaddings.callerPadding)
                     .fillMaxSize(calleeAspectRatio)
-                    .clip(callerShape)
-                    .background(callerBackgroundColor, callerShape)
-                    .align(callerAlignment)
+                    .clip(phoneShapes.callerShape)
+                    .background(phoneColors.callerBackgroundColor, phoneShapes.callerShape)
+                    .align(phoneAlignments.callerAlignment)
             ) {
                 VideoRenderer(
                     modifier = Modifier.fillMaxSize(),
                     videoTrack = remoteVideoTrack,
                     eglBaseContext = rtcManager?.eglBaseContext,
-                    shape = calleeShape
                 )
             }
         }
         if (calleeVisible) {
             Box(
                 modifier = Modifier
-                    .padding(calleePadding)
+                    .padding(phonePaddings.calleePadding)
                     .fillMaxSize(callerAspectRatio)
-                    .clip(calleeShape)
-                    .background(calleeBackgroundColor, calleeShape)
-                    .align(calleeAlignment)
+                    .clip(phoneShapes.calleeShape)
+                    .background(phoneColors.calleeBackgroundColor, phoneShapes.calleeShape)
+                    .align(phoneAlignments.calleeAlignment)
             ) {
                 VideoRenderer(
                     modifier = Modifier.fillMaxSize(),
                     videoTrack = localVideoTrack,
                     eglBaseContext = rtcManager?.eglBaseContext,
-                    shape = calleeShape
                 )
             }
         }
         if (callControlsVisible) {
             VideoCallControls(
                 modifier = Modifier
-                    .padding(controlsPadding)
+                    .padding(phonePaddings.controlsPadding)
                     .wrapContentSize()
-                    .clip(controlsShape)
-                    .background(controlsBackgroundColor, controlsShape)
-                    .align(controlsAlignment),
+                    .clip(phoneShapes.controlsShape)
+                    .background(phoneColors.videoControlsBackground, phoneShapes.controlsShape)
+                    .align(phoneAlignments.controlsAlignment),
                 webRtcManager = rtcManager,
             )
         }
-        if ((callerDevice != null || calleeDevice != null) && !isAccepted) {
+        if (!isAccepted) {
             if (autoAnswerCall.not()) {
                 IncomingCallScreen(
                     modifier = Modifier.fillMaxSize(),
@@ -141,6 +126,8 @@ fun VideoCall(
                         rtcManager?.unmute()
                     },
                     onDeny = {
+                        isAccepted = false
+                        rtcManager?.unmute()
                         rtcManager?.dismissCall(true)
                     }
                 )
@@ -149,8 +136,8 @@ fun VideoCall(
     }
     DisposableEffect(rtcManager) {
         rtcManager?.apply {
-            initialize()
             mute()
+            initialize()
         }
         onDispose {
             rtcManager?.release(CallEndReason.LOCAL_END)
@@ -160,7 +147,7 @@ fun VideoCall(
 
 @Composable
 fun rememberRtcManager(
-    callerIp: String?,
+    calleeIp: String?,
     context: Context = LocalContext.current,
     isDesign: Boolean = isPreview,
     onLocalTrackReady: CallManager.(VideoTrack) -> Unit = {},
@@ -168,14 +155,14 @@ fun rememberRtcManager(
     onAcceptCall: CallManager.() -> Unit = {},
     onCallEnded: CallManager.(CallEndReason) -> Unit = {},
     onCallStarted: CallManager.(SessionDescription) -> Unit = {}
-) = remember(callerIp) {
+) = remember(calleeIp) {
     runCatching {
         if (isDesign) null
         else {
             CallManager(
                 context = context,
-                remoteIp = callerIp ?: "",
-                isCaller = callerIp.isNullOrEmpty().not(),
+                remoteIp = calleeIp ?: "",
+                isCaller = calleeIp.isNullOrEmpty().not(),
                 onLocalTrackReady = onLocalTrackReady,
                 onRemoteTrackReady = onRemoteTrackReady,
                 onAcceptCall = onAcceptCall,

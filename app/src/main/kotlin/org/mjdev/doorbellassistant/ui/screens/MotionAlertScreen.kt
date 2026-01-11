@@ -14,14 +14,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import org.mjdev.doorbellassistant.enums.VideoSources
@@ -29,10 +30,12 @@ import org.mjdev.doorbellassistant.manager.AIManager.Companion.TAG
 import org.mjdev.doorbellassistant.ui.components.AISpeechRecognizer
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayer
 import org.mjdev.doorbellassistant.ui.components.FrontCameraPreview
-import org.mjdev.doorbellassistant.ui.theme.DoorBellAssistantTheme
+import org.mjdev.phone.extensions.CustomExtensions.isLandscape
 import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import org.mjdev.phone.helpers.Previews
-import org.mjdev.phone.ui.BrushedBox
+import org.mjdev.phone.ui.components.BrushedBox
+import org.mjdev.phone.ui.theme.base.PhoneTheme
+import org.mjdev.phone.ui.theme.base.phoneColors
 
 @OptIn(UnstableApi::class)
 @Previews
@@ -45,7 +48,7 @@ fun MotionAlertScreen(
     onConversationContinued: () -> Unit = {},
     onDismiss: () -> Unit = {},
     onCommand: (String) -> Boolean = { false },
-) = DoorBellAssistantTheme {
+) = PhoneTheme {
     val videoState: MutableState<VideoSources?> = remember(visibleState.value) {
         mutableStateOf(VideoSources.Welcome)
     }
@@ -57,7 +60,7 @@ fun MotionAlertScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(phoneColors.background)
                 .clickable {
                     videoState.value = VideoSources.Warning
                 },
@@ -106,12 +109,18 @@ fun MotionAlertScreen(
             }
             BrushedBox(
                 modifier = Modifier.fillMaxSize(),
+                innerColor = Color.White.copy(alpha=0.01f),
+                outerColor = phoneColors.background,
+                paddingLeft = if (isLandscape) -200.dp else -100.dp,
+                paddingTop = if (isLandscape) -200.dp else 50.dp,
+                paddingRight = if (isLandscape) 440.dp else 0.dp,
+                paddingBottom = if (isLandscape) 50.dp else 130.dp,
             )
             AISpeechRecognizer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
-                    .navigationBarsPadding(),
+                    .systemBarsPadding(),
                 speechState = speechState,
                 onConversationResponded = {
                     onConversationContinued()
@@ -150,7 +159,11 @@ fun MotionAlertScreen(
                     .fillMaxSize()
                     .navigationBarsPadding(),
                 imageState = imageState,
+                onClick = {
+                    videoState.value = VideoSources.Warning
+                }
             )
+            // todo don't touch layout here, better then before
         }
     }
 }

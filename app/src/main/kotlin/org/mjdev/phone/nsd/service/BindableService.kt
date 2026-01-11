@@ -1,4 +1,4 @@
-package org.mjdev.phone.service
+package org.mjdev.phone.nsd.service
 
 import android.content.ComponentName
 import android.content.Context
@@ -28,20 +28,6 @@ open class BindableService : LifecycleService() {
         var service: BindableService = this@BindableService
     }
 
-    abstract class ServiceEvent
-
-    data class ServiceError(
-        val error: Throwable
-    ) : ServiceEvent()
-
-    object NotYetImplemented : ServiceEvent()
-
-    abstract class ServiceCommand
-
-    object GetState : ServiceCommand()
-
-    object ServiceDisconnected : ServiceEvent()
-
     fun sendEvent(event: ServiceEvent) {
         CoroutineScope(Dispatchers.Main).launch {
             _events.emit(event)
@@ -52,7 +38,7 @@ open class BindableService : LifecycleService() {
         command: ServiceCommand,
         handler: (ServiceEvent) -> Unit
     ) {
-        handler(NotYetImplemented)
+        handler(ServiceEvent.Companion.NotYetImplemented)
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -70,7 +56,7 @@ open class BindableService : LifecycleService() {
                 }
 
                 override fun onServiceDisconnected(name: ComponentName) {
-                    trySend(ServiceDisconnected)
+                    trySend(ServiceEvent.Companion.ServiceDisconnected)
                 }
 
                 override fun onBindingDied(name: ComponentName) {
@@ -90,7 +76,7 @@ open class BindableService : LifecycleService() {
         fun Context.serviceState(
             handler: (ServiceEvent) -> Unit
         ) {
-            val command: ServiceCommand = GetState
+            val command: ServiceCommand = ServiceCommand.Companion.GetState
             val connection = object : ServiceConnection {
                 override fun onServiceConnected(name: ComponentName, binder: IBinder) {
                     val service = (binder as LocalBinder).service

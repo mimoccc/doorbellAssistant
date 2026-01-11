@@ -4,9 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -24,11 +23,12 @@ import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.service.NsdService
 import org.mjdev.phone.service.CallNsdService.Companion.nsdDevice
 import org.mjdev.phone.stream.CallEndReason
-import org.mjdev.phone.ui.CallScreen
+import org.mjdev.phone.ui.components.VideoCall
+import org.mjdev.phone.ui.theme.base.PhoneTheme
 
 // todo speaker due type of device
 @Suppress("unused")
-class VideoCallActivity : UnlockedActivity() {
+open class VideoCallActivity : UnlockedActivity() {
     private val callee: MutableState<NsdDevice?> = mutableStateOf(null)
     private val caller: MutableState<NsdDevice?> = mutableStateOf(null)
 
@@ -64,17 +64,20 @@ class VideoCallActivity : UnlockedActivity() {
     @Composable
     fun MainScreen(
         onEndCall: (CallEndReason) -> Unit = {}
-    ) {
-        CallScreen(
-            modifier = Modifier
-                .navigationBarsPadding()
-                .displayCutoutPadding()
-                .fillMaxSize(),
-            callerDevice = callee.value,
-            calleeDevice = caller.value,
-            onEndCall = onEndCall
-        )
-    }
+    ) = PhoneTheme(
+        content = {
+            VideoCall(
+                modifier = Modifier
+                    .systemBarsPadding()
+                    .fillMaxSize(),
+                // call to
+                calleeDevice = callee.value,
+                // caller
+                callerDevice = caller.value,
+                onEndCall = onEndCall
+            )
+        },
+    )
 
     companion object {
         val packageName = VideoCallActivity::class.java.`package`?.name
@@ -88,18 +91,23 @@ class VideoCallActivity : UnlockedActivity() {
             callee: NsdDevice? = null,
             caller: NsdDevice? = null
         ) {
+            val isCaller = callee != null
             nsdDevice(
                 serviceClass = serviceClass
             ) { device ->
                 CoroutineScope(Dispatchers.Default).launch {
-                    if (callee != null) {
-                        makeCall(caller, callee)
-                    }
                     intent<VideoCallActivity> {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         putExtra(CALLEE, callee?.asJson())
-                        putExtra(CALLER, (caller ?: device)?.asJson())
+                        putExtra(
+                            CALLER,
+                            if (isCaller) device?.asJson()
+                            else caller?.asJson()
+                        )
                         startActivity(this@intent)
+                    }
+                    if (isCaller) {
+                        makeCall(caller, callee)
                     }
                 }
             }

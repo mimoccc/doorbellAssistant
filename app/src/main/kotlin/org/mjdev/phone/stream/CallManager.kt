@@ -3,6 +3,7 @@ package org.mjdev.phone.stream
 import android.content.Context
 import android.media.AudioManager
 import android.util.Log
+import org.mjdev.phone.exception.CallManagerException
 import org.webrtc.AudioSource
 import org.webrtc.AudioTrack
 import org.webrtc.Camera2Enumerator
@@ -28,13 +29,21 @@ import org.webrtc.VideoTrack
 @Suppress("DEPRECATION", "USELESS_CAST")
 class CallManager(
     private val context: Context,
+    private val signallingPort: Int = 8889,
+
     private val remoteIp: String,
+
     private val isCaller: Boolean = false,
+
     private val enableIntelVp8Encoder: Boolean = true,
     private val enableH264HighProfile: Boolean = true,
-    private val signallingPort: Int = 8889,
+
     private val onLocalTrackReady: CallManager.(VideoTrack) -> Unit = {},
     private val onRemoteTrackReady: CallManager.(VideoTrack) -> Unit = {},
+
+    private val onFailure: (Throwable) -> Unit = { e ->
+        Log.e(UdpSignalingServer.Companion.TAG, "Failed to start UDP signaling", e)
+    },
     private val onAcceptCall: CallManager.() -> Unit = {},
     private val onCallEnded: CallManager.(CallEndReason) -> Unit = {},
     private val onCallStarted: CallManager.(SessionDescription) -> Unit = {},
@@ -52,6 +61,9 @@ class CallManager(
     private var localVideoTrack: VideoTrack? = null
     private var remoteVideoTrack: VideoTrack? = null
     private var localAudioTrack: AudioTrack? = null
+
+    val eglBaseContext: EglBase.Context?
+        get() = eglBase.eglBaseContext
 
     private val audioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -87,75 +99,29 @@ class CallManager(
         UdpSignalingClient(
             remoteIp,
             signallingPort,
+            onFailure = onFailure,
+            onReady = {
+                onSignalingServerStarted()
+            },
             onOfferReceived = { sdp ->
-                if (!isCaller) {
-                    Log.d(TAG, "Callee: Offer received")
-                    peerConnection?.setRemoteDescription(
-                        object : SdpObserver {
-                            override fun onSetSuccess() {
-                                Log.d(TAG, "Callee: Remote offer set, creating answer")
-                                createAnswer()
-                            }
-
-                            override fun onCreateSuccess(p0: SessionDescription?) {
-                            }
-
-                            override fun onCreateFailure(p0: String?) {
-                                Log.e(TAG, "Callee: Failed to create answer: $p0")
-                            }
-
-                            override fun onSetFailure(p0: String?) {
-                                Log.e(TAG, "Callee: Failed to set remote offer: $p0")
-                            }
-                        },
-                        SessionDescription(SessionDescription.Type.OFFER, sdp)
-                    )
-                } else {
-                    Log.d(TAG, "Caller: Ignoring offer from peer")
-                }
+                handleOfferReceived(sdp)
             },
             onAnswerReceived = { sdp ->
-                if (isCaller) {
-                    Log.d(TAG, "Caller: Answer received")
-                    peerConnection?.setRemoteDescription(
-                        object : SdpObserver {
-                            override fun onSetSuccess() {
-                                Log.d(TAG, "Caller: Remote answer set successfully")
-                            }
-
-                            override fun onCreateSuccess(p0: SessionDescription?) {
-                            }
-
-                            override fun onCreateFailure(p0: String?) {
-                            }
-
-                            override fun onSetFailure(p0: String?) {
-                                Log.e(TAG, "Caller: Failed to set remote answer: $p0")
-                            }
-                        },
-                        SessionDescription(
-                            SessionDescription.Type.ANSWER,
-                            sdp
-                        )
-                    )
-                } else {
-                    Log.d(TAG, "Callee: Ignoring answer from peer")
-                }
+               handleAnswerReceived(sdp)
             },
             onIceCandidateReceived = { candidate ->
-                peerConnection?.addIceCandidate(candidate)
+               handleIceCandidate(candidate)
             },
             onDismissReceived = { reason ->
-                onCallEnded(reason)
+               handleDismissReceived(reason)
             },
             onAcceptReceived = {
-                onAcceptCall()
+               handleAcceptReceived()
             }
         )
     }
 
-    val eglBaseContext: EglBase.Context?
-        get() = eglBase.eglBaseContext
+
 
     override fun onIceCandidate(candidate: IceCandidate) {
         Log.d(TAG, "ICE candidate generated: ${candidate.sdp}")
@@ -226,6 +192,76 @@ class CallManager(
         startSignaling()
     }
 
+    private fun handleOfferReceived(sdp : String) {
+        if (!isCaller) {
+            Log.d(TAG, "Callee: Offer received")
+            peerConnection?.setRemoteDescription(
+                object : SdpObserver {
+                    override fun onSetSuccess() {
+                        Log.d(TAG, "Callee: Remote offer set, creating answer")
+                        // todo?
+                        createAnswer()
+                    }
+
+                    override fun onCreateSuccess(sdp: SessionDescription?) {
+                        Log.d(TAG, "Callee: Remote offer set, created answer ok.")
+                    }
+
+                    override fun onCreateFailure(sdp: String?) {
+                        onFailure(CallManagerException("Callee: Failed to set remote answer: $sdp"))
+                    }
+
+                    override fun onSetFailure(sdp: String?) {
+                        onFailure(CallManagerException("Callee: Failed to set remote answer: $sdp"))
+                    }
+                },
+                SessionDescription(SessionDescription.Type.OFFER, sdp)
+            )
+        } else {
+            Log.d(TAG, "Caller: Ignoring offer from peer")
+        }
+    }
+
+    private fun handleAnswerReceived(sdp : String) {
+        if (isCaller) {
+            Log.d(TAG, "Caller: Answer received")
+            peerConnection?.setRemoteDescription(
+                object : SdpObserver {
+                    override fun onSetSuccess() {
+                        Log.d(TAG, "Caller: Remote answer set successfully.")
+                    }
+
+                    override fun onCreateSuccess(sdp: SessionDescription?) {
+                        Log.d(TAG, "Create remote answer success, $sdp.")
+                    }
+
+                    override fun onCreateFailure(err: String?) {
+                        onFailure(CallManagerException("Caller: Failed to set remote answer: $err"))
+                    }
+
+                    override fun onSetFailure(err: String?) {
+                        onFailure(CallManagerException("Caller: Failed to set remote answer: $err"))
+                    }
+                },
+                SessionDescription(SessionDescription.Type.ANSWER,sdp)
+            )
+        } else {
+            Log.d(TAG, "Callee: Ignoring answer from peer")
+        }
+    }
+
+    private fun handleAcceptReceived() {
+        onAcceptCall()
+    }
+
+    private fun handleIceCandidate(candidate: IceCandidate) {
+        peerConnection?.addIceCandidate(candidate)
+    }
+
+    fun handleDismissReceived(reason: CallEndReason) {
+        onCallEnded(reason)
+    }
+
     private fun initializePeerConnectionFactory() {
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions
@@ -276,14 +312,7 @@ class CallManager(
     }
 
     private fun startSignaling() {
-        signalingClient.connect {
-            if (isCaller) {
-                Log.d(TAG, "Caller: UDP signaling ready, creating offer")
-                createOffer()
-            } else {
-                Log.d(TAG, "Callee: UDP signaling ready, waiting for offer")
-            }
-        }
+        signalingClient.start()
     }
 
     private fun createOffer() {
@@ -333,6 +362,15 @@ class CallManager(
             mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
             mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
         })
+    }
+
+    private fun onSignalingServerStarted() {
+        if (isCaller) {
+            Log.d(TAG, "Caller: UDP signaling ready, creating offer")
+            createOffer()
+        } else {
+            Log.d(TAG, "Callee: UDP signaling ready, waiting for offer")
+        }
     }
 
     fun sendCallAccepted() {
@@ -389,7 +427,7 @@ class CallManager(
         }
         videoSource?.dispose()
         audioSource?.dispose()
-        signalingClient.release()
+        signalingClient.stop()
         surfaceTextureHelper?.dispose()
         localVideoTrack?.dispose()
         localAudioTrack?.dispose()

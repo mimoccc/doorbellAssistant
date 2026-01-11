@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import org.mjdev.doorbellassistant.vpn.AdVpnService
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
-import org.mjdev.phone.service.CallNsdService.Companion.start
+import org.mjdev.phone.nsd.service.CallNsdService.Companion.start
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(

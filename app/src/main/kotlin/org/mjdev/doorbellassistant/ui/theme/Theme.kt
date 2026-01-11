@@ -4,6 +4,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import org.mjdev.phone.ui.theme.base.PhoneCustomizer
+import org.mjdev.phone.ui.theme.base.PhoneTheme
 
 private val AppColorScheme = lightColorScheme(
     primary = LightMD5,
@@ -22,10 +24,16 @@ private val AppColorScheme = lightColorScheme(
 @Composable
 fun DoorBellAssistantTheme(
     content: @Composable () -> Unit
-) {
-    MaterialTheme(
-        colorScheme = AppColorScheme,
-        typography = Typography,
-        content = content
-    )
-}
+) = MaterialTheme(
+    colorScheme = AppColorScheme,
+    typography = Typography,
+    content = {
+        PhoneTheme {
+            PhoneCustomizer {
+                colorsLight.background = DarkMD5
+                colorsDark.background = DarkMD5
+            }
+            content()
+        }
+    }
+)

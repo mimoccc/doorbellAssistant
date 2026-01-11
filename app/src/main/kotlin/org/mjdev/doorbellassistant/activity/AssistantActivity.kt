@@ -3,7 +3,6 @@ package org.mjdev.doorbellassistant.activity
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -30,8 +29,8 @@ import org.mjdev.phone.extensions.CustomExtensions.turnDisplayOff
 import org.mjdev.phone.extensions.CustomExtensions.turnDisplayOn
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdTypes
-import org.mjdev.phone.service.CallNsdService.Companion.nsdDevice
-import org.mjdev.phone.service.CallNsdService.Companion.start
+import org.mjdev.phone.nsd.service.CallNsdService.Companion.nsdDevice
+import org.mjdev.phone.nsd.service.CallNsdService.Companion.start
 
 class AssistantActivity : FullScreenActivity() {
     val delayHandler by lazy {

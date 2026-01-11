@@ -184,6 +184,7 @@ dependencies {
     implementation(libs.conscrypt.android)
     implementation(libs.bcprov.jdk18on)
     implementation(libs.bctls.jdk18on)
+    implementation(libs.androidx.palette.ktx)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

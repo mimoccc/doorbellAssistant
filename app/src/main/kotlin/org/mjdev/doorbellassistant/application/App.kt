@@ -8,7 +8,9 @@ import org.kodein.di.DIAware
 import org.kodein.di.LazyDI
 import org.mjdev.doorbellassistant.di.mainDI
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
-import org.mjdev.phone.service.CallNsdService.Companion.start
+import org.mjdev.doorbellassistant.ui.theme.DarkMD5
+import org.mjdev.phone.nsd.service.CallNsdService.Companion.start
+import org.mjdev.phone.ui.theme.base.phoneCustomizer
 import java.security.Security
 
 class App : Application(), DIAware {
@@ -24,6 +26,10 @@ class App : Application(), DIAware {
         setupExceptionHandler()
         Security.insertProviderAt(Conscrypt.newProvider(), 1)
         Security.addProvider(BouncyCastleProvider())
+        phoneCustomizer {
+            colorsLight.background = DarkMD5
+            colorsDark.background = DarkMD5
+        }
         start<DoorbellNsdService>()
     }
 

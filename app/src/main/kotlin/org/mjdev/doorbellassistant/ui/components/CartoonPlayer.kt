@@ -18,6 +18,7 @@ import org.mjdev.doorbellassistant.enums.VideoSources
 import org.mjdev.doorbellassistant.extensions.ComposeExt.rememberExoPlayer
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.components.BackgroundLayout
+import org.mjdev.phone.ui.theme.base.PhoneTheme
 
 @Suppress("unused")
 @Previews
@@ -34,7 +35,7 @@ fun CartoonPlayer(
     onPaused: () -> Boolean = { true },
     onResumed: () -> Boolean = { true },
     backgroundColor: Color = MaterialTheme.colorScheme.background,
-)  {
+) = PhoneTheme {
     val exoPlayer = rememberExoPlayer(
         videoUri = "asset:///${state.value?.path}".toUri(),
         startOnReady = true,
@@ -46,7 +47,6 @@ fun CartoonPlayer(
     ) {
         BackgroundLayout(
             assetImageFile = "avatar_transparent.png",
-            backgroundColor=backgroundColor,
         )
     }
     AnimatedVisibility(

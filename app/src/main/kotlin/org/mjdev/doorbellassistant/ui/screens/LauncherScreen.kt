@@ -10,26 +10,23 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BackHand
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
-import org.mjdev.doorbellassistant.ui.theme.DoorBellAssistantTheme
+import org.mjdev.phone.ui.components.GlowButton
 import org.mjdev.doorbellassistant.ui.theme.White
 import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.components.BackgroundLayout
+import org.mjdev.phone.ui.theme.base.PhoneTheme
+import org.mjdev.phone.ui.theme.base.phoneColors
 
 @Previews
 @Composable
@@ -38,7 +35,7 @@ fun LauncherScreen(
     visibleState: MutableState<Boolean> = mutableStateOf(!isPreview),
     onStartClicked: () -> Unit = {},
     onDismiss: () -> Unit = {},
-) = DoorBellAssistantTheme {
+) = PhoneTheme {
     AnimatedVisibility(
         modifier = modifier.clickable { onDismiss() },
         visible = visibleState.value.not(),
@@ -48,7 +45,7 @@ fun LauncherScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
+                .background(phoneColors.background),
             contentAlignment = Alignment.Center
         ) {
             BackgroundLayout(
@@ -56,17 +53,12 @@ fun LauncherScreen(
                     .fillMaxSize()
                     .alpha(0.5f)
             )
-            Button(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .shadow(8.dp),
-                onClick = onStartClicked
+            GlowButton(
+                modifier = Modifier.size(120.dp),
+                onClick = onStartClicked,
             ) {
                 Icon(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(end = 4.dp),
+                    modifier = Modifier.padding(15.dp).fillMaxSize(),
                     contentDescription = "",
                     tint = White,
                     imageVector = Icons.Filled.BackHand

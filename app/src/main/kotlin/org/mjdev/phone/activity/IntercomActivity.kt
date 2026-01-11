@@ -4,10 +4,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,10 +26,12 @@ import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdTypes
 import org.mjdev.phone.nsd.service.NsdService
 import org.mjdev.phone.ui.components.BackgroundLayout
-import org.mjdev.phone.ui.NsdList
+import org.mjdev.phone.ui.components.NsdList
+import org.mjdev.phone.ui.theme.base.PhoneTheme
+import org.mjdev.phone.ui.theme.base.phoneColors
 
-@Suppress("AssignedValueIsNeverRead", "UNCHECKED_CAST")
-class IntercomActivity : UnlockedActivity() {
+@Suppress("UNCHECKED_CAST")
+open class IntercomActivity : UnlockedActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -63,13 +68,14 @@ class IntercomActivity : UnlockedActivity() {
 
     @Previews
     @Composable
-    fun MainScreen() {
+    fun MainScreen() = PhoneTheme {
         var arePermissionsGranted by remember { mutableStateOf(false) }
         if (arePermissionsGranted) {
             Box(
                 modifier = Modifier
-                    .navigationBarsPadding()
+                    .systemBarsPadding()
                     .fillMaxSize()
+                    .background(phoneColors.background)
             ) {
                 NsdList(
                     modifier = Modifier.fillMaxSize(),

@@ -11,10 +11,10 @@ import java.util.UUID
 
 class UDPThread(
     val signalingPort: Int = 8889,
-    val socketTimeout: Int = 1000,
+    val socketTimeout: Int = 30000,
     val onFailure: (Throwable) -> Unit = {},
     val onReady: () -> Unit = {},
-    val onMessage: (address: InetAddress, message: String) -> Unit,
+    val onMessage: (address: InetAddress, port: Int?, message: String) -> Unit,
 ) : Thread(UUID.randomUUID().toString()), AutoCloseable {
     companion object {
         private val TAG = UDPThread::class.simpleName
@@ -46,7 +46,7 @@ class UDPThread(
                     socket?.receive(packet)
                     val message = String(packet.data, 0, packet.length)
                     Log.d(TAG, "Received: $message")
-                    onMessage(packet.address, message)
+                    onMessage(packet.address, socket?.port, message)
                 } catch (_: SocketTimeoutException) {
                     continue
                 } catch (e: SocketException) {

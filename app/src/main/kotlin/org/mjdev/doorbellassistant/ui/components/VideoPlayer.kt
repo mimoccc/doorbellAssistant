@@ -2,7 +2,6 @@ package org.mjdev.doorbellassistant.ui.components
 
 import android.graphics.Color
 import android.view.View
-import android.widget.ImageView
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.aspectRatio
@@ -32,6 +31,7 @@ import org.mjdev.phone.extensions.CustomExtensions.rememberAssetImagePainter
 import org.mjdev.phone.extensions.CustomExtensions.rememberLifeCycleOwnerState
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.helpers.views.CustomPlayerView
+import org.mjdev.phone.ui.theme.base.PhoneTheme
 
 @Suppress("unused")
 @Previews
@@ -47,7 +47,7 @@ fun VideoPlayer(
     onFirstFrameRendered: () -> Unit = {},
     onPaused: () -> Boolean = { true },
     onResumed: () -> Boolean = { true }
-) {
+) = PhoneTheme {
     val context = LocalContext.current
     val lifecycleOwner = rememberLifeCycleOwnerState()
     val videoSize = remember { mutableStateOf<VideoSize?>(null) }

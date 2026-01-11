@@ -258,10 +258,10 @@ object ComposeExt {
     @Composable
     fun rememberDeviceCapture(
         device: NsdDevice?,
-        lifecycleScope: LifecycleCoroutineScope
+        lifecycleScope: LifecycleCoroutineScope?
     ): MutableState<Bitmap?> = remember(device) {
         val image: MutableState<Bitmap?> = mutableStateOf(null)
-        lifecycleScope.launch {
+        lifecycleScope?.launch {
             withContext(Dispatchers.IO) {
                 while (true) {
                     image.value = device?.getFrame()

@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import org.mjdev.doorbellassistant.ui.theme.Red
 import org.mjdev.doorbellassistant.ui.theme.White
 import org.mjdev.phone.helpers.Previews
+import org.mjdev.phone.ui.theme.base.PhoneTheme
 
 @Previews
 @Composable
@@ -28,27 +29,29 @@ fun VPNControls(
     state: MutableState<Boolean> = mutableStateOf(false),
     onStart: () -> Unit = {},
     onStop: () -> Unit = {}
-) = Row(
-    modifier = modifier.padding(horizontal = 16.dp),
-    horizontalArrangement = Arrangement.Center
-) {
-    IconButton(
-        modifier = Modifier
-            .size(80.dp)
-            .clip(CircleShape),
-        onClick = {
-            if (state.value) onStop() else onStart()
-        }
+) = PhoneTheme {
+    Row(
+        modifier = modifier.padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.Center
     ) {
-        Icon(
+        IconButton(
             modifier = Modifier
-                .size(79.dp)
-                .clip(CircleShape)
-                .background(White, CircleShape),
-            imageVector = if (state.value) Icons.Default.StopCircle
-            else Icons.Default.PlayCircle,
-            contentDescription = if (state.value) "Stop" else "Start",
-            tint = Red
-        )
+                .size(80.dp)
+                .clip(CircleShape),
+            onClick = {
+                if (state.value) onStop() else onStart()
+            }
+        ) {
+            Icon(
+                modifier = Modifier
+                    .size(79.dp)
+                    .clip(CircleShape)
+                    .background(White, CircleShape),
+                imageVector = if (state.value) Icons.Default.StopCircle
+                else Icons.Default.PlayCircle,
+                contentDescription = if (state.value) "Stop" else "Start",
+                tint = Red
+            )
+        }
     }
 }

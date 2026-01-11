@@ -83,6 +83,7 @@
                 android:turnScreenOn="true"
                 android:exported="true"
                 android:banner="@mipmap/ic_launcher"
+                android:theme="@style/Theme.DoorBellAssistant"
                 tools:targetApi="27">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -134,12 +135,9 @@
                 android:label="@string/app_name_call"
                 android:name="org.mjdev.phone.activity.VideoCallActivity"
                 android:launchMode="singleInstance"
+                android:autoRemoveFromRecents="true"
                 android:configChanges="orientation|screenSize|keyboardHidden"
                 android:exported="true">
-            <!--            <intent-filter>-->
-            <!--                <action android:name="android.intent.action.MAIN" />-->
-            <!--                <category android:name="android.intent.category.LAUNCHER" />-->
-            <!--            </intent-filter>-->
         </activity>
 
         <service

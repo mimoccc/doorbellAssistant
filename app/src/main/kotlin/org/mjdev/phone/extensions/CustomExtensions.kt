@@ -7,6 +7,8 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.content.Context.ACTIVITY_SERVICE
 import android.content.Intent
+import android.content.res.Configuration.ORIENTATION_LANDSCAPE
+import android.content.res.Configuration.ORIENTATION_PORTRAIT
 import android.graphics.BitmapFactory
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -20,17 +22,30 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorLong
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.ContentDrawScope
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -38,17 +53,34 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.MediaItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.mjdev.phone.vector.ImageVectorProvider.createVectorPainter
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import kotlin.coroutines.CoroutineContext
 import kotlin.jvm.java
+import kotlin.reflect.KProperty
 
 @Suppress("DEPRECATION", "unused")
 object CustomExtensions {
+
+    val isLandscape : Boolean
+        @Composable
+        get() {
+            val config = LocalConfiguration.current
+            return config.orientation == ORIENTATION_LANDSCAPE
+        }
+
+    val isPortrait : Boolean
+        @Composable
+        get() {
+            val config = LocalConfiguration.current
+            return config.orientation == ORIENTATION_PORTRAIT
+        }
 
     @SuppressLint("NewApi")
     fun Activity.dismissKeyguard() {
@@ -386,6 +418,83 @@ object CustomExtensions {
     fun rememberLifeCycleOwnerState(): State<LifecycleOwner?> {
         val lifecycleOwner = if (isPreview) null else LocalLifecycleOwner.current
         return rememberUpdatedState(lifecycleOwner)
+    }
+
+    class ImageVectorDelegate(
+        private var vector: ImageVector
+    ) {
+        operator fun getValue(
+            thisRef: Any?,
+            property: KProperty<*>
+        ): Painter = createVectorPainter(vector)
+    }
+
+    class StringDelegate(
+        private val str: String
+    ) {
+        operator fun getValue(
+            thisRef: Any?,
+            property: KProperty<*>
+        ): String = str
+    }
+
+    operator fun ImageVector.provideDelegate(
+        thisRef: Any?,
+        property: KProperty<*>
+    ): ImageVectorDelegate = ImageVectorDelegate(this)
+
+    operator fun String.provideDelegate(
+        thisRef: Any?,
+        property: KProperty<*>
+    ) : StringDelegate = StringDelegate(this)
+
+    fun Modifier.neonStroke(
+        backgroundColor: Color = Color.Transparent,
+        glowColor: Color = Color.White,
+        glowRadius: Float = 8f,
+        shape: Shape = CircleShape,
+    ) = drawWithContent {
+        drawNeonStroke(
+            color = glowColor,
+            backgroundColor = backgroundColor,
+            radius = glowRadius.dp,
+            shape = shape
+        )
+        drawContent()
+    }
+
+    fun ContentDrawScope.drawNeonStroke(
+        color: Color = Color.White,
+        backgroundColor: Color = Color.Black,
+        radius: Dp = 4.dp,
+        glowAlpha: Float = 1f,
+        shape: Shape
+    ) {
+        val outline = shape.createOutline(size, layoutDirection, this)
+        drawIntoCanvas { canvas ->
+            val paint = Paint().apply {
+                style = PaintingStyle.Stroke
+                strokeWidth = 1.5f * radius.value
+            }
+            val frameworkPaint = paint.asFrameworkPaint()
+            frameworkPaint.color = color.copy(alpha = 0f).toArgb()
+            frameworkPaint.setShadowLayer(
+                radius.toPx(),
+                0f,
+                0f,
+                color.copy(alpha = glowAlpha).toArgb()
+            )
+            canvas.drawOutline(outline, paint)
+            drawIntoCanvas { canvas ->
+                canvas.drawOutline(
+                    outline = outline,
+                    paint = Paint().apply {
+                        this.color = backgroundColor
+                        style = PaintingStyle.Fill
+                    }
+                )
+            }
+        }
     }
 
 }
