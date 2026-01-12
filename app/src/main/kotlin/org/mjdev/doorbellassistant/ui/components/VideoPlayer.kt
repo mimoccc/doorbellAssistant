@@ -107,7 +107,10 @@ fun VideoPlayer(
             contentDescription = ""
         )
     }
-    DisposableEffect(exoPlayer) {
+    DisposableEffect(
+        exoPlayer,
+        lifecycleOwner.value
+    ) {
         val lifecycle = lifecycleOwner.value?.lifecycle
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
@@ -119,17 +122,18 @@ fun VideoPlayer(
 
                 Lifecycle.Event.ON_PAUSE -> {
                     if (onPaused()) {
-                        exoPlayer?.pause()
+                        exoPlayer?.stop()
                     }
                 }
 
-                Lifecycle.Event.ON_DESTROY -> exoPlayer?.release()
+                Lifecycle.Event.ON_DESTROY ->  {
+                    exoPlayer?.release()
+                }
                 else -> Unit
             }
         }
         lifecycle?.addObserver(observer)
         onDispose {
-            exoPlayer?.stop()
             lifecycle?.removeObserver(observer)
         }
     }

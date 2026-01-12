@@ -6,9 +6,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,13 +17,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
 import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
+import org.mjdev.phone.rpc.INsdServerRPC
+import org.mjdev.phone.nsd.service.CallNsdService.Companion.rememberCallNsdService
 import org.mjdev.phone.stream.CallEndReason
 import org.mjdev.phone.stream.CallManager
-import org.mjdev.phone.ui.screens.IncomingCallScreen
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneAlignments
 import org.mjdev.phone.ui.theme.base.phoneColors
@@ -31,138 +32,172 @@ import org.mjdev.phone.ui.theme.base.phoneShapes
 import org.webrtc.SessionDescription
 import org.webrtc.VideoTrack
 
+@Suppress("ParamsComparedByRef")
 @Previews
 @Composable
 fun VideoCall(
     modifier: Modifier = Modifier,
-    callerDevice: NsdDevice? = null, // NsdDevice.EMPTY,
-    calleeDevice: NsdDevice? = null, //NsdDevice.EMPTY,
+    caller: NsdDevice = NsdDevice.EMPTY,
+    callee: NsdDevice = NsdDevice.EMPTY,
+    isCaller: Boolean = false,
     calleeVisible: Boolean = true,
     callerVisible: Boolean = true,
     callControlsVisible: Boolean = true,
-    autoAnswerCall: Boolean = false,
     callerAspectRatio: Float = 0.4f,
     calleeAspectRatio: Float = 0.98f,
     onStartCall: (SessionDescription) -> Unit = {},
     onEndCall: (CallEndReason) -> Unit = {},
 ) = PhoneTheme {
-    val context = LocalContext.current
-    var localVideoTrack by remember { mutableStateOf<VideoTrack?>(null) }
-    var remoteVideoTrack by remember { mutableStateOf<VideoTrack?>(null) }
-    var isAccepted by remember { mutableStateOf(autoAnswerCall) }
-    val rtcManager = rememberRtcManager(
-        calleeIp = calleeDevice?.address,
-        onLocalTrackReady = { track ->
-            localVideoTrack = track
-        },
-        onRemoteTrackReady = { track ->
-            remoteVideoTrack = track
-        },
-        onAcceptCall = {
-            unmute()
-            isAccepted = true
-        },
-        onCallStarted = { sdp ->
-            onStartCall(sdp)
-        },
-        onCallEnded = { reason ->
-            remoteVideoTrack = null
-            onEndCall(reason)
+    val isAutoAnswerCall by remember(caller) {
+        derivedStateOf {
+            isPreview || (callee.isAutoAnswerCall && !isCaller)
         }
-    )
-    Box(modifier = modifier) {
-        if (callerVisible) {
-            Box(
-                modifier = Modifier
-                    .padding(phonePaddings.callerPadding)
-                    .fillMaxSize(calleeAspectRatio)
-                    .clip(phoneShapes.callerShape)
-                    .background(phoneColors.callerBackgroundColor, phoneShapes.callerShape)
-                    .align(phoneAlignments.callerAlignment)
-            ) {
-                VideoRenderer(
-                    modifier = Modifier.fillMaxSize(),
-                    videoTrack = remoteVideoTrack,
-                    eglBaseContext = rtcManager?.eglBaseContext,
-                )
+    }
+    Box(
+        modifier = modifier
+    ) {
+        val callService by rememberCallNsdService().collectAsState(null)
+        var localVideoTrack by remember { mutableStateOf<VideoTrack?>(null) }
+        var remoteVideoTrack by remember { mutableStateOf<VideoTrack?>(null) }
+        var isAccepted by remember(caller, callee) {
+            mutableStateOf(isAutoAnswerCall)
+        }
+        val callRpcServer by remember(callService) {
+            derivedStateOf {
+                callService?.rpcServer
             }
         }
-        if (calleeVisible) {
-            Box(
-                modifier = Modifier
-                    .padding(phonePaddings.calleePadding)
-                    .fillMaxSize(callerAspectRatio)
-                    .clip(phoneShapes.calleeShape)
-                    .background(phoneColors.calleeBackgroundColor, phoneShapes.calleeShape)
-                    .align(phoneAlignments.calleeAlignment)
-            ) {
-                VideoRenderer(
-                    modifier = Modifier.fillMaxSize(),
-                    videoTrack = localVideoTrack,
-                    eglBaseContext = rtcManager?.eglBaseContext,
-                )
-            }
-        }
-        if (callControlsVisible) {
-            VideoCallControls(
-                modifier = Modifier
-                    .padding(phonePaddings.controlsPadding)
-                    .wrapContentSize()
-                    .clip(phoneShapes.controlsShape)
-                    .background(phoneColors.videoControlsBackground, phoneShapes.controlsShape)
-                    .align(phoneAlignments.controlsAlignment),
-                webRtcManager = rtcManager,
+        // todo : better performance pls, remove!
+        if (callRpcServer != null) {
+            val callManager = rememberCallManager(
+                callee = callee,
+                caller = caller,
+                nsdRpcServer = callRpcServer,
+                isCaller = isCaller,
+                onLocalTrackReady = { track ->
+                    localVideoTrack = track
+                },
+                onRemoteTrackReady = { track ->
+                    remoteVideoTrack = track
+                },
+                onAcceptCall = {
+                    isAccepted = true
+                },
+                onCallStarted = { sdp ->
+                    onStartCall(sdp)
+                },
+                onCallEnded = { reason ->
+                    remoteVideoTrack = null
+                    onEndCall(reason)
+                },
             )
-        }
-        if (!isAccepted) {
-            if (autoAnswerCall.not()) {
-                IncomingCallScreen(
+            if (callerVisible) {
+                Box(
+                    modifier = Modifier
+                        .padding(phonePaddings.callerPadding)
+                        .fillMaxSize(calleeAspectRatio)
+                        .clip(phoneShapes.callerShape)
+                        .background(phoneColors.colorCallerBackground, phoneShapes.callerShape)
+                        .align(phoneAlignments.callerAlignment)
+                ) {
+                    VideoRenderer(
+                        modifier = Modifier.fillMaxSize(),
+                        videoTrack = remoteVideoTrack,
+                        eglBaseContext = callManager?.eglBaseContext,
+                    )
+                }
+            }
+            if (calleeVisible) {
+                Box(
+                    modifier = Modifier
+                        .padding(phonePaddings.calleePadding)
+                        .fillMaxSize(callerAspectRatio)
+                        .clip(phoneShapes.calleeShape)
+                        .background(phoneColors.colorCalleeBackground, phoneShapes.calleeShape)
+                        .align(phoneAlignments.calleeAlignment)
+                ) {
+                    VideoRenderer(
+                        modifier = Modifier.fillMaxSize(),
+                        videoTrack = localVideoTrack,
+                        eglBaseContext = callManager?.eglBaseContext,
+                    )
+                }
+            }
+            if (callControlsVisible) {
+                VideoCallControls(
+                    modifier = Modifier
+                        .padding(phonePaddings.controlsPadding)
+                        .wrapContentSize()
+                        .clip(phoneShapes.controlsShape)
+                        .background(
+                            phoneColors.colorVideoControlsBackground,
+                            phoneShapes.controlsShape
+                        )
+                        .align(phoneAlignments.controlsAlignment),
+                    webRtcManager = callManager,
+                )
+            }
+            if (!isAccepted) {
+                CallScreen(
                     modifier = Modifier.fillMaxSize(),
-                    caller = callerDevice,
-                    callee = calleeDevice,
+                    caller = caller,
+                    callee = callee,
                     onAccept = {
                         isAccepted = true
-                        rtcManager?.sendCallAccepted()
-                        rtcManager?.unmute()
+                        callManager?.unmute()
+                        callManager?.callAccept()
                     },
                     onDeny = {
                         isAccepted = false
-                        rtcManager?.unmute()
-                        rtcManager?.dismissCall(true)
+                        callManager?.unmute()
+                        callManager?.dismissCall(true)
                     }
                 )
+            } else {
+                callManager?.unmute()
+                callManager?.callAccept()
             }
-        }
-    }
-    DisposableEffect(rtcManager) {
-        rtcManager?.apply {
-            mute()
-            initialize()
-        }
-        onDispose {
-            rtcManager?.release(CallEndReason.LOCAL_END)
+            DisposableEffect(callManager) {
+                callManager?.apply {
+                    initialize()
+                    mute()
+                    if (isCaller) {
+                        callRpcServer?.sendCallStart(caller, callee)
+                    } else {
+                        callRpcServer?.sendCallStarted(caller, callee)
+                    }
+                }
+                onDispose {
+                    callManager?.release()
+                }
+            }
         }
     }
 }
 
+@Suppress("ParamsComparedByRef")
 @Composable
-fun rememberRtcManager(
-    calleeIp: String?,
+fun rememberCallManager(
+    caller: NsdDevice,
+    callee: NsdDevice,
+    nsdRpcServer: INsdServerRPC?,
     context: Context = LocalContext.current,
+    isCaller: Boolean = false,
     isDesign: Boolean = isPreview,
     onLocalTrackReady: CallManager.(VideoTrack) -> Unit = {},
     onRemoteTrackReady: CallManager.(VideoTrack) -> Unit = {},
-    onAcceptCall: CallManager.() -> Unit = {},
+    onAcceptCall: CallManager.(String) -> Unit = {},
     onCallEnded: CallManager.(CallEndReason) -> Unit = {},
     onCallStarted: CallManager.(SessionDescription) -> Unit = {}
-) = remember(calleeIp) {
+) = remember(callee, nsdRpcServer) {
     runCatching {
-        if (isDesign) null
-        else {
+        if (isDesign) null else {
             CallManager(
                 context = context,
-                remoteIp = calleeIp ?: "",
-                isCaller = calleeIp.isNullOrEmpty().not(),
+                caller = caller,
+                callee = callee,
+                nsdRpcServer = nsdRpcServer,
+                isCaller = isCaller,
                 onLocalTrackReady = onLocalTrackReady,
                 onRemoteTrackReady = onRemoteTrackReady,
                 onAcceptCall = onAcceptCall,

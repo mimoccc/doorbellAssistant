@@ -3,81 +3,63 @@ package org.mjdev.phone.activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.mjdev.phone.activity.base.UnlockedActivity
-import org.mjdev.phone.rpc.NsdServerRpc.Companion.makeCall
+import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
 import org.mjdev.phone.extensions.CustomExtensions.intent
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.helpers.ToolsJson.asJson
 import org.mjdev.phone.helpers.ToolsJson.fromJson
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.service.NsdService
-import org.mjdev.phone.service.CallNsdService.Companion.nsdDevice
 import org.mjdev.phone.stream.CallEndReason
 import org.mjdev.phone.ui.components.VideoCall
 import org.mjdev.phone.ui.theme.base.PhoneTheme
+import org.webrtc.SessionDescription
 
 // todo speaker due type of device
 @Suppress("unused")
 open class VideoCallActivity : UnlockedActivity() {
-    private val callee: MutableState<NsdDevice?> = mutableStateOf(null)
-    private val caller: MutableState<NsdDevice?> = mutableStateOf(null)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val callee: NsdDevice? = intent.getStringExtra(CALLEE)?.fromJson()
+        val caller: NsdDevice? = intent.getStringExtra(CALLER)?.fromJson()
         setContent {
             MainScreen(
+                caller = caller,
+                callee = callee,
                 onEndCall = { reason -> handleCallEnd(reason) }
             )
         }
-        onNewIntent(intent)
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        val calleeIn: NsdDevice? = intent.getStringExtra(CALLEE)?.fromJson()
-        val callerIn: NsdDevice? = intent.getStringExtra(CALLER)?.fromJson()
-        if (callee.value?.address != calleeIn?.address) {
-            callee.value = calleeIn
-        }
-        if (caller.value?.address != callerIn?.address) {
-            caller.value = callerIn
-        }
-    }
-
-    private fun handleCallEnd(
-        reason: CallEndReason
-    ) {
+    private fun handleCallEnd(reason: CallEndReason) {
         finish()
     }
 
+    @Suppress("ParamsComparedByRef")
     @Previews
     @Composable
     fun MainScreen(
-        onEndCall: (CallEndReason) -> Unit = {}
-    ) = PhoneTheme(
-        content = {
-            VideoCall(
-                modifier = Modifier
-                    .systemBarsPadding()
-                    .fillMaxSize(),
-                // call to
-                calleeDevice = callee.value,
-                // caller
-                callerDevice = caller.value,
-                onEndCall = onEndCall
-            )
-        },
-    )
+        onStartCall: (SessionDescription) -> Unit = {},
+        onEndCall: (CallEndReason) -> Unit = {},
+        caller: NsdDevice? = NsdDevice.EMPTY,
+        callee: NsdDevice? = NsdDevice.EMPTY,
+    ) = PhoneTheme {
+        VideoCall(
+            modifier = Modifier.fillMaxSize(),
+            callee = callee ?: NsdDevice.EMPTY,
+            caller = caller ?: NsdDevice.EMPTY,
+            isCaller = caller?.address == currentWifiIP,
+            onEndCall = onEndCall,
+            onStartCall = onStartCall
+        )
+    }
 
     companion object {
         val packageName = VideoCallActivity::class.java.`package`?.name
@@ -91,24 +73,18 @@ open class VideoCallActivity : UnlockedActivity() {
             callee: NsdDevice? = null,
             caller: NsdDevice? = null
         ) {
-            val isCaller = callee != null
-            nsdDevice(
-                serviceClass = serviceClass
-            ) { device ->
-                CoroutineScope(Dispatchers.Default).launch {
-                    intent<VideoCallActivity> {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        putExtra(CALLEE, callee?.asJson())
-                        putExtra(
-                            CALLER,
-                            if (isCaller) device?.asJson()
-                            else caller?.asJson()
-                        )
-                        startActivity(this@intent)
-                    }
-                    if (isCaller) {
-                        makeCall(caller, callee)
-                    }
+            CoroutineScope(Dispatchers.Default).launch {
+                intent<VideoCallActivity> {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    putExtra(
+                        CALLEE,
+                        callee?.asJson()
+                    )
+                    putExtra(
+                        CALLER,
+                        caller?.asJson()
+                    )
+                    startActivity(this@intent)
                 }
             }
         }

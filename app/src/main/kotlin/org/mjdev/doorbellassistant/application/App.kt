@@ -1,6 +1,5 @@
 package org.mjdev.doorbellassistant.application
 
-import android.app.Application
 import android.util.Log
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.conscrypt.Conscrypt
@@ -8,12 +7,19 @@ import org.kodein.di.DIAware
 import org.kodein.di.LazyDI
 import org.mjdev.doorbellassistant.di.mainDI
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
+import org.mjdev.doorbellassistant.ui.theme.Controls
 import org.mjdev.doorbellassistant.ui.theme.DarkMD5
+import org.mjdev.doorbellassistant.ui.theme.Item
+import org.mjdev.doorbellassistant.ui.theme.Label
+import org.mjdev.doorbellassistant.ui.theme.White
+import org.mjdev.phone.application.CallApplication
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.start
 import org.mjdev.phone.ui.theme.base.phoneCustomizer
 import java.security.Security
 
-class App : Application(), DIAware {
+class App : CallApplication<DoorbellNsdService>(), DIAware {
+    override var service = DoorbellNsdService::class.java
+
     override val di: LazyDI by mainDI(this@App)
 
     companion object {
@@ -27,8 +33,24 @@ class App : Application(), DIAware {
         Security.insertProviderAt(Conscrypt.newProvider(), 1)
         Security.addProvider(BouncyCastleProvider())
         phoneCustomizer {
-            colorsLight.background = DarkMD5
-            colorsDark.background = DarkMD5
+            colorsLight.colorBackground = DarkMD5
+            colorsDark.colorBackground = DarkMD5
+            colorsLight.colorLabelText = Controls
+            colorsDark.colorLabelText = Controls
+            colorsLight.colorIconTint = White
+            colorsDark.colorIconTint = White
+            colorsLight.colorVideoControlsBackground = Controls
+            colorsDark.colorVideoControlsBackground = Controls
+            colorsLight.colorIconsBackground = Controls
+            colorsDark.colorIconsBackground = Controls
+            colorsLight.colorGlow = White
+            colorsDark.colorGlow = White
+            colorsLight.colorLabelsBackground = Item
+            colorsDark.colorLabelsBackground = Item
+            colorsLight.colorCallerIconBorder = Item
+            colorsDark.colorCallerIconBorder = Item
+            colorsLight.colorLabelText = Label
+            colorsDark.colorLabelText = Label
         }
         start<DoorbellNsdService>()
     }

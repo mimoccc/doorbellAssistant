@@ -2,7 +2,6 @@ package org.mjdev.doorbellassistant.service
 
 import android.content.Context
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
@@ -15,29 +14,26 @@ import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc
 import org.mjdev.doorbellassistant.ui.components.FrontCameraPreview
 import org.mjdev.doorbellassistant.ui.window.ComposeFloatingWindow
 import org.mjdev.doorbellassistant.ui.window.ComposeFloatingWindow.Companion.alertLayoutParams
-import org.mjdev.phone.activity.IntercomActivity
 import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdTypes
-import org.mjdev.phone.nsd.rpc.INsdServerRPC
+import org.mjdev.phone.rpc.INsdServerRPC
 import org.mjdev.phone.rpc.NsdAction
-import org.mjdev.phone.service.CallNsdService
+import org.mjdev.phone.nsd.service.CallNsdService
 
 // todo automatic user login with wifi access
 class DoorbellNsdService : CallNsdService() {
     override val serviceType: NsdTypes
-        get() = if (baseContext.isDoorBellAssistantRunning) NsdTypes.DOOR_BELL_ASSISTANT
-        else NsdTypes.DOOR_BELL_CLIENT
+        get() = if (baseContext.isDoorBellAssistantRunning)
+            NsdTypes.DOOR_BELL_ASSISTANT
+        else
+            NsdTypes.DOOR_BELL_CLIENT
 
     override val rpcServer: INsdServerRPC by lazy {
         DoorBellAssistantServerRpc(
             context = baseContext,
             onAction = ::onRpcAction
         )
-    }
-
-    init {
-        IntercomActivity.registerService(this)
     }
 
     override fun onStarted(address: String, port: Int) {
@@ -56,9 +52,7 @@ class DoorbellNsdService : CallNsdService() {
             setContent {
                 val imageState = rememberDeviceCapture(device, lifecycleScope)
                 FrontCameraPreview(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .navigationBarsPadding(),
+                    modifier = Modifier.fillMaxSize(),
                     imageState = imageState,
                     onClick = { hide() }
                 )

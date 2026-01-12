@@ -6,9 +6,9 @@ import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -32,7 +32,7 @@ fun rememberNsdManagerFlow(
 @OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun rememberNsdDeviceList(
-    scope: CoroutineScope = rememberCoroutineScope(),
+    scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     nsdManagerFlow: NsdManagerFlow = rememberNsdManagerFlow(),
     onError: (Throwable) -> Unit = {},
     types: List<NsdTypes> = NsdTypes.entries,
@@ -77,7 +77,9 @@ fun rememberNsdDeviceList(
                     }
 
                     is DiscoveryEvent.DiscoveryServiceLost -> {
-                        services.removeIf { d -> d.serviceName == event.service.serviceName }
+                        services.removeIf { d ->
+                            d.serviceName == event.service.serviceName
+                        }
                     }
 
                     else -> Unit

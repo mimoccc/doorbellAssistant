@@ -1,16 +1,10 @@
 package org.mjdev.phone.activity
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,10 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.mjdev.phone.activity.VideoCallActivity.Companion.startCall
 import org.mjdev.phone.activity.base.UnlockedActivity
-import org.mjdev.phone.exception.NsdException
+import org.mjdev.phone.application.CallApplication.Companion.getCallServiceClass
 import org.mjdev.phone.extensions.PermissionsExt.LaunchPermissions
+import org.mjdev.phone.helpers.GlanceNotificationManager
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdTypes
+import org.mjdev.phone.nsd.service.CallNsdService.Companion.nsdDevice
 import org.mjdev.phone.nsd.service.NsdService
 import org.mjdev.phone.ui.components.BackgroundLayout
 import org.mjdev.phone.ui.components.NsdList
@@ -37,33 +33,8 @@ open class IntercomActivity : UnlockedActivity() {
         setContent {
             MainScreen()
         }
-        runCatching {
-            startNsdService()
-        }.onFailure { e ->
-            e.printStackTrace()
-        }
-    }
-
-    fun startNsdService() {
-        Intent(
-            this,
-            getServiceClass()
-        ).also { intent ->
-            startForegroundService(intent)
-        }
-    }
-
-    private fun getServiceClass(): Class<NsdService> =
-        service ?: throw (NsdException("Service for calls must be registered."))
-
-    companion object {
-        private val TAG = IntercomActivity::class.simpleName
-
-        private var service: Class<NsdService>? = null
-
-        fun registerService(service: NsdService) {
-            this.service = service::class.java as Class<NsdService>
-        }
+        // todo
+        GlanceNotificationManager(this).test()
     }
 
     @Previews
@@ -73,28 +44,28 @@ open class IntercomActivity : UnlockedActivity() {
         if (arePermissionsGranted) {
             Box(
                 modifier = Modifier
-                    .systemBarsPadding()
                     .fillMaxSize()
-                    .background(phoneColors.background)
+                    .background(phoneColors.colorBackground)
             ) {
                 NsdList(
                     modifier = Modifier.fillMaxSize(),
                     types = NsdTypes.entries,
                     onError = { e -> Log.e(TAG, e.message, e) },
-                    onCallClick = { nsdDevice ->
-                        this@IntercomActivity.startCall(
-                            serviceClass = getServiceClass(),
-                            callee = nsdDevice
-                        )
+                    onCallClick = { callee ->
+                        val serviceClass = getCallServiceClass() as Class<NsdService>
+                        nsdDevice { caller ->
+                            startCall(
+                                serviceClass = serviceClass,
+                                callee = callee,
+                                caller = caller
+                            )
+                        }
                     },
                 )
             }
         } else {
             Box(
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .displayCutoutPadding()
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 BackgroundLayout(
@@ -112,5 +83,9 @@ open class IntercomActivity : UnlockedActivity() {
                 }
             )
         }
+    }
+
+    companion object {
+        private val TAG = IntercomActivity::class.simpleName
     }
 }

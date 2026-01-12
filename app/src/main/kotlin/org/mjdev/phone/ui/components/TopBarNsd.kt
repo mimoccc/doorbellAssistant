@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,74 +35,67 @@ fun TopBarNsd(
     applicationContext: Context = LocalContext.current.applicationContext,
     onClick: () -> Unit = {},
     onClickSettings: () -> Unit = {},
-) = PhoneTheme(
-    content = {
-        val userName: String = applicationContext.currentSystemUser
-        val currentWifiSsid = LocalContext.current.currentWifiSSID
-        val currentWifiIp = LocalContext.current.currentWifiIP
-        Box(
-            modifier = modifier.wrapContentHeight()
+) = PhoneTheme {
+    val userName: String = applicationContext.currentSystemUser
+    val currentWifiSsid = LocalContext.current.currentWifiSSID
+    val currentWifiIp = LocalContext.current.currentWifiIP
+    Box(
+        modifier = modifier.wrapContentHeight()
+    ) {
+        Column(
+            modifier = Modifier
+                .background(
+                    color = phoneColors.colorLabelsBackground,
+                    shape = phoneShapes.deviceLogoShape
+                )
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(start = 88.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
+                .align(Alignment.Center)
         ) {
-            Column(
-                modifier = Modifier
-                    .background(
-                        color = phoneColors.labelsBackground,
-                        shape = phoneShapes.deviceLogoShape
-                    )
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(start = 88.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
-                    .align(Alignment.Center)
-            ) {
-                Text(
-                    color = phoneColors.textColor,
-                    text = userName,
-                    fontSize = 13.sp
-                )
-                Text(
-                    color = phoneColors.textColor,
-                    text = currentWifiSsid,
-                    fontSize = 11.sp
-                )
-                Text(
-                    color = phoneColors.textColor,
-                    text = currentWifiIp,
-                    fontSize = 11.sp
-                )
-            }
-            Icon(
-                modifier = Modifier
-                    .size(80.dp)
-                    .background(
-                        color = phoneColors.iconsBackground,
-                        shape = phoneShapes.headerLogoShape
-                    )
-                    .border(
-                        2.dp,
-                        phoneColors.callerIconBorderColor,
-                        phoneShapes.headerLogoShape
-                    )
-                    .clip(phoneShapes.headerLogoShape)
-                    .clickable(onClick = onClick),
-                contentDescription = "",
-                painter = phoneIcons.userAccountIcon,
-                tint = phoneColors.iconTint,
+            Text(
+                color = phoneColors.colorText,
+                text = userName,
+                fontSize = 13.sp
             )
-            Icon(
-                modifier = Modifier
-                    .padding(end = 8.dp)
-                    .size(32.dp)
-                    .background(
-                        color = phoneColors.iconsBackground,
-                        shape = phoneShapes.settingsControlButtonShape
-                    )
-                    .align(Alignment.CenterEnd)
-                    .clip(phoneShapes.settingsControlButtonShape)
-                    .clickable(onClick = onClickSettings),
-                contentDescription = "",
-                painter = phoneIcons.buttonSettings,
-                tint = phoneColors.iconTint,
+            Text(
+                color = phoneColors.colorText,
+                text = currentWifiSsid,
+                fontSize = 11.sp
+            )
+            Text(
+                color = phoneColors.colorText,
+                text = currentWifiIp,
+                fontSize = 11.sp
             )
         }
-    },
-)
+        Icon(
+            modifier = Modifier
+                .size(80.dp)
+                .background(
+                    color = phoneColors.colorIconsBackground,
+                    shape = phoneShapes.headerLogoShape
+                )
+                .border(
+                    2.dp,
+                    phoneColors.colorCallerIconBorder,
+                    phoneShapes.headerLogoShape
+                )
+                .clip(phoneShapes.headerLogoShape)
+                .clickable(onClick = onClick),
+            contentDescription = "",
+            painter = phoneIcons.userAccountIcon,
+            tint = phoneColors.colorIconTint,
+        )
+        SettingsIcon(
+            modifier = Modifier.padding(end = 8.dp)
+                .size(32.dp)
+                .background(
+                    color = phoneColors.colorIconsBackground,
+                    shape = phoneShapes.settingsControlButtonShape
+                )
+                .align(Alignment.CenterEnd),
+            shape = phoneShapes.settingsControlButtonShape
+        )
+    }
+}

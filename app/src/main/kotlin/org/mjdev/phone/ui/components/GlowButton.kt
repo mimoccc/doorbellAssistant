@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import org.mjdev.phone.extensions.CustomExtensions.neonStroke
 import org.mjdev.phone.helpers.Previews
+import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 
 @Suppress("LocalVariableName")
@@ -27,7 +28,7 @@ import org.mjdev.phone.ui.theme.base.phoneColors
 @Composable
 fun GlowButton(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = phoneColors.background,
+    backgroundColor: Color = phoneColors.colorBackground,
     glowColor: Color = Color.White,
     glowRadius: Float = 8f,
     onClick: () -> Unit = {},
@@ -35,7 +36,7 @@ fun GlowButton(
     animate: Boolean = true,
     animMaxGlow: Float = 16f,
     content: @Composable () -> Unit = {}
-) {
+) = PhoneTheme {
     val infiniteTransition = if (animate) rememberInfiniteTransition(label = "glow") else null
     val _glowRadius = infiniteTransition?.animateFloat(
         initialValue = glowRadius,

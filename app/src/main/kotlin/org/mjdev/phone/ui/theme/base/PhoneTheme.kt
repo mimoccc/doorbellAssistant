@@ -2,16 +2,11 @@
 
 package org.mjdev.phone.ui.theme.base
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Modifier
 import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import org.mjdev.phone.ui.theme.DefaultDarkColors
 import org.mjdev.phone.ui.theme.DefaultLightColors
@@ -88,34 +83,20 @@ fun shouldBeDarkTheme(
 }
 
 @Composable
-fun PreviewBackground(
-    isPreviewMode: Boolean = false,
-    content: @Composable () -> Unit,
-) {
-    if (isPreviewMode) {
-        Box(
-            modifier = Modifier
-                .wrapContentSize()
-                .background(phoneColors.previewBackground)
-        ) {
-            content()
-        }
-    } else {
-        content()
-    }
-}
-
-@Composable
 fun PhoneTheme(
     colorScheme: PhoneColorScheme = customTheme.value,
     style: PhoneColorsStyle = PhoneColorsStyle.AUTO,
-    showBackground: Boolean = isPreview,
+    isPreviewMode: Boolean = isPreview,
     content: @Composable PhoneColorScheme.() -> Unit,
 ) {
     val current = LocalPhoneColors.current
-    val actualTheme = if (current === EmptyColorScheme) colorScheme.copy(style = style) else current
+    val isEmptyTheme = current === EmptyColorScheme
+    val actualTheme = if (isEmptyTheme) colorScheme.copy(style = style) else current
     CompositionLocalProvider(LocalPhoneColors provides actualTheme) {
-        PreviewBackground(showBackground) {
+        PhonePreviewBackground(
+            isPreviewMode=isPreviewMode,
+            isEmptyTheme = isEmptyTheme
+        ) {
             content(colorScheme)
         }
     }
@@ -131,10 +112,10 @@ fun PhoneThemeLight(
 fun PhoneThemeDark(
     colorScheme: PhoneColorScheme = customTheme.value,
     content: @Composable PhoneColorScheme.() -> Unit
-) = PhoneTheme(colorScheme, PhoneColorsStyle.DARK, content =content)
+) = PhoneTheme(colorScheme, PhoneColorsStyle.DARK, content = content)
 
-fun phoneCustomizer (
-    customizer : PhoneColorScheme.() -> Unit
+fun phoneCustomizer(
+    customizer: PhoneColorScheme.() -> Unit
 ) {
     customTheme.value = DefaultPhoneColorScheme.apply(customizer)
 }

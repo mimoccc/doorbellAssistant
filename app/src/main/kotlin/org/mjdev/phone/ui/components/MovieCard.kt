@@ -30,11 +30,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.palette.graphics.Palette
-import org.mjdev.phone.extensions.CustomExtensions.isLandscape
+import org.mjdev.phone.extensions.CustomExtensions.isPortrait
 import org.mjdev.phone.extensions.CustomExtensions.neonStroke
 import org.mjdev.phone.extensions.CustomExtensions.rememberAssetImage
 import org.mjdev.phone.helpers.Previews
-import org.mjdev.phone.ui.theme.base.phoneColors
 import kotlin.math.min
 
 @Suppress("unused")
@@ -45,7 +44,7 @@ fun MovieCard(
     bitmap: ImageBitmap? = rememberAssetImage("avatar_transparent.png"),
     title: String = "title",
     subtitle: String = "subtitle",
-    contentScale: ContentScale = ContentScale.Inside,
+    contentScale: ContentScale = if (isPortrait) ContentScale.FillHeight else ContentScale.Inside,
     roundCorners: Boolean = true,
     roundCornersSize: Dp? = null,
     useBackgroundFromPic: Boolean = true,
@@ -150,7 +149,7 @@ fun rememberMajorColor(
     val default = defaultColor ?: Color.Transparent
     runCatching {
         if (bitmap == null) default else Palette
-            .from(bitmap!!.asAndroidBitmap())
+            .from(bitmap.asAndroidBitmap())
             .generate()
             .getDominantColor(default.toArgb())
             .let { dominantInt ->

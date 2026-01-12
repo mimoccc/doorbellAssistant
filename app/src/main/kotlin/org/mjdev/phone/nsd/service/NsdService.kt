@@ -21,9 +21,7 @@ import org.mjdev.phone.nsd.device.NsdTypes
 import org.mjdev.phone.nsd.device.NsdTypes.Companion.serviceName
 import org.mjdev.phone.nsd.manager.NsdManagerFlow
 import org.mjdev.phone.nsd.registration.RegistrationEvent
-import org.mjdev.phone.nsd.rpc.EmptyRPCServer
-import org.mjdev.phone.nsd.rpc.INsdServerRPC
-import org.mjdev.phone.service.BindableService
+import org.mjdev.phone.rpc.INsdServerRPC
 import kotlin.uuid.ExperimentalUuidApi
 
 @SuppressLint("HardwareIds")
@@ -38,8 +36,8 @@ abstract class NsdService : BindableService() {
     private var registrationJob: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
-    open val serviceType: NsdTypes = NsdTypes.UNSPECIFIED
-    open val rpcServer: INsdServerRPC by lazy { EmptyRPCServer(baseContext) }
+    abstract val serviceType: NsdTypes
+    abstract val rpcServer: INsdServerRPC
 
     val powerManager
         get() = getSystemService(POWER_SERVICE) as PowerManager

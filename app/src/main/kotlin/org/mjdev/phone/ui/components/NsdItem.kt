@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -43,7 +42,7 @@ fun NsdItem(
         Column(
             modifier = Modifier
                 .background(
-                    color = phoneColors.labelsBackground,
+                    color = phoneColors.colorLabelsBackground,
                     shape = phoneShapes.labelsShape
                 )
                 .fillMaxWidth()
@@ -52,17 +51,17 @@ fun NsdItem(
                 .align(Alignment.Center)
         ) {
             Text(
-                color = phoneColors.textColor,
+                color = phoneColors.colorText,
                 text = device?.label ?: "-",
                 fontSize = 13.sp
             )
             Text(
-                color = phoneColors.textColor,
+                color = phoneColors.colorText,
                 text = device?.address ?: "-",
                 fontSize = 11.sp
             )
             Text(
-                color = phoneColors.textColor,
+                color = phoneColors.colorText,
                 text = device?.serviceName ?: "-",
                 fontSize = 11.sp
             )
@@ -71,19 +70,19 @@ fun NsdItem(
             modifier = Modifier
                 .size(72.dp)
                 .background(
-                    color = phoneColors.iconsBackground,
+                    color = phoneColors.colorIconsBackground,
                     shape = phoneShapes.headerIconShape
                 )
                 .border(
                     2.dp,
-                    phoneColors.callerIconBorderColor,
+                    phoneColors.colorCallerIconBorder,
                     phoneShapes.headerIconShape
                 )
                 .clip(phoneShapes.headerIconShape)
                 .clickable(onClick = onDeviceClick)
                 .padding(8.dp),
             contentDescription = "",
-            tint = phoneColors.iconTint,
+            tint = phoneColors.colorIconTint,
             imageVector = device?.imageVector ?: NsdTypes.UNSPECIFIED.imageVector,
         )
         if (showCallButton) Icon(
@@ -91,7 +90,7 @@ fun NsdItem(
                 .padding(end = 8.dp)
                 .size(40.dp)
                 .background(
-                    color = phoneColors.iconsBackground,
+                    color = phoneColors.colorIconsBackground,
                     shape = phoneShapes.callControlButtonShape
                 )
                 .align(Alignment.CenterEnd)
@@ -100,7 +99,7 @@ fun NsdItem(
                 .clickable(onClick = onCallClick),
             contentDescription = "",
             painter = phoneIcons.itemCallIcon,
-            tint = phoneColors.iconTint,
+            tint = phoneColors.colorIconTint,
         )
     }
 }

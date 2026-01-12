@@ -29,14 +29,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
@@ -53,7 +59,6 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import androidx.media3.common.MediaItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -68,14 +73,14 @@ import kotlin.reflect.KProperty
 @Suppress("DEPRECATION", "unused")
 object CustomExtensions {
 
-    val isLandscape : Boolean
+    val isLandscape: Boolean
         @Composable
         get() {
             val config = LocalConfiguration.current
             return config.orientation == ORIENTATION_LANDSCAPE
         }
 
-    val isPortrait : Boolean
+    val isPortrait: Boolean
         @Composable
         get() {
             val config = LocalConfiguration.current
@@ -211,7 +216,7 @@ object CustomExtensions {
         }
     }
 
-    inline fun <reified T:Activity> T.bringToFront() {
+    inline fun <reified T : Activity> T.bringToFront() {
         runCatching {
             val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
             val myPackage = T::class.java.`package`?.name
@@ -313,6 +318,39 @@ object CustomExtensions {
         condition: Boolean,
         other: Modifier.() -> Modifier
     ): Modifier = if (condition) this.then(other()) else this
+
+    fun Modifier.dashedBorder(
+        brush: Brush,
+        shape: Shape,
+        strokeWidth: Dp = 2.dp,
+        dashLength: Dp = 4.dp,
+        gapLength: Dp = 4.dp,
+        cap: StrokeCap = StrokeCap.Round
+    ) = drawWithContent {
+        val outline = shape.createOutline(size, layoutDirection, density = this)
+        val dashedStroke = Stroke(
+            cap = cap,
+            width = strokeWidth.toPx(),
+            pathEffect = PathEffect.dashPathEffect(
+                intervals = floatArrayOf(dashLength.toPx(), gapLength.toPx())
+            )
+        )
+        drawContent()
+        drawOutline(
+            outline = outline,
+            style = dashedStroke,
+            brush = brush
+        )
+    }
+
+    fun Modifier.dashedBorder(
+        color: Color=Color.White,
+        shape: Shape= RectangleShape,
+        strokeWidth: Dp = 2.dp,
+        dashLength: Dp = 4.dp,
+        gapLength: Dp = 4.dp,
+        cap: StrokeCap = StrokeCap.Round
+    ) = dashedBorder(brush = SolidColor(color), shape, strokeWidth, dashLength, gapLength, cap)
 
     fun ComponentActivity.enableEdgeToEdge(
         statusBarColor: Color = Color.DarkGray,
@@ -446,7 +484,7 @@ object CustomExtensions {
     operator fun String.provideDelegate(
         thisRef: Any?,
         property: KProperty<*>
-    ) : StringDelegate = StringDelegate(this)
+    ): StringDelegate = StringDelegate(this)
 
     fun Modifier.neonStroke(
         backgroundColor: Color = Color.Transparent,

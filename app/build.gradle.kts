@@ -128,6 +128,9 @@ android {
     }
 }
 
+// todo : fucking android studio error
+tasks.register("testClasses")
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(platform(libs.firebase.bom))
@@ -185,6 +188,17 @@ dependencies {
     implementation(libs.bcprov.jdk18on)
     implementation(libs.bctls.jdk18on)
     implementation(libs.androidx.palette.ktx)
+
+
+    implementation("androidx.glance:glance:1.1.1")
+    implementation("androidx.glance:glance-preview:1.1.1")
+    implementation("androidx.glance:glance-appwidget-preview:1.1.1")
+    implementation("androidx.glance:glance-appwidget:1.1.1")
+    implementation("androidx.glance:glance-material3:1.1.1")
+    implementation("androidx.glance:glance-material:1.1.1")
+    implementation("com.google.android.glance.tools:appwidget-host:0.2.2")
+    implementation("com.google.android.glance.tools:appwidget-preview:0.1.2")
+    implementation("com.google.android.glance.tools:appwidget-viewer:0.2.2")
 
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

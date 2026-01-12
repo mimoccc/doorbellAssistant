@@ -29,10 +29,6 @@ fun DoorBellAssistantTheme(
     typography = Typography,
     content = {
         PhoneTheme {
-            PhoneCustomizer {
-                colorsLight.background = DarkMD5
-                colorsDark.background = DarkMD5
-            }
             content()
         }
     }

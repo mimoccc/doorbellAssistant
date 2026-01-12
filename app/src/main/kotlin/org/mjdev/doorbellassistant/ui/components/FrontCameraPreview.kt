@@ -63,7 +63,7 @@ fun FrontCameraPreview(
             modifier = Modifier
                 .padding(16.dp)
                 .size(size),
-            glowColor = phoneColors.glowColor,
+            glowColor = phoneColors.colorGlow,
             glowRadius = 4f,
             contentScale = ContentScale.Crop,
             useBackgroundFromPic = false,

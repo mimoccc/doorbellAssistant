@@ -1,7 +1,6 @@
 package org.mjdev.phone.ui.components
 
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -43,7 +42,7 @@ fun TextLabel(
         Text(
             modifier = modifier,
             text = label,
-            color = phoneColors.labelTextColor,
+            color = phoneColors.colorLabelText,
             fontSize = fontSize,
             fontStyle = fontStyle,
             fontWeight = fontWeight,

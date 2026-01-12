@@ -39,7 +39,7 @@ open class VideoTextureViewRenderer @JvmOverloads constructor(
     }
 
     private fun updateFrameData(videoFrame: VideoFrame) {
-        if (isFirstFrameRendered) {
+        if (!isFirstFrameRendered) {
             rendererEvents?.onFirstFrameRendered()
             isFirstFrameRendered = true
         }

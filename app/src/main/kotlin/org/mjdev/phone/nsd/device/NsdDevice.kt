@@ -1,46 +1,46 @@
 package org.mjdev.phone.nsd.device
 
 import android.net.nsd.NsdServiceInfo
-import android.os.Build
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.mjdev.phone.extensions.CustomExtensions.toInetAddress
-import org.mjdev.phone.service.CallNsdService
+import org.mjdev.phone.nsd.device.NsdTypes.Companion.serviceName
 
 @Suppress("TRANSIENT_IS_REDUNDANT", "unused", "DEPRECATION")
 @Serializable
-open class NsdDevice(
-    @Transient
-    var nsdServiceInfo: NsdServiceInfo? = null,
-    val serviceName: String? = nsdServiceInfo?.serviceName ?: "",
-    val serviceTypeUid: String? = nsdServiceInfo?.serviceType ?: "",
-    val address: String? = nsdServiceInfo?.host?.hostAddress ?: "",
-    val port: Int? = nsdServiceInfo?.port,
-) {
-    @Transient
-    val hostName: String?
-        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            nsdServiceInfo?.host?.hostName
-        } else {
-            null
-        }
+open class NsdDevice {
+    constructor(nsdServiceInfo: NsdServiceInfo) {
+        address = nsdServiceInfo.host?.hostAddress ?: ""
+        port = nsdServiceInfo.port
+        serviceName = nsdServiceInfo.serviceName ?: ""
+        hostName = nsdServiceInfo.host?.hostName ?: address
+        serviceType = NsdTypes(nsdServiceInfo.serviceType)
+        serviceTypeName = serviceType.serviceName
+    }
 
-    @Transient
-    val serviceType: NsdTypes
-        get() =  NsdTypes.Companion(serviceTypeUid)
+    var hostName: String
+    var serviceName: String
+    var serviceTypeName: String
+    var address: String
+    var port: Int
+    var serviceType: NsdTypes
 
     @Transient
     val imageVector: ImageVector
         get() = serviceType.imageVector
 
     @Transient
-    val uid: String
-        get() = serviceType.uid
-
-    @Transient
     val label: String
         get() = serviceType.label
+
+    @Transient
+    val isAutoAnswerCall: Boolean
+        get() = serviceType.isAutoAnswerCall
+
+    override fun toString(): String {
+        return "[$serviceType]($address:$port)"
+    }
 
     companion object {
         @Transient
@@ -55,7 +55,7 @@ open class NsdDevice(
             port: Int = 8888,
         ) = NsdDevice(NsdServiceInfo().apply {
             this.port = port
-            this.serviceType = serviceType.uid
+            this.serviceType = serviceType.serviceName
             this.serviceName = serviceName
             this.host = address.toInetAddress()
         })

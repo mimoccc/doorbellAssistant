@@ -1,9 +1,14 @@
 package org.mjdev.phone.stream
 
 import android.content.Context
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
 import android.media.AudioManager
+import android.os.Build
 import android.util.Log
 import org.mjdev.phone.exception.CallManagerException
+import org.mjdev.phone.nsd.device.NsdDevice
+import org.mjdev.phone.rpc.INsdServerRPC
 import org.webrtc.AudioSource
 import org.webrtc.AudioTrack
 import org.webrtc.Camera2Enumerator
@@ -29,29 +34,21 @@ import org.webrtc.VideoTrack
 @Suppress("DEPRECATION", "USELESS_CAST")
 class CallManager(
     private val context: Context,
-    private val signallingPort: Int = 8889,
-
-    private val remoteIp: String,
-
+    private val nsdRpcServer: INsdServerRPC?,
+    private val callee: NsdDevice,
+    private val caller: NsdDevice,
     private val isCaller: Boolean = false,
-
     private val enableIntelVp8Encoder: Boolean = true,
     private val enableH264HighProfile: Boolean = true,
-
     private val onLocalTrackReady: CallManager.(VideoTrack) -> Unit = {},
     private val onRemoteTrackReady: CallManager.(VideoTrack) -> Unit = {},
-
     private val onFailure: (Throwable) -> Unit = { e ->
-        Log.e(UdpSignalingServer.Companion.TAG, "Failed to start UDP signaling", e)
+        Log.e(TAG, "Failed to start UDP signaling", e)
     },
-    private val onAcceptCall: CallManager.() -> Unit = {},
+    private val onAcceptCall: CallManager.(String) -> Unit = {},
     private val onCallEnded: CallManager.(CallEndReason) -> Unit = {},
     private val onCallStarted: CallManager.(SessionDescription) -> Unit = {},
-) : PeerConnection.Observer {
-    companion object {
-        private val TAG = CallManager::class.simpleName
-    }
-
+) : PeerConnection.Observer, ICallManager {
     private var peerConnectionFactory: PeerConnectionFactory? = null
     private var peerConnection: PeerConnection? = null
     private var videoCapturer: CameraVideoCapturer? = null
@@ -61,6 +58,7 @@ class CallManager(
     private var localVideoTrack: VideoTrack? = null
     private var remoteVideoTrack: VideoTrack? = null
     private var localAudioTrack: AudioTrack? = null
+    private var audioFocusRequest: AudioFocusRequest? = null
 
     val eglBaseContext: EglBase.Context?
         get() = eglBase.eglBaseContext
@@ -95,46 +93,26 @@ class CallManager(
             sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
         }
     }
-    private val signalingClient: UdpSignalingClient by lazy {
-        UdpSignalingClient(
-            remoteIp,
-            signallingPort,
-            onFailure = onFailure,
-            onReady = {
-                onSignalingServerStarted()
-            },
-            onOfferReceived = { sdp ->
-                handleOfferReceived(sdp)
-            },
-            onAnswerReceived = { sdp ->
-               handleAnswerReceived(sdp)
-            },
-            onIceCandidateReceived = { candidate ->
-               handleIceCandidate(candidate)
-            },
-            onDismissReceived = { reason ->
-               handleDismissReceived(reason)
-            },
-            onAcceptReceived = {
-               handleAcceptReceived()
-            }
-        )
-    }
-
-
 
     override fun onIceCandidate(candidate: IceCandidate) {
         Log.d(TAG, "ICE candidate generated: ${candidate.sdp}")
-        signalingClient.sendIceCandidate(candidate)
+        nsdRpcServer?.sendIceCandidate(callee, candidate)
+        nsdRpcServer?.sendIceCandidate(caller, candidate)
     }
 
     override fun onTrack(transceiver: RtpTransceiver) {
         val track = transceiver.receiver.track()
         Log.d(TAG, "onTrack: track=$track, kind=${track?.kind()}")
-        if (track is VideoTrack) {
-            remoteVideoTrack = track
-            Log.d(TAG, "Remote video track ready: ${track.id()}")
-            onRemoteTrackReady(track)
+        when (track) {
+            is VideoTrack -> {
+                remoteVideoTrack = track
+                Log.d(TAG, "Remote video track ready: ${track.id()}")
+                onRemoteTrackReady(track)
+            }
+            is AudioTrack -> {
+                Log.d(TAG, "Remote audio track ready: ${track.id()}")
+                // Audio tracks are automatically played by WebRTC
+            }
         }
     }
 
@@ -144,10 +122,16 @@ class CallManager(
     ) {
         val track = receiver.track()
         Log.d(TAG, "onAddTrack: track=$track, kind=${track?.kind()}, streams=${streams.size}")
-        if (track is VideoTrack) {
-            remoteVideoTrack = track
-            Log.d(TAG, "Remote video track ready via onAddTrack: ${track.id()}")
-            onRemoteTrackReady(track)
+        when (track) {
+            is VideoTrack -> {
+                remoteVideoTrack = track
+                Log.d(TAG, "Remote video track ready via onAddTrack: ${track.id()}")
+                onRemoteTrackReady(track)
+            }
+            is AudioTrack -> {
+                Log.d(TAG, "Remote audio track ready via onAddTrack: ${track.id()}")
+                // Audio tracks are automatically played by WebRTC
+            }
         }
     }
 
@@ -182,24 +166,31 @@ class CallManager(
     }
 
     override fun onAddStream(stream: MediaStream) {
-        Log.d(TAG, "Stream added: ${stream.id}, videoTracks=${stream.videoTracks.size}")
+        Log.d(TAG, "Stream added: ${stream.id}, videoTracks=${stream.videoTracks.size}, audioTracks=${stream.audioTracks.size}")
+        // Process audio tracks from stream
+        stream.audioTracks.forEach { audioTrack ->
+            Log.d(TAG, "Processing audio track from stream: ${audioTrack.id()}, enabled=${audioTrack.enabled()}")
+        }
+        stream.videoTracks.forEach { videoTrack ->
+            Log.d(TAG, "Processing video track from stream: ${videoTrack.id()}, enabled=${videoTrack.enabled()}")
+        }
     }
 
     fun initialize() {
+        nsdRpcServer?.registerCallManager(this)
         initializePeerConnectionFactory()
         createPeerConnection()
         createLocalMediaStream()
-        startSignaling()
+        configureAudio()
     }
 
-    private fun handleOfferReceived(sdp : String) {
+    override fun handleOfferReceived(sdp: String) {
         if (!isCaller) {
             Log.d(TAG, "Callee: Offer received")
             peerConnection?.setRemoteDescription(
                 object : SdpObserver {
                     override fun onSetSuccess() {
                         Log.d(TAG, "Callee: Remote offer set, creating answer")
-                        // todo?
                         createAnswer()
                     }
 
@@ -222,7 +213,7 @@ class CallManager(
         }
     }
 
-    private fun handleAnswerReceived(sdp : String) {
+    override fun handleAnswerReceived(sdp: String) {
         if (isCaller) {
             Log.d(TAG, "Caller: Answer received")
             peerConnection?.setRemoteDescription(
@@ -243,43 +234,67 @@ class CallManager(
                         onFailure(CallManagerException("Caller: Failed to set remote answer: $err"))
                     }
                 },
-                SessionDescription(SessionDescription.Type.ANSWER,sdp)
+                SessionDescription(SessionDescription.Type.ANSWER, sdp)
             )
         } else {
             Log.d(TAG, "Callee: Ignoring answer from peer")
         }
     }
 
-    private fun handleAcceptReceived() {
-        onAcceptCall()
+    override fun handleAcceptReceived(sdp: String) {
+        onAcceptCall(sdp)
     }
 
-    private fun handleIceCandidate(candidate: IceCandidate) {
+    override fun handleIceCandidate(sdpMid: String?, sdpMLineIndex: Int, sdp: String?) {
+        Log.d(TAG, "Received ICE candidate: sdpMid=$sdpMid, sdpMLineIndex=$sdpMLineIndex")
+        val candidate = IceCandidate(sdpMid, sdpMLineIndex, sdp)
         peerConnection?.addIceCandidate(candidate)
+        Log.d(TAG, "ICE candidate added to peer connection")
     }
 
-    fun handleDismissReceived(reason: CallEndReason) {
+    override fun handleDismissReceived(reason: CallEndReason) {
         onCallEnded(reason)
     }
 
+    override fun handleCallStarted(
+        caller: NsdDevice?,
+        callee: NsdDevice?
+    ) {
+        Log.d(TAG, "handleCallStarted: isCaller=$isCaller, caller=${caller?.address}, callee=${callee?.address}")
+        if (isCaller) {
+            Log.d(TAG, "Caller: Creating offer")
+            createOffer()
+        } else {
+            Log.d(TAG, "Callee: Waiting for offer before creating answer")
+        }
+    }
+
     private fun initializePeerConnectionFactory() {
+        Log.d(TAG, "Initializing PeerConnectionFactory")
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions
                 .builder(context)
                 .createInitializationOptions()
         )
+        val options = PeerConnectionFactory.Options().apply {
+            // Disable audio processing that might cause issues
+            // networkIgnoreMask = 0
+        }
         peerConnectionFactory = PeerConnectionFactory.builder()
             .setVideoEncoderFactory(encoderFactory)
             .setVideoDecoderFactory(decoderFactory)
-            .setOptions(PeerConnectionFactory.Options())
+            .setOptions(options)
             .createPeerConnectionFactory()
+        Log.d(TAG, "PeerConnectionFactory initialized successfully")
     }
 
     private fun createPeerConnection() {
         peerConnection = peerConnectionFactory?.createPeerConnection(rtcConfig, this)
+        Log.d(TAG, "Peer connection created: $peerConnection")
     }
 
     private fun createLocalMediaStream() {
+        Log.d(TAG, "Creating local media stream")
         audioSource = peerConnectionFactory?.createAudioSource(MediaConstraints())
         localAudioTrack = peerConnectionFactory?.createAudioTrack("audio_track", audioSource)
         videoCapturer = createVideoCapturer()
@@ -289,14 +304,72 @@ class CallManager(
         videoCapturer?.initialize(surfaceTextureHelper, context, videoSource?.capturerObserver)
         videoCapturer?.startCapture(1280, 720, 30)
         localVideoTrack?.let { track ->
-            Log.d(TAG, "Local video track created: ${track.id()}")
+            Log.d(TAG, "Local video track created: ${track.id()}, enabled=${track.enabled()}")
             onLocalTrackReady(track)
             peerConnection?.addTrack(track, listOf("local_stream"))
         }
         localAudioTrack?.let { track ->
-            Log.d(TAG, "Local audio track created: ${track.id()}")
+            Log.d(TAG, "Local audio track created: ${track.id()}, enabled=${track.enabled()}")
             peerConnection?.addTrack(track, listOf("local_stream"))
         }
+        Log.d(TAG, "Local media stream created successfully")
+    }
+
+    private fun configureAudio() {
+        Log.d(TAG, "Configuring audio for VoIP call")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build()
+            audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(audioAttributes)
+                .setAcceptsDelayedFocusGain(true)
+                .setOnAudioFocusChangeListener { focusChange ->
+                    Log.d(TAG, "Audio focus changed: $focusChange")
+                    when (focusChange) {
+                        AudioManager.AUDIOFOCUS_GAIN -> {
+                            Log.d(TAG, "Audio focus gained")
+                        }
+                        AudioManager.AUDIOFOCUS_LOSS -> {
+                            Log.d(TAG, "Audio focus lost permanently")
+                        }
+                        AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                            Log.d(TAG, "Audio focus lost temporarily")
+                        }
+                    }
+                }
+                .build()
+            val result = audioManager.requestAudioFocus(audioFocusRequest!!)
+            Log.d(TAG, "Audio focus request result: $result")
+        } else {
+            @Suppress("DEPRECATION")
+            val result = audioManager.requestAudioFocus(
+                null,
+                AudioManager.STREAM_VOICE_CALL,
+                AudioManager.AUDIOFOCUS_GAIN
+            )
+            Log.d(TAG, "Audio focus request result (legacy): $result")
+        }
+        audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+        audioManager.isSpeakerphoneOn = true
+        Log.d(TAG, "Audio mode set to: ${audioManager.mode}, Speaker: ${audioManager.isSpeakerphoneOn}")
+    }
+
+    private fun restoreAudio() {
+        Log.d(TAG, "Restoring audio settings")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioFocusRequest?.let {
+                audioManager.abandonAudioFocusRequest(it)
+                Log.d(TAG, "Audio focus abandoned")
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            audioManager.abandonAudioFocus(null)
+            Log.d(TAG, "Audio focus abandoned (legacy)")
+        }
+        audioManager.mode = AudioManager.MODE_NORMAL
+        audioManager.isSpeakerphoneOn = false
     }
 
     private fun createVideoCapturer(): CameraVideoCapturer? {
@@ -311,16 +384,14 @@ class CallManager(
         return null
     }
 
-    private fun startSignaling() {
-        signalingClient.start()
-    }
-
     private fun createOffer() {
+        Log.d(TAG, "Caller: Starting to create offer")
         peerConnection?.createOffer(object : SdpObserver {
             override fun onCreateSuccess(sdp: SessionDescription) {
+                Log.d(TAG, "Caller: Offer created successfully")
                 peerConnection?.setLocalDescription(SimpleSdpObserver(), sdp)
-                signalingClient.sendOffer(sdp.description)
-                Log.d(TAG, "Caller: Offer sent")
+                nsdRpcServer?.sendOffer(callee, sdp.description)
+                Log.d(TAG, "Caller: Offer sent to ${callee.address}")
             }
 
             override fun onSetSuccess() {
@@ -340,11 +411,13 @@ class CallManager(
     }
 
     private fun createAnswer() {
+        Log.d(TAG, "Callee: Starting to create answer")
         peerConnection?.createAnswer(object : SdpObserver {
             override fun onCreateSuccess(sdp: SessionDescription) {
+                Log.d(TAG, "Callee: Answer created successfully")
                 peerConnection?.setLocalDescription(SimpleSdpObserver(), sdp)
-                signalingClient.sendAnswer(sdp.description)
-                Log.d(TAG, "Callee: Answer sent")
+                nsdRpcServer?.sendAnswer(caller, sdp.description)
+                Log.d(TAG, "Callee: Answer sent to ${caller.address}")
                 onCallStarted(sdp)
             }
 
@@ -364,25 +437,15 @@ class CallManager(
         })
     }
 
-    private fun onSignalingServerStarted() {
-        if (isCaller) {
-            Log.d(TAG, "Caller: UDP signaling ready, creating offer")
-            createOffer()
-        } else {
-            Log.d(TAG, "Callee: UDP signaling ready, waiting for offer")
-        }
-    }
-
-    fun sendCallAccepted() {
-        signalingClient.sendAccept(
-            peerConnection?.localDescription?.description ?: ""
-        )
+    fun callAccept() {
+        nsdRpcServer?.sendAccept(caller, peerConnection?.localDescription?.description ?: "")
+        nsdRpcServer?.sendAccept(callee, peerConnection?.localDescription?.description ?: "")
+        createAnswer()
     }
 
     fun dismissCall(fromButton: Boolean) {
-        signalingClient.sendDismiss(
-            peerConnection?.localDescription?.description ?: ""
-        )
+        nsdRpcServer?.sendDismiss(caller, peerConnection?.localDescription?.description ?: "")
+        nsdRpcServer?.sendDismiss(callee, peerConnection?.localDescription?.description ?: "")
         if (fromButton) {
             onCallEnded(CallEndReason.LOCAL_END)
         }
@@ -412,28 +475,31 @@ class CallManager(
         audioManager.isMicrophoneMute = false
     }
 
-    fun release(reason: CallEndReason) = runCatching {
-        signalingClient.sendDismiss(
-            peerConnection?.localDescription?.description ?: ""
-        )
-        onCallEnded(reason)
-        peerConnection?.apply {
-            close()
-            dispose()
+    fun release() {
+        runCatching {
+            restoreAudio()
+            nsdRpcServer?.unregisterCallManager(this)
+            peerConnection?.apply {
+                close()
+                dispose()
+            }
+            videoCapturer?.apply {
+                stopCapture()
+                dispose()
+            }
+            videoSource?.dispose()
+            audioSource?.dispose()
+            surfaceTextureHelper?.dispose()
+            localVideoTrack?.dispose()
+            localAudioTrack?.dispose()
+            peerConnectionFactory?.dispose()
+            eglBase.release()
+        }.onFailure { e ->
+            e.printStackTrace()
         }
-        videoCapturer?.apply {
-            stopCapture()
-            dispose()
-        }
-        videoSource?.dispose()
-        audioSource?.dispose()
-        signalingClient.stop()
-        surfaceTextureHelper?.dispose()
-        localVideoTrack?.dispose()
-        localAudioTrack?.dispose()
-        peerConnectionFactory?.dispose()
-        eglBase.release()
-    }.onFailure { e ->
-        e.printStackTrace()
+    }
+
+    companion object {
+        private val TAG = CallManager::class.simpleName
     }
 }
