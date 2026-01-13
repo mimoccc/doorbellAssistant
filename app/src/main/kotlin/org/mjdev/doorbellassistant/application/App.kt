@@ -7,6 +7,7 @@ import org.kodein.di.DIAware
 import org.kodein.di.LazyDI
 import org.mjdev.doorbellassistant.di.mainDI
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
+import org.mjdev.doorbellassistant.service.LockScreenService.Companion.startLockScreenService
 import org.mjdev.doorbellassistant.ui.theme.Controls
 import org.mjdev.doorbellassistant.ui.theme.DarkMD5
 import org.mjdev.doorbellassistant.ui.theme.Item
@@ -53,6 +54,7 @@ class App : CallApplication<DoorbellNsdService>(), DIAware {
             colorsDark.colorLabelText = Label
         }
         start<DoorbellNsdService>()
+        startLockScreenService()
     }
 
     private fun setupExceptionHandler() {

@@ -62,6 +62,9 @@
     <uses-permission
             android:name="android.permission.ACCESS_FINE_LOCATION"
             tools:ignore="PermissionImpliesUnsupportedHardware" />
+    <uses-permission
+            android:name="android.permission.BIND_DEVICE_ADMIN"
+            tools:ignore="ProtectedPermissions" />
 
     <application
             android:usesCleartextTraffic="true"
@@ -139,8 +142,17 @@
                 android:launchMode="singleInstance"
                 android:autoRemoveFromRecents="true"
                 android:configChanges="orientation|screenSize|keyboardHidden"
-                android:exported="true">
-        </activity>
+                android:exported="true" />
+
+        <service
+                android:name=".service.LockScreenService"
+                android:enabled="true"
+                android:foregroundServiceType="specialUse"
+                android:exported="false">
+            <property
+                    android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                    android:value="Lock screen overlay service" />
+        </service>
 
         <service
                 android:enabled="true"
@@ -168,7 +180,8 @@
                 android:enabled="true"
                 android:name=".vpn.AdVpnService"
                 android:permission="android.permission.BIND_VPN_SERVICE"
-                android:foregroundServiceType="specialUse">
+                android:foregroundServiceType="specialUse"
+                tools:ignore="VpnServicePolicy">
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>
