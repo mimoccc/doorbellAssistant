@@ -4,7 +4,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.os.Build;
 
 import org.mjdev.doorbellassistant.R;
 

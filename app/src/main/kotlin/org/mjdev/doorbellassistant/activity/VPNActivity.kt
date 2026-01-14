@@ -7,14 +7,14 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.VpnService
 import android.os.Bundle
-import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import org.mjdev.doorbellassistant.ui.screens.VPNScreen
-import org.mjdev.doorbellassistant.vpn.AdVpnService
+//import org.mjdev.doorbellassistant.vpn.AdVpnService
 import org.mjdev.phone.activity.base.UnlockedActivity
+import kotlin.jvm.java
 
 @Suppress("unused")
 class VPNActivity : UnlockedActivity() {
@@ -26,11 +26,11 @@ class VPNActivity : UnlockedActivity() {
 
     private val vpnStatusReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            val status = intent?.getIntExtra(
-                AdVpnService.VPN_UPDATE_STATUS_EXTRA,
-                AdVpnService.VPN_STATUS_STOPPED
-            ) ?: AdVpnService.VPN_STATUS_STOPPED
-            vpnState.value = status == AdVpnService.VPN_STATUS_RUNNING
+//            val status = intent?.getIntExtra(
+//                AdVpnService.VPN_UPDATE_STATUS_EXTRA,
+//                AdVpnService.VPN_STATUS_STOPPED
+//            ) ?: AdVpnService.VPN_STATUS_STOPPED
+//            vpnState.value = status == AdVpnService.VPN_STATUS_RUNNING
         }
     }
 
@@ -38,7 +38,7 @@ class VPNActivity : UnlockedActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            startVpnService()
+//            startVpnService()
         }
     }
 
@@ -49,8 +49,12 @@ class VPNActivity : UnlockedActivity() {
         setContent {
             VPNScreen(
                 vpnState = vpnState,
-                checkAndStartVpn = { checkAndStartVpn() },
-                stopVpnService = { stopVpnService() },
+                checkAndStartVpn = {
+//                    checkAndStartVpn()
+                },
+                stopVpnService = {
+//                    stopVpnService()
+                },
             )
         }
     }
@@ -58,12 +62,12 @@ class VPNActivity : UnlockedActivity() {
     @SuppressLint("WrongConstant")
     override fun onResume() {
         super.onResume()
-        ContextCompat.registerReceiver(
-            this,
-            vpnStatusReceiver,
-            IntentFilter(AdVpnService.VPN_UPDATE_STATUS_INTENT),
-            ContextCompat.RECEIVER_EXPORTED
-        )
+//        ContextCompat.registerReceiver(
+//            this,
+//            vpnStatusReceiver,
+//            IntentFilter(AdVpnService.VPN_UPDATE_STATUS_INTENT),
+//            ContextCompat.RECEIVER_EXPORTED
+//        )
     }
 
     override fun onPause() {
@@ -72,23 +76,23 @@ class VPNActivity : UnlockedActivity() {
     }
 
     private fun checkAndStartVpn() {
-        val intent = VpnService.prepare(this)
-        if (intent != null) {
-            vpnPermissionLauncher.launch(intent)
-        } else {
-            startVpnService()
-        }
+//        val intent = VpnService.prepare(this)
+//        if (intent != null) {
+//            vpnPermissionLauncher.launch(intent)
+//        } else {
+//            startVpnService()
+//        }
     }
 
-    private fun startVpnService() = startForegroundService(
-        Intent(this, AdVpnService::class.java).apply {
-            putExtra("COMMAND", 0)
-        }
-    )
+//    private fun startVpnService() = startForegroundService(
+//        Intent(this, AdVpnService::class.java).apply {
+//            putExtra("COMMAND", 0)
+//        }
+//    )
 
-    private fun stopVpnService() = startService(
-        Intent(this, AdVpnService::class.java).apply {
-            putExtra("COMMAND", 2)
-        }
-    )
+//    private fun stopVpnService() = startService(
+//        Intent(this, AdVpnService::class.java).apply {
+//            putExtra("COMMAND", 2)
+//        }
+//    )
 }

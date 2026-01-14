@@ -1,4 +1,4 @@
-package org.mjdev.phone.rpc
+package org.mjdev.phone.rpc.server
 
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.stream.ICallManager

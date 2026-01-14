@@ -17,7 +17,7 @@ import org.kodein.di.bindProvider
 import org.kodein.di.bindSingleton
 import org.kodein.di.instance
 import org.mjdev.doorbellassistant.BuildConfig
-import org.mjdev.doorbellassistant.manager.AppNotificationManager
+import org.mjdev.doorbellassistant.helpers.AppNotificationManager
 import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import java.io.File
 import java.util.concurrent.TimeUnit

@@ -17,8 +17,8 @@ import org.mjdev.doorbellassistant.ui.window.ComposeFloatingWindow.Companion.ale
 import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdTypes
-import org.mjdev.phone.rpc.INsdServerRPC
-import org.mjdev.phone.rpc.NsdAction
+import org.mjdev.phone.rpc.server.INsdServerRPC
+import org.mjdev.phone.rpc.action.NsdAction
 import org.mjdev.phone.nsd.service.CallNsdService
 
 // todo automatic user login with wifi access

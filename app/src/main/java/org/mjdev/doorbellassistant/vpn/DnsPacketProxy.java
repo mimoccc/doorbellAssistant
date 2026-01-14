@@ -3,7 +3,6 @@ package org.mjdev.doorbellassistant.vpn;
 import android.content.Context;
 import android.util.Log;
 
-import org.pcap4j.packet.IcmpV4CommonPacket;
 import org.pcap4j.packet.IpPacket;
 import org.pcap4j.packet.IpSelector;
 import org.pcap4j.packet.IpV4Packet;

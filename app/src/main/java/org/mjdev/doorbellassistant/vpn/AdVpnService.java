@@ -12,7 +12,6 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.VpnService;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 
@@ -20,7 +19,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
-import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import org.mjdev.doorbellassistant.R;
@@ -28,8 +26,8 @@ import org.mjdev.doorbellassistant.activity.VPNActivity;
 
 import java.lang.ref.WeakReference;
 
-@SuppressWarnings("unused")
-@SuppressLint("ServicePolicy")
+@SuppressWarnings({"unused", "deprecation"})
+@SuppressLint({"ServicePolicy", "VpnServicePolicy"})
 public class AdVpnService extends VpnService implements Handler.Callback {
     public static final int NOTIFICATION_ID_STATE = 10;
     public static final int REQUEST_CODE_START = 43;
@@ -40,7 +38,7 @@ public class AdVpnService extends VpnService implements Handler.Callback {
 
         @SuppressWarnings("deprecation")
         public MyHandler(Callback callback) {
-            this.callback = new WeakReference<Callback>(callback);
+            this.callback = new WeakReference<>(callback);
         }
 
         @Override
@@ -68,12 +66,9 @@ public class AdVpnService extends VpnService implements Handler.Callback {
     // TODO: Temporary Hack til refactor is done
     public static int vpnStatus = VPN_STATUS_STOPPED;
     private final Handler handler = new MyHandler(this);
-    private AdVpnThread vpnThread = new AdVpnThread(this, new AdVpnThread.Notify() {
-        @Override
-        public void run(int value) {
-            handler.sendMessage(handler.obtainMessage(VPN_MSG_STATUS_UPDATE, value, 0));
-        }
-    });
+    private AdVpnThread vpnThread = new AdVpnThread(this, value ->
+            handler.sendMessage(handler.obtainMessage(VPN_MSG_STATUS_UPDATE, value, 0)
+            ));
     private final BroadcastReceiver connectivityChangedReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -199,7 +194,7 @@ public class AdVpnService extends VpnService implements Handler.Callback {
                 // fallthrough
             case START:
                 getSharedPreferences("state", MODE_PRIVATE).edit().putBoolean("isActive", true).apply();
-                startVpn(intent == null ? null : (PendingIntent) intent.getParcelableExtra("NOTIFICATION_INTENT"));
+                startVpn(intent == null ? null : intent.getParcelableExtra("NOTIFICATION_INTENT"));
                 break;
             case STOP:
                 getSharedPreferences("state", MODE_PRIVATE).edit().putBoolean("isActive", false).apply();
@@ -227,7 +222,7 @@ public class AdVpnService extends VpnService implements Handler.Callback {
                                 this,
                                 REQUEST_CODE_START,
                                 getResumeIntent(this),
-                        PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE
+                                PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE
                         )
                 ).build());
     }
@@ -236,7 +231,7 @@ public class AdVpnService extends VpnService implements Handler.Callback {
         vpnStatus = status;
         int notificationTextId = vpnStatusToTextId(status);
         notificationBuilder.setContentTitle(getString(notificationTextId));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O || FileHelper.loadCurrentSettings(getApplicationContext()).showNotification)
+        if (FileHelper.loadCurrentSettings(getApplicationContext()).showNotification)
             startForeground(NOTIFICATION_ID_STATE, notificationBuilder.build());
         Intent intent = new Intent(VPN_UPDATE_STATUS_INTENT);
         intent.putExtra(VPN_UPDATE_STATUS_EXTRA, status);
@@ -297,10 +292,7 @@ public class AdVpnService extends VpnService implements Handler.Callback {
     }
 
     @Override
-    public boolean handleMessage(Message message) {
-        if (message == null) {
-            return true;
-        }
+    public boolean handleMessage(@NonNull Message message) {
         switch (message.what) {
             case VPN_MSG_STATUS_UPDATE:
                 updateVpnStatus(message.arg1);

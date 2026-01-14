@@ -12,11 +12,12 @@ import androidx.compose.runtime.CompositionContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import org.mjdev.phone.extensions.CustomExtensions.enableEdgeToEdge
+import org.mjdev.phone.ui.components.PermissionsScreen
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 
 open class BaseActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        // todo bck color
+        // todo bck color, phoneColors not available yet
         enableEdgeToEdge(
             Color.Transparent,
             Color.Transparent
@@ -26,6 +27,7 @@ open class BaseActivity : ComponentActivity() {
 
     fun setContent(
         parent: CompositionContext? = null,
+        permissionsScreen: @Composable () -> Unit = {},
         content: @Composable () -> Unit,
     ) = overrideSetContent(parent, content = {
         PhoneTheme {
@@ -35,7 +37,10 @@ open class BaseActivity : ComponentActivity() {
                     .systemBarsPadding()
                     .displayCutoutPadding()
             ) {
-                content()
+                PermissionsScreen(
+                    permissionsInfoContent = permissionsScreen,
+                    content = content
+                )
             }
         }
     })

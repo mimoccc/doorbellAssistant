@@ -1,7 +1,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">DoorBellAssistant</string>
-    <string name="app_name_call">Call</string>
-    <string name="app_name_vpn">VPN</string>
+    <string name="app_name_assistant">DBA Assistant</string>
+    <string name="app_name_phone">DBA Phone</string>
+    <string name="app_name_vpn">DBA Vpn</string>
 
     <string name="wake_lock">DoorBellAssistantWakeLock</string>
 
@@ -40,4 +41,5 @@
     <string name="unknown_error_s">vpn unknown error: %s</string>
     <string name="requested_timed_out">request timeout</string>
     <string name="host_update_error_item">vpn host item update error: [%i] %s</string>
+
 </resources>

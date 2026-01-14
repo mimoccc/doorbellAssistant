@@ -1,5 +1,6 @@
 package org.mjdev.doorbellassistant.vpn;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -17,19 +18,12 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Configuration class. This is serialized as JSON using read() and write() methods.
- *
- * @author Julian Andres Klode
- */
 public class Configuration {
     public static final Gson GSON = new Gson();
     static final int VERSION = 2;
-    /* Default tweak level */
     static final int MINOR_VERSION = 3;
     private static final String TAG = "Configuration";
     public int version = 1;
@@ -37,36 +31,34 @@ public class Configuration {
     public boolean autoStart;
     public Hosts hosts = new Hosts();
     public DnsServers dnsServers = new DnsServers();
-
-    // Apologies for the legacy alternate
     @SerializedName(value = "allowlist", alternate = "whitelist")
     public Allowlist allowlist = new Allowlist();
     public boolean showNotification = true;
-    public boolean nightMode;
     public boolean watchDog = false;
     public boolean ipV6Support = true;
 
     public static Configuration read(Reader reader) throws IOException {
         Configuration config = GSON.fromJson(reader, Configuration.class);
-
         if (config.version > VERSION)
             throw new IOException("Unhandled file format version");
-
         for (int i = config.minorVersion + 1; i <= MINOR_VERSION; i++) {
             config.runUpdate(i);
         }
-        config.updateURL("http://someonewhocares.org/hosts/hosts", "https://someonewhocares.org/hosts/hosts", 0);
-
-
+        //noinspection HttpUrlsUsage
+        config.updateURL(
+                "http://someonewhocares.org/hosts/hosts",
+                "https://someonewhocares.org/hosts/hosts",
+                0
+        );
         return config;
     }
 
+    @SuppressWarnings("HttpUrlsUsage")
     public void runUpdate(int level) {
         switch (level) {
             case 1:
                 /* Switch someonewhocares to https */
                 updateURL("http://someonewhocares.org/hosts/hosts", "https://someonewhocares.org/hosts/hosts", -1);
-
                 /* Switch to StevenBlack's host file */
                 addURL(0, "StevenBlack's hosts file (includes all others)",
                         "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
@@ -75,10 +67,8 @@ public class Configuration {
                 updateURL("https://adaway.org/hosts.txt", null, Item.STATE_IGNORE);
                 updateURL("https://www.malwaredomainlist.com/hostslist/hosts.txt", null, Item.STATE_IGNORE);
                 updateURL("https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext", null, Item.STATE_IGNORE);
-
                 /* Remove broken host */
                 removeURL("http://winhelp2002.mvps.org/hosts.txt");
-
                 /* Update digitalcourage dns and add cloudflare */
                 updateDNS("85.214.20.141", "46.182.19.48");
                 addDNS("CloudFlare DNS (1)", "1.1.1.1", false);
@@ -128,20 +118,12 @@ public class Configuration {
     }
 
     public void removeURL(String oldURL) {
-
-        Iterator itr = hosts.items.iterator();
-        while (itr.hasNext()) {
-            Item host = (Item) itr.next();
-            if (host.location.equals(oldURL))
-                itr.remove();
-        }
+        hosts.items.removeIf(host -> host.location.equals(oldURL));
     }
 
     public void disableURL(String oldURL) {
         Log.d(TAG, String.format("disableURL: Disabling %s", oldURL));
-        Iterator itr = hosts.items.iterator();
-        while (itr.hasNext()) {
-            Item host = (Item) itr.next();
+        for (Item host : hosts.items) {
             if (host.location.equals(oldURL))
                 host.state = Item.STATE_IGNORE;
         }
@@ -160,6 +142,7 @@ public class Configuration {
         public int state;
 
         public boolean isDownloadable() {
+            //noinspection HttpUrlsUsage
             return location.startsWith("https://") || location.startsWith("http://");
         }
     }
@@ -175,45 +158,23 @@ public class Configuration {
         public List<Item> items = new ArrayList<>();
     }
 
+    @SuppressLint("QueryPermissionsNeeded")
     public static class Allowlist {
-        /**
-         * All apps use the VPN.
-         */
         public static final int DEFAULT_MODE_ON_VPN = 0;
-        /**
-         * No apps use the VPN.
-         */
         public static final int DEFAULT_MODE_NOT_ON_VPN = 1;
-        /**
-         * System apps (excluding browsers) do not use the VPN.
-         */
         public static final int DEFAULT_MODE_INTELLIGENT = 2;
 
-        public boolean showSystemApps;
-        /**
-         * The default mode to put apps in, that are not listed in the lists.
-         */
         public int defaultMode = DEFAULT_MODE_ON_VPN;
-        /**
-         * Apps that should not be allowed on the VPN
-         */
-        public List<String> items = new ArrayList<>();
-        /**
-         * Apps that should be on the VPN
-         */
+        public List<String> itemsNotOnVpn = new ArrayList<>();
         public List<String> itemsOnVpn = new ArrayList<>();
 
-        /**
-         * Categorizes all packages in the system into "on vpn" or
-         * "not on vpn".
-         *
-         * @param pm       A {@link PackageManager}
-         * @param onVpn    names of packages to use the VPN
-         * @param notOnVpn Names of packages not to use the VPN
-         */
-        public void resolve(PackageManager pm, Set<String> onVpn, Set<String> notOnVpn) {
-            Set<String> webBrowserPackageNames = new HashSet<String>();
-            List<ResolveInfo> resolveInfoList = pm.queryIntentActivities(newBrowserIntent(), 0);
+        public void resolve(
+                PackageManager pm,
+                Set<String> onVpn,
+                Set<String> notOnVpn
+        ) {
+            Set<String> webBrowserPackageNames = new HashSet<>();
+             List<ResolveInfo> resolveInfoList = pm.queryIntentActivities(newBrowserIntent(), 0);
             for (ResolveInfo resolveInfo : resolveInfoList) {
                 webBrowserPackageNames.add(resolveInfo.activityInfo.packageName);
             }
@@ -223,13 +184,11 @@ public class Configuration {
             webBrowserPackageNames.add("com.google.android.gms");
             webBrowserPackageNames.add("com.google.android.gsf");
             for (ApplicationInfo applicationInfo : pm.getInstalledApplications(0)) {
-                // We need to always keep ourselves using the VPN, otherwise our
-                // watchdog does not work.
                 if (applicationInfo.packageName.equals(BuildConfig.APPLICATION_ID)) {
                     onVpn.add(applicationInfo.packageName);
                 } else if (itemsOnVpn.contains(applicationInfo.packageName)) {
                     onVpn.add(applicationInfo.packageName);
-                } else if (items.contains(applicationInfo.packageName)) {
+                } else if (itemsNotOnVpn.contains(applicationInfo.packageName)) {
                     notOnVpn.add(applicationInfo.packageName);
                 } else if (defaultMode == DEFAULT_MODE_ON_VPN) {
                     onVpn.add(applicationInfo.packageName);
@@ -245,10 +204,7 @@ public class Configuration {
                 }
             }
         }
-        /**
-         * Returns an intent for opening a website, used for finding
-         * web browsers. Extracted method for mocking.
-         */
+
         Intent newBrowserIntent() {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://isabrowser.dns66.jak-linux.org/"));

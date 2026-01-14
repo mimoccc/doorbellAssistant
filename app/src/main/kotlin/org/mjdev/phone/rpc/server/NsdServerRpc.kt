@@ -1,12 +1,10 @@
-package org.mjdev.phone.rpc
+package org.mjdev.phone.rpc.server
 
 import android.content.Context
 import android.net.nsd.NsdServiceInfo
 import android.util.Log
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.ApplicationStarted
-import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
@@ -31,19 +29,24 @@ import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdTypes
 import org.mjdev.phone.nsd.device.nsdDeviceListFlow
 import kotlin.reflect.KClass
-import io.ktor.server.application.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
-import org.mjdev.phone.rpc.NsdActions.SDPAccept
-import org.mjdev.phone.rpc.NsdActions.SDPOffer
-import org.mjdev.phone.rpc.NsdActions.SDPAnswer
-import org.mjdev.phone.rpc.NsdActions.SDPDismiss
-import org.mjdev.phone.rpc.NsdActions.SDPIceCandidate
-import org.mjdev.phone.rpc.NsdActions.SDPStartCall
-import org.mjdev.phone.rpc.NsdActions.SDPStartCallStarted
+import org.mjdev.phone.rpc.action.NsdActions.SDPAccept
+import org.mjdev.phone.rpc.action.NsdActions.SDPOffer
+import org.mjdev.phone.rpc.action.NsdActions.SDPAnswer
+import org.mjdev.phone.rpc.action.NsdActions.SDPDismiss
+import org.mjdev.phone.rpc.action.NsdActions.SDPIceCandidate
+import org.mjdev.phone.rpc.action.NsdActions.SDPStartCall
+import org.mjdev.phone.rpc.action.NsdActions.SDPStartCallStarted
+import org.mjdev.phone.rpc.action.NsdAction
+import org.mjdev.phone.rpc.action.NsdActionRegistry
+import org.mjdev.phone.rpc.plugins.OllamaPlugin.OllamaPlugin
+import org.mjdev.phone.rpc.plugins.StartupPlugin.StartupPlugin
+import org.mjdev.phone.rpc.plugins.StopingPlugin.StopingPlugin
+import org.mjdev.phone.rpc.routing.NsdRouting
+import org.mjdev.phone.rpc.routing.NsdRoutingContext
 import org.mjdev.phone.stream.ICallManager
 import org.webrtc.IceCandidate
 
@@ -89,6 +92,13 @@ open class NsdServerRpc(
                     onStopped()
                 }
             }
+            install(OllamaPlugin) {
+
+            }
+//            install(PeerSignalingRegistryPlugin) {
+//                peerId = context.ANDROID_ID
+//                service = P2PService()
+//            }
             install(ContentNegotiation) {
                 json(nsdActionsRegister.json)
             }
@@ -270,44 +280,6 @@ open class NsdServerRpc(
         ) = nsdDeviceListFlow(this, types, onError, filter).collectLatest { devices ->
             devices.forEach { device ->
                 device.sendAction(action)
-            }
-        }
-
-        class StartupPluginConfig(
-            var onStart: (address: String, port: Int) -> Unit = { _, _ -> }
-        )
-
-        @Suppress("DEPRECATION")
-        val StartupPlugin = createApplicationPlugin(
-            name = "StartupPlugin",
-            createConfiguration = ::StartupPluginConfig
-        ) {
-            application.environment.monitor.subscribe(ApplicationStarted) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    val connectors = application.engine.resolvedConnectors()
-                    val firstConnector = connectors.first()
-                    val address = firstConnector.host
-                    val port = firstConnector.port
-                    withContext(Dispatchers.Main) {
-                        pluginConfig.onStart(address, port)
-                    }
-                }
-            }
-        }
-
-        class StopPluginConfig(
-            var onStop: () -> Unit = {}
-        )
-
-        @Suppress("DEPRECATION")
-        val StopingPlugin = createApplicationPlugin(
-            name = "StopingPlugin",
-            createConfiguration = ::StopPluginConfig
-        ) {
-            application.environment.monitor.subscribe(ApplicationStopping) {
-                CoroutineScope(Dispatchers.Main).launch {
-                    pluginConfig.onStop()
-                }
             }
         }
     }

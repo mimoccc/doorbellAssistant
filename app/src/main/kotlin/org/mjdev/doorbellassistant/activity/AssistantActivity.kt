@@ -75,27 +75,28 @@ class AssistantActivity : UnlockedActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        start<DoorbellNsdService>()
+    }
+
+    // todo
     override fun onResume() {
         super.onResume()
-        start<DoorbellNsdService>()
     }
 
     // todo
     override fun onPause() {
         super.onPause()
-//        if (isRunning<VideoCallActivity>()) {
-//            resetToBaseState()
-//        }
     }
 
-    // todo
-//    private fun resetToBaseState() {
-//        if (isMotionDetected.value) {
-//            isMotionDetected.value = false
-//        }
-//        delayHandler.stop()
-//        dismissWakeLock()
-//    }
+    private fun resetToBaseState() {
+        if (isMotionDetected.value) {
+            isMotionDetected.value = false
+        }
+        delayHandler.stop()
+        dismissWakeLock()
+    }
 
     private fun handleMotionDetected() {
         if (isMotionDetected.value.not()) {

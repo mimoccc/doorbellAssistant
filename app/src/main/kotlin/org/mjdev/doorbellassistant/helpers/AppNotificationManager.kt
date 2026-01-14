@@ -1,10 +1,9 @@
-package org.mjdev.doorbellassistant.manager
+package org.mjdev.doorbellassistant.helpers
 
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.NotificationManager as AndroidNotificationManager
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -22,7 +21,7 @@ class AppNotificationManager(
     val notificationId = 1
 
     private val androidManager
-        get() = context.getSystemService(Context.NOTIFICATION_SERVICE) as AndroidNotificationManager
+        get() = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     init {
         createNotificationChannel()
@@ -34,7 +33,7 @@ class AppNotificationManager(
             val channel = NotificationChannel(
                 channelId,
                 context.getString(titleResId),
-                AndroidNotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Service notifications"
                 setShowBadge(false)

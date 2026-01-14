@@ -20,7 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
-import org.mjdev.phone.rpc.INsdServerRPC
+import org.mjdev.phone.rpc.server.INsdServerRPC
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.rememberCallNsdService
 import org.mjdev.phone.stream.CallEndReason
 import org.mjdev.phone.stream.CallManager
