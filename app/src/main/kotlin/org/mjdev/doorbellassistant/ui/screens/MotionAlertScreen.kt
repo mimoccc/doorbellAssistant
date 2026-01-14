@@ -24,7 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import org.mjdev.doorbellassistant.enums.VideoSources
-import org.mjdev.doorbellassistant.manager.AIManager.Companion.TAG
+import org.mjdev.doorbellassistant.agent.ai.AIManager.Companion.TAG
 import org.mjdev.doorbellassistant.ui.components.AISpeechRecognizer
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayer
 import org.mjdev.doorbellassistant.ui.components.FrontCameraPreview

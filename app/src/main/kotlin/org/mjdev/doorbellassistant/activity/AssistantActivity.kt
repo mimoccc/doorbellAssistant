@@ -75,33 +75,34 @@ class AssistantActivity : UnlockedActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        start<DoorbellNsdService>()
+    }
+
+    // todo
     override fun onResume() {
         super.onResume()
-        start<DoorbellNsdService>()
     }
 
     // todo
     override fun onPause() {
         super.onPause()
-//        if (isRunning<VideoCallActivity>()) {
-//            resetToBaseState()
-//        }
     }
 
-    // todo
-//    private fun resetToBaseState() {
-//        if (isMotionDetected.value) {
-//            isMotionDetected.value = false
-//        }
-//        delayHandler.stop()
-//        dismissWakeLock()
-//    }
+    private fun resetToBaseState() {
+        if (isMotionDetected.value) {
+            isMotionDetected.value = false
+        }
+        delayHandler.stop()
+        dismissWakeLock()
+    }
 
     private fun handleMotionDetected() {
         if (isMotionDetected.value.not()) {
             isMotionDetected.value = true
         }
-        if (isDoorBellAssistantRunning && !isRunning<IntercomActivity>()) {
+        if (isDoorBellAssistantEnabled && (!isRunning<IntercomActivity>())) {
             startOrResume<AssistantActivity>(this)
         }
         bringToFront()
@@ -148,9 +149,9 @@ class AssistantActivity : UnlockedActivity() {
     companion object {
         val isMotionDetected: MutableState<Boolean> = mutableStateOf(false)
 
-        val Context.isDoorBellAssistantRunning
+        val Context.isDoorBellAssistantEnabled
             get() = runCatching {
-                isAppSetAsHomeLauncher()
+                isAppSetAsHomeLauncher() || isRunning<AssistantActivity>()
             }.getOrElse { false }
 
         fun Context.isAppSetAsHomeLauncher(): Boolean {

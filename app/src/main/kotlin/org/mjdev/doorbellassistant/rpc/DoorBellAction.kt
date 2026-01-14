@@ -3,7 +3,7 @@ package org.mjdev.doorbellassistant.rpc
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.mjdev.phone.nsd.device.NsdDevice
-import org.mjdev.phone.rpc.NsdAction
+import org.mjdev.phone.rpc.action.NsdAction
 
 object DoorBellActions {
 

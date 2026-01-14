@@ -6,6 +6,7 @@ import org.conscrypt.Conscrypt
 import org.kodein.di.DIAware
 import org.kodein.di.LazyDI
 import org.mjdev.doorbellassistant.di.mainDI
+import org.mjdev.doorbellassistant.agent.ai.OpenAiAgent
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
 import org.mjdev.doorbellassistant.service.LockScreenService.Companion.startLockScreenService
 import org.mjdev.doorbellassistant.ui.theme.Controls
@@ -23,9 +24,8 @@ class App : CallApplication<DoorbellNsdService>(), DIAware {
 
     override val di: LazyDI by mainDI(this@App)
 
-    companion object {
-        private val TAG = App::class.simpleName
-        private const val TAG_CRASH = "Crash"
+    val aiManager by lazy {
+        OpenAiAgent()
     }
 
     override fun onCreate() {
@@ -55,6 +55,11 @@ class App : CallApplication<DoorbellNsdService>(), DIAware {
         }
         start<DoorbellNsdService>()
         startLockScreenService()
+
+        // test
+        aiManager.call("How are you?") { result ->
+            Log.d(TAG, result)
+        }
     }
 
     private fun setupExceptionHandler() {
@@ -65,5 +70,10 @@ class App : CallApplication<DoorbellNsdService>(), DIAware {
             Log.e(TAG, "$TAG_CRASH: Stack trace:\n${throwable.stackTraceToString()}")
             defaultHandler?.uncaughtException(thread, throwable)
         }
+    }
+
+    companion object {
+        private val TAG = App::class.simpleName
+        private const val TAG_CRASH = "Crash"
     }
 }

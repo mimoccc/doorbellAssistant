@@ -18,7 +18,7 @@ import okhttp3.logging.HttpLoggingInterceptor.Level
 import org.mjdev.doorbellassistant.helpers.MotionDetector
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdTypes
-import org.mjdev.phone.rpc.NsdServerRpc.Companion.sendActionToAll
+import org.mjdev.phone.rpc.server.NsdServerRpc.Companion.sendActionToAll
 import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionUnDetected
 import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionDetected
 import java.io.ByteArrayOutputStream

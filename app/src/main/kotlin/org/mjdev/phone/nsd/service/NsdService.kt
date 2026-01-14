@@ -21,7 +21,7 @@ import org.mjdev.phone.nsd.device.NsdTypes
 import org.mjdev.phone.nsd.device.NsdTypes.Companion.serviceName
 import org.mjdev.phone.nsd.manager.NsdManagerFlow
 import org.mjdev.phone.nsd.registration.RegistrationEvent
-import org.mjdev.phone.rpc.INsdServerRPC
+import org.mjdev.phone.rpc.server.INsdServerRPC
 import kotlin.uuid.ExperimentalUuidApi
 
 @SuppressLint("HardwareIds")

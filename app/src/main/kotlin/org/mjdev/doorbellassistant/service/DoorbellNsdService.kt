@@ -7,7 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantRunning
+import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantEnabled
 import org.mjdev.doorbellassistant.extensions.ComposeExt.rememberDeviceCapture
 import org.mjdev.doorbellassistant.rpc.DoorBellActions
 import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc
@@ -17,14 +17,14 @@ import org.mjdev.doorbellassistant.ui.window.ComposeFloatingWindow.Companion.ale
 import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdTypes
-import org.mjdev.phone.rpc.INsdServerRPC
-import org.mjdev.phone.rpc.NsdAction
+import org.mjdev.phone.rpc.server.INsdServerRPC
+import org.mjdev.phone.rpc.action.NsdAction
 import org.mjdev.phone.nsd.service.CallNsdService
 
 // todo automatic user login with wifi access
 class DoorbellNsdService : CallNsdService() {
     override val serviceType: NsdTypes
-        get() = if (baseContext.isDoorBellAssistantRunning)
+        get() = if (baseContext.isDoorBellAssistantEnabled)
             NsdTypes.DOOR_BELL_ASSISTANT
         else
             NsdTypes.DOOR_BELL_CLIENT

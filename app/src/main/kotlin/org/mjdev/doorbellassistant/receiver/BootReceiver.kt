@@ -3,8 +3,11 @@ package org.mjdev.doorbellassistant.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import org.mjdev.doorbellassistant.vpn.AdVpnService
+import org.mjdev.doorbellassistant.activity.AssistantActivity
+import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantEnabled
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
+import org.mjdev.doorbellassistant.service.MotionDetectionService
+import org.mjdev.phone.extensions.CustomExtensions.startOrResume
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.start
 
 class BootReceiver : BroadcastReceiver() {
@@ -15,12 +18,10 @@ class BootReceiver : BroadcastReceiver() {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             context.start<DoorbellNsdService>()
             context.start<DoorbellNsdService>()
-            AdVpnService.checkStartVpnOnBoot(context)
-
-//            if (context.isAssistantEnabled) {
-//            MotionDetectionService.start(context)
-//            AssistantActivity.startOrResume(context)
-//            }
+            if (context.isDoorBellAssistantEnabled) {
+                MotionDetectionService.start(context)
+                startOrResume<AssistantActivity>(context)
+            }
         }
     }
 }

@@ -42,3 +42,4 @@ google-services.json
 # Custom
 .output.txt
 stream-api-secrets.txt!/config.prop
+/*-key.txt

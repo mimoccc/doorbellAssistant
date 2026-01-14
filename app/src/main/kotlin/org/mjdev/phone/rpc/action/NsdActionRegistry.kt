@@ -1,4 +1,4 @@
-package org.mjdev.phone.rpc
+package org.mjdev.phone.rpc.action
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi

@@ -3,8 +3,8 @@ package org.mjdev.doorbellassistant.rpc
 import android.content.Context
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.mjdev.doorbellassistant.rpc.CaptureRoute.captureRoute
-import org.mjdev.phone.rpc.NsdAction
-import org.mjdev.phone.rpc.NsdServerRpc
+import org.mjdev.phone.rpc.action.NsdAction
+import org.mjdev.phone.rpc.server.NsdServerRpc
 import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionDetected
 import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionUnDetected
 

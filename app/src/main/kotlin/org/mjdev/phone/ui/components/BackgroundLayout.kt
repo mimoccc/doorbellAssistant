@@ -36,7 +36,7 @@ fun BackgroundLayout(
             modifier = Modifier.fillMaxSize(),
             painter = imagePainter,
             contentDescription = contentDescription,
-            contentScale = if (isPortrait) ContentScale.FillHeight else ContentScale.FillHeight
+            contentScale = if (isPortrait) ContentScale.Inside else ContentScale.FillHeight
         )
 //        BrushedBox(
 //            modifier = Modifier.fillMaxSize(),

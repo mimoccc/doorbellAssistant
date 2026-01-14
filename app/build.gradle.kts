@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 import SafeMap.Companion.toSafeMap
 import kotlin.apply
 import kotlin.collections.forEach
@@ -6,7 +8,7 @@ import kotlin.reflect.KProperty
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.google.services)
+//    alias(libs.plugins.google.services)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -45,17 +47,16 @@ fun Project.readPropsFile(
         forEach { p ->
             val key = p.key
             val value = if (key.contains("pass", true)) "******" else p.value
+            println("Prop : $key = $value")
         }
     }
 }.getOrNull() ?: SafeMap()
 
 android {
     namespace = "org.mjdev.doorbellassistant"
-
     compileSdk {
         version = release(36)
     }
-
     packaging {
         resources {
             excludes += "META-INF/mailcap"
@@ -73,7 +74,6 @@ android {
             excludes += "META-INF/INDEX.LIST"
         }
     }
-
     defaultConfig {
         applicationId = "org.mjdev.doorbellassistant"
         minSdk = 26
@@ -81,20 +81,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        readPropsFile("stream-api-secrets.txt").also { streamSecrets ->
-            buildConfigField(
-                "String",
-                "STREAM_API_KEY",
-                "\"" + streamSecrets["apiKey"] + "\""
-            )
-            buildConfigField(
-                "String",
-                "STREAM_API_USER_TOKEN",
-                "\"" + streamSecrets["userToken"] + "\""
-            )
-        }
     }
-
     buildTypes {
         debug {
             isMinifyEnabled = false
@@ -116,79 +103,70 @@ android {
             )
         }
     }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-
     buildFeatures {
         compose = true
         buildConfig = true
+        prefab = true
     }
 }
 
-// todo : fucking android studio error
-tasks.register("testClasses")
-
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
-    implementation(platform(libs.firebase.bom))
-
+//    implementation(platform(libs.firebase.bom))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.androidx.ui)
-
+    // permissions
     implementation(libs.accompanist.permissions)
-
+    // compose
     implementation(libs.androidx.activity.compose)
-
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material.icons.extended)
-
+    // video player
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
-
+    // camera
     implementation(libs.androidx.camera.camera2)
     implementation(libs.camera.lifecycle)
-
-    implementation(libs.firebase.ai)
-
-    implementation(libs.generativeai)
-
+    // ktor
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cio)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
-
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+    // di
     implementation(libs.kodein.di)
     implementation(libs.kodein.di.framework.compose)
-
-//    implementation(libs.ipfslite)
-//    implementation("io.ipfs:java-ipfs-http-client:1.4.4")
-//    implementation(libs.ice4j)
-
+    // vpn
     implementation(libs.pcap4j.core)
     implementation(libs.pcap4j.packetfactory.static)
     implementation(libs.dnsjava.dnsjava)
+    // todo remove
     implementation(libs.gson)
-
+    // todo remove or replace ktor
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
-
+    // webrtc
     implementation(libs.stream.webrtc.android)
-
+    // helpers for webrtc & etc
     implementation(libs.conscrypt.android)
     implementation(libs.bcprov.jdk18on)
     implementation(libs.bctls.jdk18on)
+    // palette
     implementation(libs.androidx.palette.ktx)
-
+    // widgets & notifications
     implementation(libs.androidx.glance)
     implementation(libs.androidx.glance.preview)
     implementation(libs.androidx.glance.appwidget.preview)
@@ -198,9 +176,12 @@ dependencies {
     implementation(libs.appwidget.host)
     implementation(libs.appwidget.preview)
     implementation(libs.appwidget.viewer)
-
+    // custom ai
     implementation(libs.koog.agents)
-
+//    implementation(libs.firebase.ai)
+//    implementation(libs.generativeai)
+//    implementation(libs.cactus)
+    // testing
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

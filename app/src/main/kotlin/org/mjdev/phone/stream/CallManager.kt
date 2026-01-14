@@ -8,7 +8,7 @@ import android.os.Build
 import android.util.Log
 import org.mjdev.phone.exception.CallManagerException
 import org.mjdev.phone.nsd.device.NsdDevice
-import org.mjdev.phone.rpc.INsdServerRPC
+import org.mjdev.phone.rpc.server.INsdServerRPC
 import org.webrtc.AudioSource
 import org.webrtc.AudioTrack
 import org.webrtc.Camera2Enumerator
@@ -111,7 +111,6 @@ class CallManager(
             }
             is AudioTrack -> {
                 Log.d(TAG, "Remote audio track ready: ${track.id()}")
-                // Audio tracks are automatically played by WebRTC
             }
         }
     }
