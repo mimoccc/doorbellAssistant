@@ -6,7 +6,7 @@ import org.conscrypt.Conscrypt
 import org.kodein.di.DIAware
 import org.kodein.di.LazyDI
 import org.mjdev.doorbellassistant.di.mainDI
-import org.mjdev.doorbellassistant.agent.ai.OpenAiAgent
+import org.mjdev.doorbellassistant.agent.ai.OllamaAgent
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
 import org.mjdev.doorbellassistant.service.LockScreenService.Companion.startLockScreenService
 import org.mjdev.doorbellassistant.ui.theme.Controls
@@ -25,7 +25,7 @@ class App : CallApplication<DoorbellNsdService>(), DIAware {
     override val di: LazyDI by mainDI(this@App)
 
     val aiManager by lazy {
-        OpenAiAgent()
+        OllamaAgent()
     }
 
     override fun onCreate() {

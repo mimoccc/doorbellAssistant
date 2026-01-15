@@ -1,79 +1,107 @@
-package org.mjdev.phone.rpc.plugins
+package org.mjdev.doorbellassistant.agent.ai
 
-import android.net.Uri
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.ext.tool.SayToUser
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.llm.OllamaModels
 import android.util.Log
-import io.ktor.server.application.ApplicationStarted
-import io.ktor.server.application.createApplicationPlugin
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.launch
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.util.concurrent.ConcurrentHashMap
-import androidx.core.net.toUri
-import io.ktor.client.plugins.HttpTimeout
+import kotlin.collections.set
 
-@Suppress("HttpUrlsUsage", "LocalVariableName")
-object OllamaPlugin {
-
-    class OllamaPluginConfig {
-        val serverPort: Int = 11434
-        var scanInterval: Long = 5 * 60 * 1000
-        var connectionTimeout: Long = 2000
+@OptIn(ExperimentalCoroutinesApi::class)
+class OllamaAgent(
+    serverPort: Int = DEFAULT_OLLAMA_PORT,
+    connectionTimeout: Long = 10000,
+    systemPrompt: String = DEFAULT_SYSTEM_PROMPT,
+    model: LLModel = OllamaModels.Meta.LLAMA_3_2,
+    tools: () -> List<Tool<*, String>> = { listOf(SayToUser) }
+) {
+    val scope = CoroutineScope(Dispatchers.Default)
+    val networkScanner by lazy {
+        NetworkScanner(serverPort, connectionTimeout)
+    }
+    val server = flow {
+        networkScanner.scanLocalNetworkForOllamaServers().also { ns ->
+            emit(ns.firstOrNull())
+        }
+    }
+    val allTools by lazy {
+        tools()
+    }
+    val agent: Flow<AIAgent<String, String>?> = server.mapLatest { serverUrl ->
+        if (serverUrl != null) {
+            AIAgent(
+                promptExecutor = simpleOllamaAIExecutor(serverUrl),
+                systemPrompt = systemPrompt,
+                llmModel = model,
+                temperature = 0.7,
+                toolRegistry = ToolRegistry {
+                    allTools.forEach { t ->
+                        tool(t)
+                    }
+                },
+                maxIterations = 30
+            )
+        } else null
     }
 
-    @Suppress("DEPRECATION")
-    val OllamaPlugin = createApplicationPlugin(
-        name = "OllamaPlugin",
-        createConfiguration = ::OllamaPluginConfig
-    ) {
-        val TAG = "OllamaPlugin"
-        val scanInterval = pluginConfig.scanInterval
-        val scanner = NetworkScanner(pluginConfig)
-        application.environment.monitor.subscribe(ApplicationStarted) {
-            CoroutineScope(Dispatchers.IO).launch {
-                while (true) {
-                    try {
-                        scanner.scanLocalNetworkForOllamaServers()
-                        if (scanner.isEmpty()) {
-                            delay(scanInterval)
-                        } else {
-                            scanner.checkMinOneServerAlive()
-                        }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Network scan error: ${e.message}")
-                        delay(scanInterval)
-                    }
-                }
-            }
+    fun call(
+        prompt: String = "Hello! How can you help me?",
+        onResult: (String) -> Unit = { result -> Log.d(TAG, result) }
+    ) = scope.launch {
+        runCatching {
+            agent.first()?.run(prompt) ?: throw (OllamaException("No server found."))
+        }.onFailure { e ->
+            onResult(e.message ?: "An unknown error occurred.")
+        }.getOrNull()?.let { result ->
+            onResult(result)
         }
     }
 
+    class OllamaException(
+        message: String,
+        cause: Throwable? = null
+    ) : Exception(message, cause)
+
     class NetworkScanner(
-        private val config: OllamaPluginConfig,
-    ) : ArrayList<Uri>() {
+        val serverPort: Int,
+        val connectionTimeout: Long
+    ) : ArrayList<String>() {
         companion object {
             private val TAG = NetworkScanner::class.simpleName
         }
 
-        private val discoveredServers = ConcurrentHashMap<String, Uri>()
+        private val discoveredServers = ConcurrentHashMap<String, String>()
         private val httpClient by lazy {
             HttpClient(CIO) {
                 install(HttpTimeout) {
-                    connectTimeoutMillis = config.connectionTimeout
-                    requestTimeoutMillis = config.connectionTimeout
+                    connectTimeoutMillis = connectionTimeout
+                    requestTimeoutMillis = connectionTimeout
                 }
             }
         }
 
-        suspend fun scanLocalNetworkForOllamaServers() {
+        suspend fun scanLocalNetworkForOllamaServers(): NetworkScanner {
             val localIp = getLocalIpAddress()
             if (localIp == null) {
                 Log.e(TAG, "Could not determine local IP address.")
@@ -85,15 +113,13 @@ object OllamaPlugin {
                         networkBase
                     }/${
                         subnetMask
-                    } for Ollama servers on port ${
-                        config.serverPort
-                    }"
+                    } for Ollama servers on port $serverPort"
                 )
                 val jobs = (1..254).map { hostPart ->
                     CoroutineScope(Dispatchers.IO).async {
                         val targetIp = "$networkBase.$hostPart"
                         if (targetIp != localIp) {
-                            checkOllamaServer(targetIp, config.serverPort)
+                            checkOllamaServer(targetIp, serverPort)
                         }
                     }
                 }
@@ -107,9 +133,11 @@ object OllamaPlugin {
                     Log.d(TAG, "$idx. Server at:  $uri")
                 }
             }
+            return this
         }
 
-        private suspend fun checkOllamaServer(
+        @Suppress("HttpUrlsUsage")
+        suspend fun checkOllamaServer(
             ip: String,
             port: Int
         ) = runCatching {
@@ -118,9 +146,8 @@ object OllamaPlugin {
             if (response.status.value == 200) {
                 val responseBody = response.bodyAsText()
                 if (responseBody.contains("models") || responseBody.contains("name")) {
-                    val serverUri = "http://$ip:$port".toUri()
-                    discoveredServers[ip] = serverUri
-                    println("Found Ollama server at: $ip:$port")
+                    discoveredServers[ip] = "http://$ip:$port"
+                    Log.d(TAG, "Found Ollama server at: $ip:$port")
                 }
             }
         }.onFailure { e ->
@@ -155,9 +182,13 @@ object OllamaPlugin {
             // Simple heuristic - most home networks use /24
             return 24
         }
+    }
 
-        fun checkMinOneServerAlive() {
-            // todo
-        }
+    companion object {
+        private val TAG = OllamaAgent::class.simpleName
+
+        const val DEFAULT_OLLAMA_PORT = 11434
+        const val DEFAULT_SYSTEM_PROMPT =
+            "You are a helpful assistant. Answer user questions concisely."
     }
 }

@@ -42,7 +42,6 @@ import org.mjdev.phone.rpc.action.NsdActions.SDPStartCall
 import org.mjdev.phone.rpc.action.NsdActions.SDPStartCallStarted
 import org.mjdev.phone.rpc.action.NsdAction
 import org.mjdev.phone.rpc.action.NsdActionRegistry
-import org.mjdev.phone.rpc.plugins.OllamaPlugin.OllamaPlugin
 import org.mjdev.phone.rpc.plugins.StartupPlugin.StartupPlugin
 import org.mjdev.phone.rpc.plugins.StopingPlugin.StopingPlugin
 import org.mjdev.phone.rpc.routing.NsdRouting
@@ -91,9 +90,6 @@ open class NsdServerRpc(
                     port = 8888
                     onStopped()
                 }
-            }
-            install(OllamaPlugin) {
-
             }
 //            install(PeerSignalingRegistryPlugin) {
 //                peerId = context.ANDROID_ID
