@@ -3,29 +3,17 @@ package org.mjdev.doorbellassistant.extensions
 import android.content.Context
 import android.content.IntentFilter
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.VectorDrawable
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
 import android.net.Uri
-import android.net.wifi.WifiManager
-import android.os.Handler
 import android.os.PowerManager
 import android.os.PowerManager.WakeLock
 import android.util.Log
-import android.view.View
 import androidx.activity.ComponentActivity
+import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
@@ -44,7 +32,6 @@ import org.mjdev.doorbellassistant.enums.IntentAction
 import org.mjdev.doorbellassistant.receiver.MotionBroadcastReceiver
 import org.mjdev.doorbellassistant.rpc.CaptureRoute.getFrame
 import org.mjdev.doorbellassistant.service.MotionDetectionService
-import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import org.mjdev.phone.nsd.device.NsdDevice
 
 @Suppress("MemberVisibilityCanBePrivate", "DEPRECATION")
@@ -52,39 +39,39 @@ object ComposeExt {
 
     private val TAG_WAKE_LOCK: Int = R.string.wake_lock
 
-    fun String.toByteArray(): ByteArray = split(".").map {
-        it.toInt().toByte()
-    }.toByteArray()
+//    fun String.toByteArray(): ByteArray = split(".").map {
+//        it.toInt().toByte()
+//    }.toByteArray()
 
-    fun ImageVector.toDrawable(
-        context: Context,
-        width: Int,
-        height: Int
-    ): BitmapDrawable {
-        val computedWidth = if (width < 1) 1 else width
-        val computedHeight = if (height < 1) 1 else height
-        val bitmap = createBitmap(computedWidth, computedHeight)
-        val canvas = Canvas(bitmap)
-        val vectorDrawable = VectorDrawable()
-        vectorDrawable.setBounds(0, 0, computedWidth, computedHeight)
-        vectorDrawable.draw(canvas)
-        return BitmapDrawable(context.resources, bitmap)
-    }
+//    fun ImageVector.toDrawable(
+//        context: Context,
+//        width: Int,
+//        height: Int
+//    ): BitmapDrawable {
+//        val computedWidth = if (width < 1) 1 else width
+//        val computedHeight = if (height < 1) 1 else height
+//        val bitmap = createBitmap(computedWidth, computedHeight)
+//        val canvas = Canvas(bitmap)
+//        val vectorDrawable = VectorDrawable()
+//        vectorDrawable.setBounds(0, 0, computedWidth, computedHeight)
+//        vectorDrawable.draw(canvas)
+//        return BitmapDrawable(context.resources, bitmap)
+//    }
 
-    fun ImageVector.toDrawable(
-        view: View,
-        width: Int = view.width,
-        height: Int = view.height
-    ): BitmapDrawable {
-        val computedWidth = if (width < 1) 1 else width
-        val computedHeight = if (height < 1) 1 else height
-        val bitmap = createBitmap(computedWidth, computedHeight)
-        val canvas = Canvas(bitmap)
-        val vectorDrawable = VectorDrawable()
-        vectorDrawable.setBounds(0, 0, computedWidth, computedHeight)
-        vectorDrawable.draw(canvas)
-        return BitmapDrawable(view.context.resources, bitmap)
-    }
+//    fun ImageVector.toDrawable(
+//        view: View,
+//        width: Int = view.width,
+//        height: Int = view.height
+//    ): BitmapDrawable {
+//        val computedWidth = if (width < 1) 1 else width
+//        val computedHeight = if (height < 1) 1 else height
+//        val bitmap = createBitmap(computedWidth, computedHeight)
+//        val canvas = Canvas(bitmap)
+//        val vectorDrawable = VectorDrawable()
+//        vectorDrawable.setBounds(0, 0, computedWidth, computedHeight)
+//        vectorDrawable.draw(canvas)
+//        return BitmapDrawable(view.context.resources, bitmap)
+//    }
 
     var ComponentActivity.wakeLock: WakeLock?
         get() = runCatching {
@@ -97,16 +84,16 @@ object ComposeExt {
         }
 
 
-    val Context.wifiManager
-        get() = getSystemService(Context.WIFI_SERVICE) as? WifiManager
+//    val Context.wifiManager
+//        get() = getSystemService(Context.WIFI_SERVICE) as? WifiManager
 
-    val Context.connectivityManager
-        get() = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+//    val Context.connectivityManager
+//        get() = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
 
-    val Context.allNetworks: Map<Network, NetworkCapabilities?>
-        get() = connectivityManager?.allNetworks?.associate { n ->
-            n to connectivityManager?.getNetworkCapabilities(n)
-        } ?: emptyMap()
+//    val Context.allNetworks: Map<Network, NetworkCapabilities?>
+//        get() = connectivityManager?.allNetworks?.associate { n ->
+//            n to connectivityManager?.getNetworkCapabilities(n)
+//        } ?: emptyMap()
 
 //    val Context.currentPublicIP: String
 //        get() = NetworkInterface.getNetworkInterfaces()
@@ -125,10 +112,10 @@ object ComposeExt {
     val EmptyBitmap
         get() = createBitmap(1, 1)
 
-    fun postDelayed(
-        timeout: Long,
-        block: () -> Unit
-    ) = Handler().postDelayed(block, timeout)
+//    fun postDelayed(
+//        timeout: Long,
+//        block: () -> Unit
+//    ) = Handler().postDelayed(block, timeout)
 
     fun ComponentActivity.acquireWakeLock() = runCatching {
         dismissWakeLock()
@@ -164,6 +151,7 @@ object ComposeExt {
         )
     }.onFailure { e -> e.printStackTrace() }
 
+    @Suppress("unused")
     fun Context.unregisterMotionDetector(
         motionReceiver: MotionBroadcastReceiver
     ) = runCatching {
@@ -171,72 +159,63 @@ object ComposeExt {
         MotionDetectionService.stop(this)
     }.onFailure { e -> e.printStackTrace() }
 
-    @androidx.annotation.OptIn(UnstableApi::class)
-    @Composable
-    fun rememberExoPlayer(
+    @OptIn(UnstableApi::class)
+    fun createExoPlayer(
+        context: Context,
         videoUri: Uri = Uri.EMPTY,
         repeatMode: @Player.RepeatMode Int = Player.REPEAT_MODE_OFF,
         startTime: Long = 0L,
         startOnReady: Boolean = true,
         onVideoFinish: (ExoPlayer) -> Unit = { p -> p.pause() },
-        onFrame: (ExoPlayer) -> Unit = {}
-    ): ExoPlayer? {
-        if(isPreview) return null
-        val context = LocalContext.current
-        val currentOnVideoFinish = rememberUpdatedState(onVideoFinish)
-        val currentOnFrame = rememberUpdatedState(onFrame)
-        val exoPlayer = ExoPlayer.Builder(context).build().apply {
-            setVideoFrameMetadataListener { _, _, _, _ ->
-                currentOnFrame.value.invoke(this@apply)
+        onFrame: (ExoPlayer) -> Unit = {},
+        onVideoStart: (ExoPlayer) -> Unit = {},
+    ): ExoPlayer = ExoPlayer.Builder(context).build().apply {
+        setVideoFrameMetadataListener { _, _, _, _ ->
+            onFrame(this@apply)
+        }
+        addListener(object : Player.Listener {
+            override fun onPlayerError(error: PlaybackException) {
+                Log.e("VideoPlayer", "ExoPlayer error: ${error.message}", error)
+//                onVideoFinish(this@apply)
             }
-            addListener(object : Player.Listener {
-                override fun onPlayerError(error: PlaybackException) {
-                    Log.e("VideoPlayer", "ExoPlayer error: ${error.message}", error)
-                }
 
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    when (playbackState) {
-                        Player.STATE_READY -> {
-                            if (currentPosition < startTime) {
-                                seekTo(startTime)
-                            }
-                        }
-
-                        Player.STATE_ENDED -> {
-                            currentOnVideoFinish.value.invoke(this@apply)
-                            currentOnFrame.value.invoke(this@apply)
-                        }
-
-                        else -> {
-                            // no op
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                when (playbackState) {
+                    Player.STATE_READY -> {
+                        if (currentPosition < startTime) {
+                            seekTo(startTime)
                         }
                     }
-                }
 
-                override fun onPositionDiscontinuity(
-                    oldPosition: Player.PositionInfo,
-                    newPosition: Player.PositionInfo,
-                    reason: Int
-                ) {
-                    val isDiscontinuity = reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION
-                    if (isDiscontinuity) {
-                        currentOnVideoFinish.value.invoke(this@apply)
-                        currentOnFrame.value.invoke(this@apply)
+                    Player.STATE_ENDED -> {
+                        onVideoFinish(this@apply)
+                        onFrame(this@apply)
+                    }
+
+                    else -> {
+                        // no op
                     }
                 }
-            })
+            }
+
+            override fun onPositionDiscontinuity(
+                oldPosition: Player.PositionInfo,
+                newPosition: Player.PositionInfo,
+                reason: Int
+            ) {
+                val isDiscontinuity = reason == Player.DISCONTINUITY_REASON_AUTO_TRANSITION
+                if (isDiscontinuity) {
+                    onVideoFinish(this@apply)
+                    onFrame(this@apply)
+                }
+            }
+        })
+        this.repeatMode = repeatMode
+        this.playWhenReady = startOnReady
+        if (videoUri != Uri.EMPTY) {
             setMediaItem(MediaItem.fromUri(videoUri))
-            this.repeatMode = repeatMode
-            this.playWhenReady = startOnReady
             prepare()
         }
-        DisposableEffect(videoUri) {
-            onDispose {
-                exoPlayer.stop()
-                exoPlayer.release()
-            }
-        }
-        return exoPlayer
     }
 
     operator fun PaddingValues.plus(other: PaddingValues) = object : PaddingValues {
@@ -255,6 +234,7 @@ object ComposeExt {
             this@plus.calculateBottomPadding() + other.calculateBottomPadding()
     }
 
+    @Suppress("ParamsComparedByRef")
     @Composable
     fun rememberDeviceCapture(
         device: NsdDevice?,
@@ -270,6 +250,20 @@ object ComposeExt {
             }
         }
         image
+    }
+
+    @Composable
+    fun VisibleState(
+        visible: Boolean = false,
+        content: @Composable () -> Unit = {},
+    ) {
+        if (visible) {
+            content()
+        }
+    }
+
+    fun logPosition() {
+        RuntimeException("POSITION").printStackTrace()
     }
 
 }

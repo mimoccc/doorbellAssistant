@@ -78,6 +78,10 @@ class OllamaAgent(
         }
     }
 
+    fun release() {
+        // todo
+    }
+
     class OllamaException(
         message: String,
         cause: Throwable? = null

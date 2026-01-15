@@ -34,42 +34,31 @@ import org.mjdev.phone.ui.theme.base.phoneColors
 @Composable
 fun LauncherScreen(
     modifier: Modifier = Modifier,
-    visibleState: MutableState<Boolean> = mutableStateOf(!isPreview),
     onStartClicked: () -> Unit = {},
-    onDismiss: () -> Unit = {},
 ) = PhoneTheme {
-    AnimatedVisibility(
-        modifier = modifier.clickable { onDismiss() },
-        visible = visibleState.value.not(),
-        enter = fadeIn(animationSpec = tween(500)),
-        exit = fadeOut(animationSpec = tween(500))
+    Box(
+        modifier = modifier.background(phoneColors.colorBackground),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
+        BackgroundLayout(
+            Modifier
                 .fillMaxSize()
-                .background(phoneColors.colorBackground),
-            contentAlignment = Alignment.Center
+                .alpha(0.8f)
+        )
+        GlowButton(
+            modifier = Modifier.size(120.dp),
+            onClick = onStartClicked,
         ) {
-            BackgroundLayout(
-                Modifier
-                    .fillMaxSize()
-                    .alpha(0.8f)
+            Icon(
+                modifier = Modifier
+                    .padding(15.dp)
+                    .fillMaxSize(),
+                contentDescription = "",
+                tint = if (isPreview) {
+                    if (isSystemInDarkTheme()) White else Black
+                } else White,
+                imageVector = Icons.Filled.BackHand
             )
-            GlowButton(
-                modifier = Modifier.size(120.dp),
-                onClick = onStartClicked,
-            ) {
-                Icon(
-                    modifier = Modifier
-                        .padding(15.dp)
-                        .fillMaxSize(),
-                    contentDescription = "",
-                    tint = if (isPreview) {
-                        if (isSystemInDarkTheme()) White else Black
-                    } else White,
-                    imageVector = Icons.Filled.BackHand
-                )
-            }
         }
     }
 }

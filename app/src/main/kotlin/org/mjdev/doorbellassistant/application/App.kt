@@ -24,10 +24,6 @@ class App : CallApplication<DoorbellNsdService>(), DIAware {
 
     override val di: LazyDI by mainDI(this@App)
 
-    val aiManager by lazy {
-        OllamaAgent()
-    }
-
     override fun onCreate() {
         super.onCreate()
         setupExceptionHandler()
@@ -57,9 +53,9 @@ class App : CallApplication<DoorbellNsdService>(), DIAware {
         startLockScreenService()
 
         // test
-        aiManager.call("How are you?") { result ->
-            Log.d(TAG, result)
-        }
+//        aiManager.call("How are you?") { result ->
+//            Log.d(TAG, result)
+//        }
     }
 
     private fun setupExceptionHandler() {

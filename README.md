@@ -15,6 +15,7 @@ Simply, it allows local area network calls.
 ### Achieved so far:
 
 - motion detection
+- audio detection
 - VoIP phone
 - stateful media player
 - auto LAN NSD discovery
@@ -27,7 +28,11 @@ Simply, it allows local area network calls.
 
 ### To do:
 
-- Whisper integration or an autodetection of the AI server with Whisper
+- remove video glitch
+- improve motion detection, may be with ai?
+- improve audio detection - service
+- better voice handling with noise reduction and auto-adaptation
+- better background layer
 - STT / TTS completion
 - dependencies injection
 - improve performance
@@ -35,6 +40,7 @@ Simply, it allows local area network calls.
 - image of client device if set
 - as application is install and play, no config needed, settings button removal
 - custom id for clients, can be set from device user name, may be...
+- record activities around if needed
 
 ### Screens:
 

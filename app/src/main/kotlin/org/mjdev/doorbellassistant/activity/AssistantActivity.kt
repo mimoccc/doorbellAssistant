@@ -23,7 +23,7 @@ import org.mjdev.doorbellassistant.rpc.CaptureRoute.sendMotionUnDetected
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
 import org.mjdev.doorbellassistant.service.MotionDetectionService
 import org.mjdev.doorbellassistant.ui.screens.MainScreen
-import org.mjdev.phone.activity.IntercomActivity
+import org.mjdev.phone.activity.VideoCallActivity
 import org.mjdev.phone.activity.base.UnlockedActivity
 import org.mjdev.phone.extensions.CustomExtensions.ANDROID_ID
 import org.mjdev.phone.extensions.CustomExtensions.bringToFront
@@ -40,10 +40,13 @@ import org.mjdev.phone.nsd.service.CallNsdService.Companion.start
 
 class AssistantActivity : UnlockedActivity() {
     val delayHandler by lazy {
-        DelayHandler(60000L) {
+        DelayHandler(8000L) {
             handleMotionLost()
         }
     }
+
+    val isInCall
+        get() = isRunning<VideoCallActivity>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,6 +94,7 @@ class AssistantActivity : UnlockedActivity() {
         super.onPause()
     }
 
+    @Suppress("unused")
     private fun resetToBaseState() {
         if (isMotionDetected.value) {
             isMotionDetected.value = false
@@ -103,13 +107,15 @@ class AssistantActivity : UnlockedActivity() {
         if (isMotionDetected.value.not()) {
             isMotionDetected.value = true
         }
-        if (isDoorBellAssistantEnabled && (!isRunning<IntercomActivity>())) {
+        if (!isInCall) {
             startOrResume<AssistantActivity>(this)
+            bringToFront()
+            turnDisplayOn()
+            dismissKeyguard()
+            acquireWakeLock()
+        } else {
+            isMotionDetected.value = false
         }
-        bringToFront()
-        turnDisplayOn()
-        dismissKeyguard()
-        acquireWakeLock()
         nsdDevice { device ->
             lifecycleScope.launch {
                 withContext(Dispatchers.IO) {
@@ -142,16 +148,18 @@ class AssistantActivity : UnlockedActivity() {
         if (isMotionDetected.value) {
             isMotionDetected.value = false
         }
-        turnDisplayOff()
-        dismissWakeLock()
-        CoroutineScope(Dispatchers.IO).launch {
-            NsdDevice.fromData(
-                address = currentWifiIP,
-                serviceType = NsdTypes.DOOR_BELL_ASSISTANT,
-                serviceName = ANDROID_ID,
-                port = DoorbellNsdService.nsdPort
-            ).also { d ->
-                sendMotionUnDetected(d)
+        if (isMotionDetected.value.not()) {
+            turnDisplayOff()
+            dismissWakeLock()
+            CoroutineScope(Dispatchers.IO).launch {
+                NsdDevice.fromData(
+                    address = currentWifiIP,
+                    serviceType = NsdTypes.DOOR_BELL_ASSISTANT,
+                    serviceName = ANDROID_ID,
+                    port = DoorbellNsdService.nsdPort
+                ).also { d ->
+                    sendMotionUnDetected(d)
+                }
             }
         }
     }

@@ -42,6 +42,9 @@ class AIManager(
     var onCommand: (String) -> Boolean = { false },
     var onError: (Throwable) -> Unit = { e -> Log.e(TAG, "Error in ai.", e) }
 ) {
+    val aiAgent by lazy {
+        OllamaAgent()
+    }
 //    val model by lazy {
 //        runCatching {
 //            Firebase.ai(
@@ -113,6 +116,7 @@ class AIManager(
 //            onError(e)
 //        }
 //        session = null
+        aiAgent.release()
     }
 
     companion object {
@@ -120,19 +124,21 @@ class AIManager(
 
         @Composable
         fun rememberAiManager(
-            context: Context = LocalContext.current,
             onCommand: (String) -> Boolean = { false },
             onConversationEnds: () -> Unit = {},
             onConversationResponded: (String) -> Unit = {},
             onError: (Throwable) -> Unit = { e -> Log.e(TAG, "Error in ai.", e) }
-        ) = remember {
-            AIManager(
-                context = context,
-                onCommand = onCommand,
-                onConversationEnds = onConversationEnds,
-                onConversationResponded = onConversationResponded,
-                onError = onError
-            )
+        ) : AIManager {
+            val context: Context = LocalContext.current
+            return remember {
+                AIManager(
+                    context = context,
+                    onCommand = onCommand,
+                    onConversationEnds = onConversationEnds,
+                    onConversationResponded = onConversationResponded,
+                    onError = onError
+                )
+            }
         }
     }
 }

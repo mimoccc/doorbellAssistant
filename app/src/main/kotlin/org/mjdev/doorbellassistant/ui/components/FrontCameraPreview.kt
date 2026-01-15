@@ -26,6 +26,7 @@ import org.mjdev.phone.ui.components.MovieCard
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 
+@Suppress("ParamsComparedByRef")
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Previews
 @Composable
@@ -68,6 +69,8 @@ fun FrontCameraPreview(
             contentScale = ContentScale.Crop,
             useBackgroundFromPic = false,
             borderSize = 2.dp,
+            title = "", // todo
+            subtitle = "", // todo
             bitmap = (imageState.value ?: EmptyBitmap).asImageBitmap()
         )
     }

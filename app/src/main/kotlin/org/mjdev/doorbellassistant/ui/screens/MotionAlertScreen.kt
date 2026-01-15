@@ -3,10 +3,6 @@ package org.mjdev.doorbellassistant.ui.screens
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.annotation.OptIn
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -17,21 +13,20 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import org.mjdev.doorbellassistant.enums.VideoSources
 import org.mjdev.doorbellassistant.agent.ai.AIManager.Companion.TAG
 import org.mjdev.doorbellassistant.ui.components.AISpeechRecognizer
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayer
+import org.mjdev.doorbellassistant.ui.components.CartoonPlayerState
+import org.mjdev.doorbellassistant.ui.components.CartoonPlayerState.Companion.rememberCartoonState
 import org.mjdev.doorbellassistant.ui.components.FrontCameraPreview
-import org.mjdev.phone.extensions.CustomExtensions.isLandscape
-import org.mjdev.phone.extensions.CustomExtensions.isPreview
+import org.mjdev.doorbellassistant.ui.components.WhisperRecognizerState
 import org.mjdev.phone.helpers.Previews
-import org.mjdev.phone.ui.components.BrushedBox
+import org.mjdev.phone.ui.components.BackgroundLayout
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 
@@ -40,126 +35,123 @@ import org.mjdev.phone.ui.theme.base.phoneColors
 @Composable
 fun MotionAlertScreen(
     imageState: MutableState<Bitmap?> = mutableStateOf(null),
-    speechState: MutableState<Boolean> = mutableStateOf(isPreview),
-    visibleState: MutableState<Boolean> = mutableStateOf(isPreview),
+    videoState: CartoonPlayerState = rememberCartoonState(),
+    voiceDetectionSensitivity: Float = 0.4f,
+    stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
     onWelcomeVideoFinished: () -> Unit = {},
     onConversationContinued: () -> Unit = {},
     onDismiss: () -> Unit = {},
     onCommand: (String) -> Boolean = { false },
 ) = PhoneTheme {
-    val videoState: MutableState<VideoSources?> = remember(visibleState.value) {
-        mutableStateOf(VideoSources.Welcome)
-    }
-    AnimatedVisibility(
-        visible = visibleState.value,
-        enter = fadeIn(animationSpec = tween(500)),
-        exit = fadeOut(animationSpec = tween(500))
+    var voiceRecognizerState: WhisperRecognizerState? = null
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(phoneColors.colorBackground),
+        contentAlignment = Alignment.BottomCenter
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(phoneColors.colorBackground)
-                .clickable {
-                    videoState.value = VideoSources.Warning
-                },
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            AnimatedVisibility(
-                visible = visibleState.value,
-                enter = fadeIn(animationSpec = tween(1000)),
-                exit = fadeOut(animationSpec = tween(500))
-            ) {
-                CartoonPlayer(
-                    modifier = Modifier.fillMaxSize(),
-                    state = videoState,
-                    onPaused = {
-                        speechState.value = false
-                        false // todo check
-                    },
-                    onResumed = {
-                        speechState.value = false
-                        false // todo check
-                    },
-                    onVideoFinish = { p ->
-                        speechState.value = false
-                        when (videoState.value) {
-                            VideoSources.Unavailable -> {
-                                onDismiss() // todo records ?
-                            }
+        BackgroundLayout(
+            modifier = Modifier.fillMaxSize()
+        )
+        CartoonPlayer(
+            modifier = Modifier.fillMaxSize(),
+            state = videoState,
+            onPaused = {
+                false
+            },
+            onResumed = {
+                true
+            },
+            onVideoFinish = { p ->
+                when (videoState.videoState.value) {
+                    VideoSources.Unavailable -> {
+                        onDismiss() // todo records ?
+                    }
 
-                            VideoSources.Warning -> {
-                                speechState.value = false
-                                videoState.value = VideoSources.Welcome
-                            }
+                    VideoSources.Warning -> {
+                        videoState.reset()
+                    }
 
-                            VideoSources.Welcome -> {
-                                p.mute()
-                                speechState.value = true
-                                onWelcomeVideoFinished()
-                            }
-
-                            else -> {
-
-                            }
+                    VideoSources.Welcome -> {
+                        videoState.idle()
+                        // todo better state handling
+                        if (voiceRecognizerState?.isInitialized == true) {
+                            voiceRecognizerState?.startListen()
+                            onWelcomeVideoFinished()
+                        } else {
+                            // todo ???
                         }
                     }
-                )
+
+                    else -> {
+                        // ???
+                    }
+                }
             }
-            BrushedBox(
-                modifier = Modifier.fillMaxSize(),
-                innerColor = Color.White.copy(alpha=0.01f),
-                outerColor = phoneColors.colorBackground,
-                paddingLeft = if (isLandscape) -200.dp else -100.dp,
-                paddingTop = if (isLandscape) -200.dp else 50.dp,
-                paddingRight = if (isLandscape) 440.dp else 0.dp,
-                paddingBottom = if (isLandscape) 50.dp else 130.dp,
-            )
-            AISpeechRecognizer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                speechState = speechState,
-                onConversationResponded = {
-                    onConversationContinued()
-                },
-                onCommand = onCommand,
-                onInterruptions = {
-                    onConversationContinued()
-                },
-                onVoiceDetected = {
-                    onConversationContinued()
-                },
-                onConversationEnds = {
-                    onDismiss()
-                },
-                onError = { e ->
-                    when (videoState.value) {
-                        VideoSources.Unavailable -> {
-                            onDismiss() // todo records ?
-                        }
+        )
+        AISpeechRecognizer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            voiceDetectionSensitivity = voiceDetectionSensitivity,
+            stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,
+            onVoiceRecognizerInitialized = { state ->
+                voiceRecognizerState = state
+            },
+            onConversationResponded = onConversationContinued,
+            onCommand = onCommand,
+            onDownloading = { percent ->
+                if (percent < 1f) {
+                    videoState.mute()
+                } else {
+                    videoState.seek(0)
+                    videoState.unmute()
+                }
+                // do not hide
+            },
+            onInterruptions = {
+                onConversationContinued()
+            },
+            onVoiceDetected = {
+                videoState.mute()
+                onConversationContinued()
+            },
+            onVoiceUnDetected = {
+//                videoState.unmute()
+            },
+            onConversationEnds = {
+//                videoState.reset()
+//                onDismiss()
+            },
+            onError = { e ->
+                when (videoState.source) {
+                    VideoSources.Unavailable -> {
+                        onDismiss() // todo records ?
+                    }
 
-                        VideoSources.Warning -> {
-                            videoState.value = VideoSources.Welcome
-                        }
+                    VideoSources.Warning -> {
+                        videoState.reset()
+                    }
 
-                        else -> {
-                            Log.e(TAG, "Error in ai.", e)
-                            speechState.value = false
-                            videoState.value = VideoSources.Unavailable
-                        }
+                    else -> {
+                        Log.e(TAG, "Error in ai.", e)
+                        videoState.unavailable()
                     }
                 }
-            )
-            FrontCameraPreview(
-                modifier = Modifier
-                    .padding(bottom = 48.dp)
-                    .fillMaxSize(),
-                imageState = imageState,
-                onClick = {
-                    videoState.value = VideoSources.Warning
-                }
-            )
-            // todo don't touch layout here, better then before
-        }
+            }
+        )
+        FrontCameraPreview(
+            modifier = Modifier
+                .padding(bottom = 48.dp)
+                .fillMaxSize(),
+            imageState = imageState,
+        )
     }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable {
+                videoState.warning()
+            }
+    )
 }

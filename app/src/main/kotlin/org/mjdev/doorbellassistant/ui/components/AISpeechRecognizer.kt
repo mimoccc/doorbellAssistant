@@ -1,5 +1,6 @@
 package org.mjdev.doorbellassistant.ui.components
 
+import android.R.attr.autoStart
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.background
@@ -13,24 +14,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.agent.ai.AIManager.Companion.TAG
-import org.mjdev.doorbellassistant.ui.components.WhisperRecognizerState.Companion.rememberOboeRecognizerState
+import org.mjdev.doorbellassistant.ui.components.WhisperRecognizerState.Companion.rememberWhisperVoiceRecognizerState
 import org.mjdev.doorbellassistant.ui.theme.Red
 import org.mjdev.doorbellassistant.ui.theme.White
-import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 
@@ -40,43 +37,51 @@ import org.mjdev.phone.ui.theme.base.PhoneTheme
 @Composable
 fun AISpeechRecognizer(
     modifier: Modifier = Modifier,
-    speechState: MutableState<Boolean> = mutableStateOf(isPreview),
+    autoStart: Boolean = false,
+    voiceDetectionSensitivity: Float = 0.2f,
+    stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
+    onVoiceRecognizerInitialized: (WhisperRecognizerState) -> Unit = {},
     onConversationEnds: () -> Unit = {},
+    onDownloading: (Float) -> Unit = {},
     onVoiceDetected: () -> Unit = {},
-    onConversationResponded: (String) -> Unit = {},
+    onVoiceUnDetected: () -> Unit = {},
+    onConversationResponded: () -> Unit = {},
     onInterruptions: () -> Unit = {},
     onCommand: (String) -> Boolean = { false },
     onError: (Throwable) -> Unit = { e -> Log.e(TAG, "Error in ai.", e) }
 ) = PhoneTheme {
-//    val micPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
-//    val aiManager = rememberAiManager(
-//        onCommand = onCommand,
-//        onConversationEnds = onConversationEnds,
-//        onConversationResponded = onConversationResponded,
-//        onError = onError,
-//    )
     var textState by remember { mutableStateOf("...") }
-    val recognizerState = rememberOboeRecognizerState(
-        onDownloading = { percent ->
-            Log.d(TAG, "Voice recognizer downloading model.")
-            textState = "Downloading model ${(percent * 100).toInt()} %."
-        },
+    val recognizerState = rememberWhisperVoiceRecognizerState(
+        stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,
+        voiceDetectionSensitivity = voiceDetectionSensitivity,
         onInitialized = {
             Log.d(TAG, "Voice recognize initialized.")
-            textState = "Ready."
+            textState = "Ready..."
+            onVoiceRecognizerInitialized(this)
+        },
+        onVoiceDetected = {
+            Log.d(TAG, "Voice detected.")
+            textState = "Listening..."
+            onVoiceDetected()
         },
         onVoiceStarts = {
             Log.d(TAG, "Voice starts.")
             textState = "Listening..."
+            onVoiceDetected()
         },
-        onVoiceDetected = {
-            Log.d(TAG, "Voice detected.")
-            textState = "Speaking..."
+        onVoiceEnds = {
+            textState = "Ready..."
+            onVoiceUnDetected()
+        },
+        onDownloading = { percent ->
+            Log.d(TAG, "Voice recognizer downloading model.")
+            textState = "Downloading model ${(percent * 100).toInt()} %."
+            onDownloading(percent)
         },
         onFailure = { e ->
             Log.e(TAG, "Voice recognizer failed.", e)
             textState = "${e.message}"
-        }
+        },
     )
     Row(
         modifier = modifier
@@ -84,7 +89,8 @@ fun AISpeechRecognizer(
             .fillMaxWidth()
             .wrapContentHeight()
             .background(
-                if (speechState.value) Red else White.copy(alpha = 0.3f),
+                if (recognizerState.isListening) Red
+                else White.copy(alpha = 0.3f),
                 RoundedCornerShape(16.dp),
             ),
         verticalAlignment = Alignment.CenterVertically
@@ -99,6 +105,9 @@ fun AISpeechRecognizer(
                 )
                 .padding(2.dp),
             state = recognizerState,
+            autoStart = autoStart,
+            voiceDetectionSensitivity = 0.2f,
+            stopListeningWhenNoVoiceAtLeast = 2.0f,
         )
         Text(
             modifier = Modifier
@@ -108,43 +117,5 @@ fun AISpeechRecognizer(
             textAlign = TextAlign.Start,
             color = White
         )
-    }
-    LaunchedEffect(speechState.value) {
-        if (speechState.value) {
-            recognizerState.startListen()
-        }
-//        aiManager.onInterrupt = {
-//            onInterruptions()
-//        }
-//        aiManager.onVoiceDetected = {
-//            onVoiceDetected()
-//        }
-//        aiManager.onConversationResponded = { text ->
-//            onConversationResponded(text)
-//        }
-//        aiManager.onConversationEnds = {
-//            onConversationEnds()
-//        }
-//        aiManager.onCommand = { cmd ->
-//            onCommand(cmd)
-//        }
-//        when (speechState.value) {
-//            true -> {
-//                if (micPermissionState.status.isGranted.not()) {
-//                    micPermissionState.launchPermissionRequest()
-//                }
-//                aiManager.startConversation()
-//            }
-//
-//            false -> aiManager.stopConversation()
-//        }
-    }
-    DisposableEffect(speechState.value) {
-        onDispose {
-            CoroutineScope(Dispatchers.IO).launch {
-                recognizerState.stopListening()
-            }
-//            aiManager.stopConversation()
-        }
     }
 }
