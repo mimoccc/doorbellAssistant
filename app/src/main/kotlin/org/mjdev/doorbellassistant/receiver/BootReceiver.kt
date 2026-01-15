@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import org.mjdev.doorbellassistant.activity.AssistantActivity
-import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantEnabled
+import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isAppSetAsHomeLauncher
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
 import org.mjdev.doorbellassistant.service.MotionDetectionService
 import org.mjdev.phone.extensions.CustomExtensions.startOrResume
@@ -18,7 +18,7 @@ class BootReceiver : BroadcastReceiver() {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             context.start<DoorbellNsdService>()
             context.start<DoorbellNsdService>()
-            if (context.isDoorBellAssistantEnabled) {
+            if (context.isAppSetAsHomeLauncher()) {
                 MotionDetectionService.start(context)
                 startOrResume<AssistantActivity>(context)
             }

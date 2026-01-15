@@ -27,7 +27,7 @@ open class IntercomActivity : UnlockedActivity() {
             MainScreen()
         }
         // todo
-        GlanceNotificationManager(this).test()
+//        GlanceNotificationManager(this).test()
     }
 
     @Previews

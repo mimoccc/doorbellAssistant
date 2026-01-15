@@ -29,6 +29,12 @@ Simply, it allows local area network calls.
 
 - Whisper integration or an autodetection of the AI server with Whisper
 - STT / TTS completion
+- dependencies injection
+- improve performance
+- flows everywhere possible
+- image of client device if set
+- as application is install and play, no config needed, settings button removal
+- custom id for clients, can be set from device user name, may be...
 
 ### Screens:
 

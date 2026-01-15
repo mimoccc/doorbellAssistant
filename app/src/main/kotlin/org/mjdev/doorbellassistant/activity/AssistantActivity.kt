@@ -21,6 +21,7 @@ import org.mjdev.doorbellassistant.receiver.MotionBroadcastReceiver.Companion.re
 import org.mjdev.doorbellassistant.rpc.CaptureRoute.sendMotionDetected
 import org.mjdev.doorbellassistant.rpc.CaptureRoute.sendMotionUnDetected
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
+import org.mjdev.doorbellassistant.service.MotionDetectionService
 import org.mjdev.doorbellassistant.ui.screens.MainScreen
 import org.mjdev.phone.activity.IntercomActivity
 import org.mjdev.phone.activity.base.UnlockedActivity
@@ -118,14 +119,23 @@ class AssistantActivity : UnlockedActivity() {
         }
     }
 
-    @Suppress("OVERRIDE_DEPRECATION")
+    @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
     @SuppressLint("MissingSuperCall", "GestureBackNavigation")
     override fun onBackPressed() {
-        // disable finish
+        if (isAppSetAsHomeLauncher()) {
+            // disable finish
+        } else {
+            super.onBackPressed()
+        }
     }
 
     override fun finish() {
-        // disable finish
+        if (isAppSetAsHomeLauncher()) {
+            // disable finish
+        } else {
+            MotionDetectionService.stop(this)
+            super.finish()
+        }
     }
 
     private fun handleMotionLost() {

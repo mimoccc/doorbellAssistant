@@ -31,8 +31,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.R
 import org.mjdev.doorbellassistant.ui.theme.DarkMD5
-import org.mjdev.phone.ui.theme.base.PhoneTheme
-import org.mjdev.phone.ui.theme.base.phoneColors
 
 @Preview(640, 300)
 @GlanceComposable

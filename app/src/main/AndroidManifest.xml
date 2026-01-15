@@ -79,25 +79,6 @@
             android:theme="@style/Theme.DoorBellAssistant">
 
         <activity
-                android:label="@string/app_name_assistant"
-                android:name=".activity.AssistantActivity"
-                android:configChanges="orientation|screenSize"
-                android:launchMode="singleInstance"
-                android:showWhenLocked="true"
-                android:turnScreenOn="true"
-                android:exported="true"
-                tools:targetApi="27">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.HOME" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <activity
                 android:label="@string/app_name_phone"
                 android:name="org.mjdev.phone.activity.IntercomActivity"
                 android:configChanges="orientation|screenSize"
@@ -114,6 +95,25 @@
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+                android:label="@string/app_name_assistant"
+                android:name=".activity.AssistantActivity"
+                android:configChanges="orientation|screenSize"
+                android:launchMode="singleInstance"
+                android:showWhenLocked="true"
+                android:turnScreenOn="true"
+                android:exported="true"
+                tools:targetApi="27">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
 
