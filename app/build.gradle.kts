@@ -63,6 +63,7 @@ android {
     compileSdk {
         version = release(36)
     }
+    ndkVersion = "29.0.14206865"
     packaging {
         resources {
             excludes += "META-INF/mailcap"
@@ -128,6 +129,8 @@ android {
 dependencies {
     // stupid gson reflection dependency
     implementation(kotlin("reflect"))
+    // stt
+    implementation(project(":whisper"))
     // tts
     implementation(project(":piper"))
     // phone
@@ -140,8 +143,8 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.service)
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
+    implementation(libs.androidx.lifecycle.runtime.ktx.v286)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     // permissions
     implementation(libs.accompanist.permissions)
     // compose
