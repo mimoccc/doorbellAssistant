@@ -43,9 +43,7 @@ class MotionDetector(
         }
     }
 
-    override fun onSensorChanged(
-        event: SensorEvent?
-    ) {
+    override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
             if (it.sensor.type == Sensor.TYPE_LIGHT) {
                 val newLevel = it.values[0]
@@ -65,9 +63,7 @@ class MotionDetector(
     ) {
     }
 
-    override fun analyze(
-        imageProxy: ImageProxy
-    ) {
+    override fun analyze(imageProxy: ImageProxy) {
         val rotationDegrees = imageProxy.imageInfo.rotationDegrees
         val current = rotateImageByOrientation(
             imageProxy.toBitmap(),
@@ -82,11 +78,10 @@ class MotionDetector(
             }
             val changeData = analyzeFrameChange(previous, current)
             if (changeData != null) {
+                latestBitmap.value = current
                 if (shouldTriggerMotion(changeData, currentTime)) {
                     lastDetectionTime = currentTime
-                    sendMotionIntent(current, true)
-                } else {
-                    sendMotionIntent(current, false)
+                    context.sendMotionIntent(true)
                 }
             }
         }
@@ -148,22 +143,6 @@ class MotionDetector(
         return true
     }
 
-    private fun sendMotionIntent(
-        image: Bitmap,
-        isMotionDetected: Boolean
-    ) {
-        latestBitmap.value = image
-        if (isMotionDetected) {
-            val intent = Intent(
-                context,
-                MotionBroadcastReceiver::class.java
-            ).apply {
-                action = IntentAction.MOTION_DETECTED.action
-            }
-            context.sendBroadcast(intent)
-        }
-    }
-
     fun release() {
         sensorManager.unregisterListener(this)
     }
@@ -175,5 +154,16 @@ class MotionDetector(
 
     companion object {
         val latestBitmap: MutableState<Bitmap?> = mutableStateOf(null)
+
+        fun Context.sendMotionIntent(isMotionDetected: Boolean) {
+            Intent(
+                applicationContext,
+                MotionBroadcastReceiver::class.java
+            ).apply {
+                action = if (isMotionDetected) IntentAction.MOTION_DETECTED.action
+                else IntentAction.MOTION_LOST.action
+                applicationContext.sendBroadcast(this)
+            }
+        }
     }
 }

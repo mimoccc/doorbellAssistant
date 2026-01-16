@@ -98,7 +98,7 @@ object CaptureRoute {
     )
 
     suspend fun Context.sendMotionUnDetected(
-        sender: NsdDevice,
+        sender: NsdDevice?,
         types: List<NsdTypes> = listOf(NsdTypes.DOOR_BELL_CLIENT),
         onError: (Throwable) -> Unit = { e -> e.printStackTrace() },
         filter: (NsdServiceInfo) -> Boolean = { true },

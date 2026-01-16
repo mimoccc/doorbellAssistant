@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -18,8 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.drawable.toDrawable
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Metadata
 import androidx.media3.common.Player
@@ -31,7 +28,6 @@ import org.mjdev.doorbellassistant.extensions.ComposeExt.createExoPlayer
 import org.mjdev.phone.extensions.CustomExtensions.applyIf
 import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import org.mjdev.phone.extensions.CustomExtensions.rememberAssetImagePainter
-import org.mjdev.phone.extensions.CustomExtensions.rememberLifeCycleOwnerState
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.helpers.views.CustomPlayerView
 import org.mjdev.phone.ui.theme.base.PhoneTheme
@@ -57,7 +53,6 @@ fun VideoPlayer(
     onResumed: () -> Boolean = { true },
 ) = PhoneTheme {
     val context = LocalContext.current
-//    val lifecycleOwner by rememberLifeCycleOwnerState()
     val aspectRatio by remember {
         mutableFloatStateOf(1f)
     }
@@ -74,11 +69,6 @@ fun VideoPlayer(
             onCreated(this)
         }
     }
-//    val isPlaying by remember(exoPlayer.isPlaying) {
-//        derivedStateOf {
-//            exoPlayer.isPlaying
-//        }
-//    }
     if (isPreview) {
         Image(
             modifier = modifier
@@ -145,37 +135,13 @@ fun VideoPlayer(
                 exoPlayer.prepare()
             }
         }
-//        DisposableEffect(
-//            lifecycleOwner
-//        ) {
-//            val lifecycle = lifecycleOwner?.lifecycle
-//            val observer = LifecycleEventObserver { _, event ->
-//                when (event) {
-//                    Lifecycle.Event.ON_RESUME -> {
-//                        if (onResumed()) {
-//                            if (!isPlaying) exoPlayer.play()
-//                        }
-//                    }
-//
-//                    Lifecycle.Event.ON_PAUSE -> {
-//                        if (onPaused()) {
-//                            if (isPlaying) exoPlayer.stop()
-//                        }
-//                    }
-//
-//                    Lifecycle.Event.ON_DESTROY -> {
-//                        exoPlayer.release()
-//                    }
-//
-//                    else -> Unit
-//                }
-//            }
-//            lifecycle?.addObserver(observer)
-//            onDispose {
-//                exoPlayer.stop()
-//                exoPlayer.release()
-//                lifecycle?.removeObserver(observer)
-//            }
-//        }
+        DisposableEffect(
+            Unit
+        ) {
+            onDispose {
+                exoPlayer.stop()
+                exoPlayer.release()
+            }
+        }
     }
 }

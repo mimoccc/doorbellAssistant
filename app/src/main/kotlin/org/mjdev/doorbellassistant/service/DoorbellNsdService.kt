@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantEnabled
 import org.mjdev.doorbellassistant.extensions.ComposeExt.rememberDeviceCapture
+import org.mjdev.doorbellassistant.helpers.DelayHandler
 import org.mjdev.doorbellassistant.rpc.DoorBellActions
 import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc
 import org.mjdev.doorbellassistant.ui.components.FrontCameraPreview
@@ -24,10 +25,8 @@ import org.mjdev.phone.nsd.service.CallNsdService
 // todo automatic user login with wifi access
 class DoorbellNsdService : CallNsdService() {
     override val serviceType: NsdTypes
-        get() = if (baseContext.isDoorBellAssistantEnabled)
-            NsdTypes.DOOR_BELL_ASSISTANT
-        else
-            NsdTypes.DOOR_BELL_CLIENT
+        get() = if (baseContext.isDoorBellAssistantEnabled) NsdTypes.DOOR_BELL_ASSISTANT
+        else NsdTypes.DOOR_BELL_CLIENT
 
     override val rpcServer: INsdServerRPC by lazy {
         DoorBellAssistantServerRpc(
@@ -44,10 +43,16 @@ class DoorbellNsdService : CallNsdService() {
     private fun showAlert(
         device: NsdDevice?,
         context: Context = applicationContext,
+        dismissDelay : Long = 10000
     ) = CoroutineScope(Dispatchers.Main).launch {
         ComposeFloatingWindow(
             context = context,
             windowParams = alertLayoutParams(context),
+            onShown = {
+                DelayHandler(dismissDelay){
+                   hide()
+                }.start()
+            }
         ) {
             setContent {
                 val imageState = rememberDeviceCapture(device, lifecycleScope)

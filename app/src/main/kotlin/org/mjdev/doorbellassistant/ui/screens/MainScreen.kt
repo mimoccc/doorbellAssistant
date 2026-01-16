@@ -7,8 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import org.mjdev.doorbellassistant.enums.VideoSources
 import org.mjdev.doorbellassistant.extensions.ComposeExt.VisibleState
+import org.mjdev.doorbellassistant.helpers.ActivityState.Companion.rememberActivityState
 import org.mjdev.doorbellassistant.helpers.MotionDetector
-import org.mjdev.doorbellassistant.ui.components.CartoonPlayerState
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayerState.Companion.rememberCartoonState
 import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import org.mjdev.phone.helpers.Previews
@@ -24,11 +24,12 @@ fun MainScreen(
     onWelcomeVideoFinished: () -> Unit = {},
     onConversationContinued: () -> Unit = {},
 ) = PhoneTheme {
+    val activityState = rememberActivityState()
     Box(
         modifier = modifier
     ) {
         VisibleState(
-            visible = motionState.value.not()
+            visible = motionState.value.not() || activityState.isPaused
         ) {
             LauncherScreen(
                 modifier = modifier,
@@ -38,15 +39,14 @@ fun MainScreen(
             )
         }
         VisibleState(
-            visible = motionState.value
+            visible = motionState.value && activityState.isResumed
         ) {
-            val videoState: CartoonPlayerState = rememberCartoonState(
-                initialSource = VideoSources.Welcome,
-                initialVisible = motionState.value
-            )
             MotionAlertScreen(
                 imageState = MotionDetector.latestBitmap,
-                videoState = videoState,
+                videoState = rememberCartoonState(
+                    initialSource = VideoSources.Welcome,
+                    initialVisible = motionState.value
+                ),
                 onWelcomeVideoFinished = onWelcomeVideoFinished,
                 onConversationContinued = onConversationContinued,
                 onDismiss = onDismiss,
@@ -58,3 +58,6 @@ fun MainScreen(
         }
     }
 }
+
+
+

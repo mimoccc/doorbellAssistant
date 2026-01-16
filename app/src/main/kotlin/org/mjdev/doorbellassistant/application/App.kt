@@ -6,9 +6,7 @@ import org.conscrypt.Conscrypt
 import org.kodein.di.DIAware
 import org.kodein.di.LazyDI
 import org.mjdev.doorbellassistant.di.mainDI
-import org.mjdev.doorbellassistant.agent.ai.OllamaAgent
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
-import org.mjdev.doorbellassistant.service.LockScreenService.Companion.startLockScreenService
 import org.mjdev.doorbellassistant.ui.theme.Controls
 import org.mjdev.doorbellassistant.ui.theme.DarkMD5
 import org.mjdev.doorbellassistant.ui.theme.Item
@@ -21,7 +19,6 @@ import java.security.Security
 
 class App : CallApplication<DoorbellNsdService>(), DIAware {
     override var service = DoorbellNsdService::class.java
-
     override val di: LazyDI by mainDI(this@App)
 
     override fun onCreate() {
@@ -50,12 +47,7 @@ class App : CallApplication<DoorbellNsdService>(), DIAware {
             colorsDark.colorLabelText = Label
         }
         start<DoorbellNsdService>()
-        startLockScreenService()
-
-        // test
-//        aiManager.call("How are you?") { result ->
-//            Log.d(TAG, result)
-//        }
+//        startLockScreenService()
     }
 
     private fun setupExceptionHandler() {

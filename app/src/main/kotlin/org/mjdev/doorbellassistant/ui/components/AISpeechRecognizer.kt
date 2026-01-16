@@ -118,4 +118,9 @@ fun AISpeechRecognizer(
             color = White
         )
     }
+    DisposableEffect(Unit) {
+        onDispose {
+            recognizerState.stopListening()
+        }
+    }
 }

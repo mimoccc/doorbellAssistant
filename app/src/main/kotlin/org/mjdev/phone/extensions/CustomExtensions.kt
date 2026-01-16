@@ -428,14 +428,15 @@ object CustomExtensions {
         return task == null
     }
 
+    @SuppressLint("NewApi")
     inline fun <reified T : Activity> Context.isRunning(): Boolean {
         val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
-        val myPackage = T::class.java.`package`?.name
+        val myPackage = T::class.java.`package`?.name?.replace(".activity","")
         val task = activityManager.appTasks.firstOrNull { task ->
             task.taskInfo.baseActivity?.packageName == myPackage &&
                     task.taskInfo.baseActivity?.className == T::class.qualifiedName
         }
-        return task != null
+        return task != null && task.taskInfo.isVisible
     }
 
     inline fun <reified T : Activity> startOrResume(

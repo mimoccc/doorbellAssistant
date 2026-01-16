@@ -18,7 +18,7 @@ class BootReceiver : BroadcastReceiver() {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             context.start<DoorbellNsdService>()
             context.start<DoorbellNsdService>()
-            if (context.isAppSetAsHomeLauncher()) {
+            if (context.isAppSetAsHomeLauncher) {
                 MotionDetectionService.start(context)
                 startOrResume<AssistantActivity>(context)
             }

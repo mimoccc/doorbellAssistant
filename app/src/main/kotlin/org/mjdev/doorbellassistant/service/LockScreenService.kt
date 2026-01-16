@@ -11,43 +11,26 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
-import android.graphics.PixelFormat
 import android.os.Build
 import android.view.WindowManager
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
-import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
-import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import kotlinx.coroutines.delay
-import org.mjdev.doorbellassistant.ui.theme.Black
-import org.mjdev.phone.helpers.Previews
+import org.mjdev.doorbellassistant.activity.AssistantActivity
+import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isAppSetAsHomeLauncher
+import org.mjdev.phone.extensions.CustomExtensions.startOrResume
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -91,7 +74,7 @@ class LockScreenService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         super.onDestroy()
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         unregisterReceiver(screenReceiver)
-        hideLockScreen()
+//        hideLockScreen()
     }
 
     private fun registerScreenReceiver() {
@@ -128,35 +111,38 @@ class LockScreenService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     }
 
     fun showLockScreen() {
-        if (lockScreenView != null) return
-        lockScreenView = ComposeView(this).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setViewTreeLifecycleOwner(this@LockScreenService)
-            setViewTreeSavedStateRegistryOwner(this@LockScreenService)
-            setContent {
-                LockScreenContent(onUnlock = ::hideLockScreen)
-            }
+        if(isAppSetAsHomeLauncher) {
+            startOrResume<AssistantActivity>(baseContext.applicationContext)
         }
-        windowManager.addView(lockScreenView, createWindowParams())
+//        if (lockScreenView != null) return
+//        lockScreenView = ComposeView(this).apply {
+//            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+//            setViewTreeLifecycleOwner(this@LockScreenService)
+//            setViewTreeSavedStateRegistryOwner(this@LockScreenService)
+//            setContent {
+//                LockScreenContent(onUnlock = ::hideLockScreen)
+//            }
+//        }
+//        windowManager.addView(lockScreenView, createWindowParams())
     }
 
-    fun hideLockScreen() {
-        lockScreenView?.let {
-            windowManager.removeView(it)
-            lockScreenView = null
-        }
-    }
+//    fun hideLockScreen() {
+//        lockScreenView?.let {
+//            windowManager.removeView(it)
+//            lockScreenView = null
+//        }
+//    }
 
-    private fun createWindowParams() = WindowManager.LayoutParams(
-        WindowManager.LayoutParams.MATCH_PARENT,
-        WindowManager.LayoutParams.MATCH_PARENT,
-        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                WindowManager.LayoutParams.FLAG_FULLSCREEN or
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-        PixelFormat.TRANSLUCENT
-    )
+//    private fun createWindowParams() = WindowManager.LayoutParams(
+//        WindowManager.LayoutParams.MATCH_PARENT,
+//        WindowManager.LayoutParams.MATCH_PARENT,
+//        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+//        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+//                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+//                WindowManager.LayoutParams.FLAG_FULLSCREEN or
+//                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+//        PixelFormat.TRANSLUCENT
+//    )
 
     inner class ScreenReceiver : BroadcastReceiver() {
         override fun onReceive(
@@ -165,43 +151,43 @@ class LockScreenService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         ) {
             when (intent.action) {
                 Intent.ACTION_SCREEN_OFF -> showLockScreen()
-                Intent.ACTION_USER_PRESENT -> hideLockScreen()
+//                Intent.ACTION_USER_PRESENT -> hideLockScreen()
             }
         }
     }
 
-    @Previews
-    @Composable
-    fun LockScreenContent(
-        onUnlock: () -> Unit = {}
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Black),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = currentTime(),
-                    fontSize = 48.sp,
-                    color = White
-                )
-                Spacer(modifier = Modifier.height(32.dp))
-                Button(
-                    onClick = onUnlock,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = White,
-                        contentColor = Black
-                    )
-                ) {
-                    Text("Unlock")
-                }
-            }
-        }
-    }
+//    @Previews
+//    @Composable
+//    fun LockScreenContent(
+//        onUnlock: () -> Unit = {}
+//    ) {
+//        Box(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .background(Black),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            Column(
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                Text(
+//                    text = currentTime(),
+//                    fontSize = 48.sp,
+//                    color = White
+//                )
+//                Spacer(modifier = Modifier.height(32.dp))
+//                Button(
+//                    onClick = onUnlock,
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = White,
+//                        contentColor = Black
+//                    )
+//                ) {
+//                    Text("Unlock")
+//                }
+//            }
+//        }
+//    }
 
     @Composable
     private fun currentTime(): String {
@@ -219,8 +205,9 @@ class LockScreenService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
 
     companion object {
-        fun Context.startLockScreenService() {
-            startService(Intent(this, LockScreenService::class.java))
-        }
+        // todo screen off is screen off
+//        fun Context.startLockScreenService() {
+//            startService(Intent(this, LockScreenService::class.java))
+//        }
     }
 }
