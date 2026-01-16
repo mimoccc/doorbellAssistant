@@ -3,12 +3,14 @@ package org.mjdev.doorbellassistant.agent.stt
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import org.mjdev.whisper.WhisperContext
 
 class WhisperKit(
     private val context: Context,
@@ -18,6 +20,7 @@ class WhisperKit(
     private var isDownloading = false
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
     private var modelType: WhisperModelType = WhisperModelType.SMALL
+    private var whisperContext: WhisperContext? = null
 
     fun setModel(modelType: WhisperModelType) {
         this.modelType = modelType
@@ -27,6 +30,7 @@ class WhisperKit(
         this.callback = callback
     }
 
+    // todo check integrity
     private suspend fun checkAndDownloadModel(
         onDownloading: suspend (percent: Float) -> Unit = {}
     ) = withContext(Dispatchers.IO) {
@@ -92,39 +96,86 @@ class WhisperKit(
     }
 
     fun init() {
+        isDownloading = true
         scope.launch {
             checkAndDownloadModel { percent ->
                 withContext(Dispatchers.Main) {
                     callback(WhisperKitResult.WhisperKitDownload(percent))
                 }
             }
-            while (isDownloading) {
-                delay(100)
-            }
-            withContext(Dispatchers.Main) {
-                callback(WhisperKitResult.WhisperKitInitialized)
+            isDownloading = false
+            runCatching {
+                val modelFile = File(filesDir, "models/${modelType.modelName}.bin")
+                whisperContext = WhisperContext.createContextFromFile(modelFile.absolutePath)
+                withContext(Dispatchers.Main) {
+                    callback(WhisperKitResult.WhisperKitInitialized)
+                }
+            }.getOrElse { e ->
+                withContext(Dispatchers.Main) {
+                    callback(WhisperKitResult.WhisperKitError(e))
+                }
+                whisperContext = null
             }
         }
     }
 
     suspend fun release() {
-        // todo
-        withContext(Dispatchers.Main) {
-            callback(WhisperKitResult.WhisperKitReleased)
+        runCatching {
+            whisperContext?.release()
+            whisperContext = null
+            withContext(Dispatchers.Main) {
+                callback(WhisperKitResult.WhisperKitReleased)
+            }
+        }.onFailure { e ->
+            withContext(Dispatchers.Main) {
+                callback(WhisperKitResult.WhisperKitError(e))
+            }
         }
     }
 
-    @Suppress("unused")
     suspend fun transcribe(data: ByteArray) {
-        // todo
-        withContext(Dispatchers.Main) {
-            callback.invoke(WhisperKitResult.WhisperKitText("", listOf()))
+        if (whisperContext == null) {
+            withContext(Dispatchers.Main) {
+                callback(
+                    WhisperKitResult.WhisperKitError(
+                        IllegalStateException("WhisperContext not initialized")
+                    )
+                )
+            }
+        } else {
+            callback(WhisperKitResult.WhisperKitTranscribing)
+            runCatching {
+                val floatData = convertBytesToFloats(data)
+                val result = whisperContext?.transcribeData(floatData, printTimestamp = false) ?: ""
+                withContext(Dispatchers.Main) {
+                    callback(
+                        WhisperKitResult.WhisperKitText(
+                            result.trim(),
+                            result.trim().split(" ").toList()
+                        )
+                    )
+                }
+            }.getOrElse { e ->
+                withContext(Dispatchers.Main) {
+                    callback(WhisperKitResult.WhisperKitError(e))
+                }
+            }
         }
+    }
+
+    private fun convertBytesToFloats(data: ByteArray): FloatArray {
+        val shorts = ShortArray(data.size / 2)
+        ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts)
+        return FloatArray(shorts.size) { shorts[it] / 32768.0f }
     }
 
     sealed class WhisperKitResult {
         object WhisperKitInitialized : WhisperKitResult()
+
         object WhisperKitReleased : WhisperKitResult()
+
+        object WhisperKitTranscribing : WhisperKitResult()
+
         data class WhisperKitError(
             val error: Throwable
         ) : WhisperKitResult()
@@ -139,24 +190,22 @@ class WhisperKit(
         ) : WhisperKitResult()
     }
 
-    @Suppress("unused")
     enum class WhisperModelType(
         val modelName: String,
         val url: String,
         val frequency: Int = 16000,
         val channels: Int = 1,
-        val maxDuration: Long = 20000,
     ) {
         SMALL(
-            modelName = "whisper-small-multilingual",
+            modelName = "ggml-small",
             url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin",
         ),
         MEDIUM(
-            modelName = "whisper-medium-multilingual",
+            modelName = "ggml-medium",
             url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin",
         ),
         LARGE(
-            modelName = "whisper-large-v3",
+            modelName = "ggml-large-v3",
             url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",
         )
     }

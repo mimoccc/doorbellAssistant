@@ -1,4 +1,7 @@
 @file:Suppress("UnstableApiUsage")
+
+include(":whisper")
+
 pluginManagement {
     repositories {
         google {

@@ -42,6 +42,7 @@ fun MotionAlertScreen(
     onConversationContinued: () -> Unit = {},
     onDismiss: () -> Unit = {},
     onCommand: (String) -> Boolean = { false },
+    onThinking: () -> Unit = {},
 ) = PhoneTheme {
     var voiceRecognizerState: WhisperRecognizerState? = null
     Box(
@@ -123,6 +124,7 @@ fun MotionAlertScreen(
 //                videoState.reset()
 //                onDismiss()
             },
+            onThinking = onThinking,
             onError = { e ->
                 when (videoState.source) {
                     VideoSources.Unavailable -> {

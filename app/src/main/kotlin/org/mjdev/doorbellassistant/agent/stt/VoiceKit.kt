@@ -1,6 +1,7 @@
 package org.mjdev.doorbellassistant.agent.stt
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioRecord
@@ -61,15 +62,15 @@ class VoiceKit(
         }
     }
 
-//    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-//    suspend fun startRecording() = mutex.withLock {
-//        if (isRecording) return@withLock
-//        isRecording = true
-//        listener.onVoiceStarts()
-//        recordingJob = CoroutineScope(Dispatchers.IO).launch {
-//            recordAndProcessVoice()
-//        }
-//    }
+    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
+    suspend fun startRecording() = mutex.withLock {
+        if (isRecording) return@withLock
+        isRecording = true
+        listener.onVoiceStarts()
+        recordingJob = CoroutineScope(Dispatchers.IO).launch {
+            recordAndProcessVoice()
+        }
+    }
 
     suspend fun stop() = mutex.withLock {
         listeningJob?.cancelAndJoin()
@@ -82,6 +83,7 @@ class VoiceKit(
         isRecording = false
     }
 
+    @SuppressLint("MissingPermission")
     private suspend fun listenForVoice() {
         val record = audioRecord ?: return
         val buffer = ShortArray(sampleRate / 10)
@@ -94,6 +96,7 @@ class VoiceKit(
                     lastVoiceTime = System.currentTimeMillis()
                     isVoiceDetected = true
                     listener.onVoiceDetected()
+                    startRecording()
                 } else {
                     val silenceDuration = System.currentTimeMillis() - lastVoiceTime
                     if (isVoiceDetected && (silenceDuration > silenceDurationMs)) {
@@ -106,30 +109,30 @@ class VoiceKit(
         }
     }
 
-//    private suspend fun recordAndProcessVoice() {
-//        val record = audioRecord ?: return
-//        val chunkSize = sampleRate / 2
-//        val buffer = ShortArray(chunkSize)
-//        var lastVoiceTime = System.currentTimeMillis()
-//        while (recordingJob?.isActive == true && isRecording) {
-//            val read = record.read(buffer, 0, buffer.size)
-//            if (read > 0) {
-//                val energy = calculateRMS(buffer, read)
-//                if (energy > energyThreshold * voiceDetectionSensitivity) {
-//                    lastVoiceTime = System.currentTimeMillis()
-//                }
-//                val byteArray = shortArrayToByteArray(buffer, read)
-//                listener.onGotVoiceChunk(byteArray)
-//                val silenceDuration = System.currentTimeMillis() - lastVoiceTime
-//                if (silenceDuration > silenceDurationMs) {
-//                    isRecording = false
-//                    listener.voiceEnds()
-//                    listenForVoice()
-//                    break
-//                }
-//            }
-//        }
-//    }
+    private suspend fun recordAndProcessVoice() {
+        val record = audioRecord ?: return
+        val chunkSize = sampleRate / 2
+        val buffer = ShortArray(chunkSize)
+        var lastVoiceTime = System.currentTimeMillis()
+        while (recordingJob?.isActive == true && isRecording) {
+            val read = record.read(buffer, 0, buffer.size)
+            if (read > 0) {
+                val energy = calculateRMS(buffer, read)
+                if (energy > voiceRecognitionThreshold * voiceDetectionSensitivity) {
+                    lastVoiceTime = System.currentTimeMillis()
+                }
+                val byteArray = shortArrayToByteArray(buffer, read)
+                listener.onGotVoiceChunk(byteArray)
+                val silenceDuration = System.currentTimeMillis() - lastVoiceTime
+                if (silenceDuration > silenceDurationMs) {
+                    isRecording = false
+                    listener.voiceEnds()
+                    listenForVoice()
+                    break
+                }
+            }
+        }
+    }
 
     private fun calculateRMS(buffer: ShortArray, size: Int): Float {
         var sum = 0.0

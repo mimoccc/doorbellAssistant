@@ -8,7 +8,6 @@ import kotlin.reflect.KProperty
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-//    alias(libs.plugins.google.services)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -57,6 +56,8 @@ android {
     compileSdk {
         version = release(36)
     }
+    
+    ndkVersion = "29.0.14206865"
     packaging {
         resources {
             excludes += "META-INF/mailcap"
@@ -116,7 +117,7 @@ android {
 
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
-//    implementation(platform(libs.firebase.bom))
+    implementation(project(":whisper"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.service)
@@ -178,9 +179,6 @@ dependencies {
     implementation(libs.appwidget.viewer)
     // custom ai
     implementation(libs.koog.agents)
-//    implementation(libs.firebase.ai)
-//    implementation(libs.generativeai)
-//    implementation(libs.cactus)
     // testing
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

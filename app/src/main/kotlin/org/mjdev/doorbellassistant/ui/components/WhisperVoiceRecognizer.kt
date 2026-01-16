@@ -51,16 +51,20 @@ class WhisperRecognizerState(
     val onFailure: WhisperRecognizerState.(e: Throwable) -> Unit = {},
     val voiceDetectionSensitivity: Float = 0.2f,
     val stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
+    val onThinking: () -> Unit = {},
 ) {
-    private var _isInitialized : Boolean = false
-    private var _isListeningStarted = false
+    private var _isThinking: MutableState<Boolean> = mutableStateOf(false)
+    private var _isInitialized: MutableState<Boolean> = mutableStateOf(false)
+    private var _isListeningStarted : MutableState<Boolean> = mutableStateOf(false)
     private var _isListening: MutableState<Boolean> = mutableStateOf(false)
     private val scope = CoroutineScope(Dispatchers.Default)
 
     val isListening
-        get() = _isListening.value
+        get() = _isListening.value || _isListeningStarted.value
     val isInitialized
-        get() = _isInitialized
+        get() = _isInitialized.value
+    val isThinking
+        get() = _isThinking.value
 
     private val whisperKit by lazy {
         WhisperKit(context, filesDir).apply {
@@ -68,11 +72,15 @@ class WhisperRecognizerState(
             setCallback { result ->
                 when (result) {
                     is WhisperKit.WhisperKitResult.WhisperKitInitialized -> {
-                        _isInitialized = true
+                        _isInitialized.value = true
+                        _isThinking.value = false
+                        _isListening.value = false
                         this@WhisperRecognizerState.onInitialized(this@WhisperRecognizerState)
                     }
 
                     is WhisperKit.WhisperKitResult.WhisperKitText -> {
+                        _isThinking.value = false
+                        _isListening.value = false
                         this@WhisperRecognizerState.onVoiceTranscribed(
                             result.text,
                             result.segments
@@ -80,17 +88,27 @@ class WhisperRecognizerState(
                     }
 
                     is WhisperKit.WhisperKitResult.WhisperKitError -> {
-                        _isInitialized = false
+                        _isThinking.value = false
+                        _isListening.value = false
                         this@WhisperRecognizerState.onFailure(result.error)
                     }
 
+                    is WhisperKit.WhisperKitResult.WhisperKitTranscribing -> {
+                        _isThinking.value = true
+                        _isListening.value = true
+                        this@WhisperRecognizerState.onThinking()
+                    }
+
                     is WhisperKit.WhisperKitResult.WhisperKitDownload -> {
-                        _isInitialized = false
+                        _isInitialized.value = false
+                        _isThinking.value = false
                         this@WhisperRecognizerState.onDownloading(result.percent)
                     }
 
                     WhisperKit.WhisperKitResult.WhisperKitReleased -> {
-                        _isInitialized = false
+                        _isInitialized.value = false
+                        _isThinking.value = false
+                        _isListening.value = false
                         this@WhisperRecognizerState.onReleased(this@WhisperRecognizerState)
                     }
                 }
@@ -106,6 +124,7 @@ class WhisperRecognizerState(
                 @RequiresPermission(Manifest.permission.RECORD_AUDIO)
                 override suspend fun onVoiceDetected() {
                     _isListening.value = true
+                    _isThinking.value = false
                     withContext(Dispatchers.Main) {
                         this@WhisperRecognizerState.onVoiceDetected()
                     }
@@ -113,6 +132,7 @@ class WhisperRecognizerState(
 
                 override suspend fun onVoiceStarts() {
                     _isListening.value = true
+                    _isThinking.value = false
                     withContext(Dispatchers.Main) {
                         this@WhisperRecognizerState.onVoiceStarts()
                     }
@@ -120,6 +140,7 @@ class WhisperRecognizerState(
 
                 override suspend fun onGotVoiceChunk(data: ByteArray) {
                     _isListening.value = true
+                    _isThinking.value = false
                     withContext(Dispatchers.Main) {
                         this@WhisperRecognizerState.onGotVoiceChunk(data)
                     }
@@ -127,6 +148,7 @@ class WhisperRecognizerState(
 
                 override suspend fun voiceEnds() {
                     _isListening.value = false
+                    _isThinking.value = false
                     withContext(Dispatchers.Main) {
                         this@WhisperRecognizerState.onVoiceEnds()
                     }
@@ -141,14 +163,14 @@ class WhisperRecognizerState(
 
     @SuppressLint("MissingPermission")
     fun startListen() = scope.launch {
-        if (!_isListeningStarted) {
+        if (!_isListeningStarted.value) {
             voiceKit.start(modelType.frequency, modelType.channels)
-            _isListeningStarted = true
+            _isListeningStarted.value = true
         }
     }
 
     fun stopListening() = runCatching {
-        _isListeningStarted = false
+        _isListeningStarted.value = false
         scope.launch {
             voiceKit.stop()
             whisperKit.release()
@@ -160,11 +182,6 @@ class WhisperRecognizerState(
     private suspend fun onGotVoiceChunk(data: ByteArray) {
         whisperKit.transcribe(data)
     }
-
-//    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-//    private suspend fun startRecording() {
-//        voiceKit.startRecording()
-//    }
 
     companion object {
         @Suppress("ParamsComparedByRef")
@@ -182,6 +199,7 @@ class WhisperRecognizerState(
             ) -> Unit = { _, _ -> },
             onVoiceEnds: WhisperRecognizerState.() -> Unit = {},
             onDownloading: (percent: Float) -> Unit = {},
+            onThinking: () -> Unit = {},
             onFailure: WhisperRecognizerState.(e: Throwable) -> Unit = {},
             voiceDetectionSensitivity: Float = 0.2f,
             stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
@@ -196,6 +214,7 @@ class WhisperRecognizerState(
                 onVoiceTranscribed = onVoiceTranscribed,
                 onVoiceEnds = onVoiceEnds,
                 onDownloading = onDownloading,
+                onThinking = onThinking,
                 onFailure = onFailure,
                 voiceDetectionSensitivity = voiceDetectionSensitivity,
                 stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,

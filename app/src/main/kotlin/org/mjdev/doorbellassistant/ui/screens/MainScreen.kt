@@ -23,6 +23,7 @@ fun MainScreen(
     onDismiss: () -> Unit = {},
     onWelcomeVideoFinished: () -> Unit = {},
     onConversationContinued: () -> Unit = {},
+    onThinking: () -> Unit = {},
 ) = PhoneTheme {
     val activityState = rememberActivityState()
     Box(
@@ -50,6 +51,7 @@ fun MainScreen(
                 onWelcomeVideoFinished = onWelcomeVideoFinished,
                 onConversationContinued = onConversationContinued,
                 onDismiss = onDismiss,
+                onThinking = onThinking,
                 onCommand = { cmd ->
                     // todo
                     true
