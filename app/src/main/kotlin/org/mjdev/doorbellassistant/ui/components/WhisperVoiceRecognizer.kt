@@ -212,7 +212,7 @@ fun WhisperVoiceRecognizer(
     context: Context = LocalContext.current,
     filesDir: File? = context.filesDir,
     modelType: WhisperKit.WhisperModelType = WhisperKit.WhisperModelType.MEDIUM,
-    voiceDetectionSensitivity: Float = 0.8f,
+    voiceDetectionSensitivity: Float = 0.2f,
     stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
     autoStart: Boolean = false,
     state: WhisperRecognizerState = rememberWhisperVoiceRecognizerState(

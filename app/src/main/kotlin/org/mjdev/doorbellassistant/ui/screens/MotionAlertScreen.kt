@@ -36,7 +36,7 @@ import org.mjdev.phone.ui.theme.base.phoneColors
 fun MotionAlertScreen(
     imageState: MutableState<Bitmap?> = mutableStateOf(null),
     videoState: CartoonPlayerState = rememberCartoonState(),
-    voiceDetectionSensitivity: Float = 0.4f,
+    voiceDetectionSensitivity: Float = 0.2f,
     stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
     onWelcomeVideoFinished: () -> Unit = {},
     onConversationContinued: () -> Unit = {},
