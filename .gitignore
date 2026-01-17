@@ -43,3 +43,6 @@ google-services.json
 .output.txt
 stream-api-secrets.txt!/config.prop
 /*-key.txt
+/app/vosk-api/
+/app/vosk-api/*
+/app/vosk-api

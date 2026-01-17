@@ -2,9 +2,15 @@ package org.mjdev.doorbellassistant.agent.stt.transcribers.vosk
 
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKit
@@ -16,18 +22,22 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.Executors
 import java.util.zip.ZipInputStream
 
+@OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
 class VoskKit(
     private val context: Context,
     private val filesDir: File? = context.filesDir,
     private var callback: suspend (KitResult) -> Unit = { }
 ) : ITKit {
-    private var isDownloading = false
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    private val voskContext = newSingleThreadContext("VoskKit")
+    private val scope: CoroutineScope = CoroutineScope(voskContext)
+    private val mutex = Mutex()
     private var modelType: VoskModelType = VoskModelType.CS_SMALL
     private var model: Model? = null
     private var recognizer: Recognizer? = null
+    private var isDownloading = false
 
     override fun setModel(modelType: ITKitModel) {
         this.modelType = modelType as? VoskModelType
@@ -47,7 +57,7 @@ class VoskKit(
 
     private suspend fun checkAndDownloadModel(
         onDownloading: suspend (percent: Float) -> Unit = {}
-    ) = withContext(Dispatchers.IO) {
+    ) {
         runCatching {
             val dir = modelDir()
             val marker = modelMarkerFile(dir)
@@ -56,11 +66,15 @@ class VoskKit(
                 val assetName = modelType.url.substringAfterLast("/")
                 val zipFile = File(dir, assetName)
                 isDownloading = true
-                val assetExists = context.assets.list(modelType.assetsFolder)?.contains(assetName) ?: false
+                val assetExists = context.assets
+                    .list(modelType.assetsFolder)
+                    ?.contains(assetName) ?: false
                 if (assetExists) {
-                    context.assets.open("${modelType.assetsFolder}/$assetName").use { input ->
-                        FileOutputStream(zipFile).use { input.copyTo(it) }
-                    }
+                    context.assets
+                        .open("${modelType.assetsFolder}/$assetName")
+                        .use { input ->
+                            FileOutputStream(zipFile).use { input.copyTo(it) }
+                        }
                 } else {
                     downloadToFile(
                         url = modelType.url,
@@ -76,7 +90,7 @@ class VoskKit(
             }
         }.onFailure { e ->
             isDownloading = false
-            withContext(Dispatchers.Main) { callback(KitResult.Error(e)) }
+            postResult(KitResult.Error(e))
         }.onSuccess {
             isDownloading = false
         }
@@ -85,57 +99,56 @@ class VoskKit(
     override fun init() {
         scope.launch {
             checkAndDownloadModel { percent ->
-                withContext(Dispatchers.Main) { callback(KitResult.Download(percent)) }
+                postResult(KitResult.Download(percent))
             }
             while (isDownloading) delay(100)
-            withContext(Dispatchers.IO) {
-                recognizer?.close()
-                recognizer = null
-                model?.close()
-                model = null
-                val dir = modelDir()
-                val marker = modelMarkerFile(dir)
-                val actualModelPath = marker.takeIf { it.exists() }?.readText()?.trim()
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let { File(it) }
-                    ?: findActualModelRoot(dir)
-                    ?: throw IllegalStateException("Model not ready: ${dir.absolutePath}")
-                model = Model(actualModelPath.absolutePath)
-                recognizer = Recognizer(model, modelType.frequency.toFloat())
-            }
-            withContext(Dispatchers.Main) { callback(KitResult.Initialized) }
+            recognizer?.close()
+            recognizer = null
+            model?.close()
+            model = null
+            val dir = modelDir()
+            val marker = modelMarkerFile(dir)
+            val actualModelPath = marker.takeIf { it.exists() }?.readText()?.trim()
+                ?.takeIf { it.isNotBlank() }
+                ?.let { File(it) }
+                ?: findActualModelRoot(dir)
+                ?: throw IllegalStateException("Model not ready: ${dir.absolutePath}")
+            model = Model(actualModelPath.absolutePath)
+            recognizer = Recognizer(model, modelType.frequency.toFloat())
+            postResult(KitResult.Initialized)
         }
     }
 
     override fun release() {
         scope.launch {
-            withContext(Dispatchers.IO) {
-                recognizer?.close()
-                recognizer = null
-                model?.close()
-                model = null
-            }
-            withContext(Dispatchers.Main) { callback(KitResult.Released) }
+            recognizer?.close()
+            recognizer = null
+            model?.close()
+            model = null
+            postResult(KitResult.Released)
         }
     }
 
     @Suppress("unused")
     override fun transcribe(data: ByteArray) {
         scope.launch {
-            val rec = recognizer
-            if (rec == null) {
-                withContext(Dispatchers.Main) {
-                    callback(KitResult.Error(IllegalStateException("Vosk not initialized")))
+            mutex.withLock {
+                if (recognizer == null) {
+                    postResult(KitResult.Error(IllegalStateException("Vosk not initialized")))
+                } else {
+                    postResult(KitResult.Transcribing)
+                    val accepted = recognizer?.acceptWaveForm(data, data.size)
+                    val json = if (accepted == true) recognizer?.result
+                    else recognizer?.partialResult
+                    val obj = runCatching {
+                        JSONObject(json ?: "{}")
+                    }.getOrNull()
+                    val text = obj?.optString("text")
+                        ?: obj?.optString("partial")
+                        ?: ""
+                    val segments = if (text.isBlank()) emptyList() else listOf(text)
+                    postResult(KitResult.Text(text, segments))
                 }
-            } else {
-                withContext(Dispatchers.Main) { callback(KitResult.Transcribing) }
-                val accepted = withContext(Dispatchers.IO) { rec.acceptWaveForm(data, data.size) }
-                val json =
-                    withContext(Dispatchers.IO) { if (accepted) rec.result else rec.partialResult }
-                val obj = runCatching { JSONObject(json) }.getOrNull()
-                val text = (obj?.optString("text") ?: obj?.optString("partial") ?: "").trim()
-                val segments = if (text.isBlank()) emptyList() else listOf(text)
-                withContext(Dispatchers.Main) { callback(KitResult.Text(text, segments)) }
             }
         }
     }
@@ -172,6 +185,12 @@ class VoskKit(
             }
         }
         conn.disconnect()
+    }
+
+    private suspend fun postResult(result: KitResult) {
+        withContext(Dispatchers.Main) {
+            callback(result)
+        }
     }
 
     private fun unzip(

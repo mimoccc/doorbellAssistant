@@ -78,6 +78,7 @@
             android:fullBackupContent="@xml/backup_rules"
             android:icon="@mipmap/ic_launcher"
             android:name=".application.App"
+            android:largeHeap="true"
             android:roundIcon="@mipmap/ic_launcher"
             android:supportsRtl="true"
             android:theme="@style/Theme.DoorBellAssistant">
@@ -90,6 +91,7 @@
                 android:showWhenLocked="true"
                 android:turnScreenOn="true"
                 android:exported="true"
+                android:largeHeap="true"
                 android:banner="@mipmap/ic_launcher"
                 android:theme="@style/Theme.DoorBellAssistant"
                 tools:targetApi="27">
@@ -107,6 +109,7 @@
                 android:name=".activity.AssistantActivity"
                 android:configChanges="orientation|screenSize"
                 android:launchMode="singleInstance"
+                android:largeHeap="true"
                 android:showWhenLocked="true"
                 android:turnScreenOn="true"
                 android:exported="true"
@@ -123,6 +126,7 @@
 
         <activity
                 android:label="@string/app_name_phone"
+                android:largeHeap="true"
                 android:name="org.mjdev.phone.activity.VideoCallActivity"
                 android:launchMode="singleInstance"
                 android:autoRemoveFromRecents="true"

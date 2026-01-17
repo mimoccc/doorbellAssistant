@@ -190,3 +190,11 @@ configurations.all {
     }
 }
 
+//tasks.register<Exec>("buildVosk") {
+//    commandLine = listOf("./build-vosk.sh")
+//    environment = mapOf("ANDROID_NDK_HOME" to android.ndkPath.toString())
+//}
+
+//tasks.named("preBuild") {
+//    dependsOn("buildVosk")
+//}
