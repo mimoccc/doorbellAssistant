@@ -41,7 +41,7 @@ import kotlin.math.min
 @Composable
 fun MovieCard(
     modifier: Modifier = Modifier,
-    bitmap: ImageBitmap? = rememberAssetImage("avatar_transparent.png"),
+    bitmap: ImageBitmap? = rememberAssetImage("avatar/avatar_transparent.png"),
     title: String = "title",
     subtitle: String = "subtitle",
     contentScale: ContentScale = if (isPortrait) ContentScale.FillHeight else ContentScale.Inside,

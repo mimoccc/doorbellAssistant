@@ -1,6 +1,7 @@
 package org.mjdev.doorbellassistant.ui.components
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,6 +28,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.mjdev.doorbellassistant.agent.ai.AIManager.Companion.TAG
+import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKit
+import org.mjdev.doorbellassistant.agent.stt.transcribers.whisper.WhisperKit
 import org.mjdev.doorbellassistant.extensions.ComposeExt.VisibleState
 import org.mjdev.doorbellassistant.ui.components.WhisperRecognizerState.Companion.rememberWhisperVoiceRecognizerState
 import org.mjdev.doorbellassistant.ui.theme.Red
@@ -55,6 +58,7 @@ fun AISpeechRecognizer(
     onCommand: (String) -> Boolean = { false },
     onError: (Throwable) -> Unit = { e -> Log.e(TAG, "Error in ai.", e) },
     onThinking: () -> Unit = {},
+    createKit: (Context) -> ITKit = { context -> WhisperKit(context) },
 ) = PhoneTheme {
     val bckColor = phoneColors.colorLabelsBackground
     var textState by remember { mutableStateOf("...") }
@@ -178,6 +182,7 @@ fun AISpeechRecognizer(
             autoStart = autoStart,
             voiceDetectionSensitivity = 0.2f,
             stopListeningWhenNoVoiceAtLeast = 2.0f,
+            createKit = createKit,
         )
     }
     DisposableEffect(Unit) {

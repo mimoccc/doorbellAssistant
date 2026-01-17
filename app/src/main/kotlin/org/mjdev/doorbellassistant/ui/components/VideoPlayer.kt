@@ -79,7 +79,7 @@ fun VideoPlayer(
                 .applyIf(!keepAspect) {
                     fillMaxHeight()
                 },
-            painter = rememberAssetImagePainter("avatar_transparent.png"),
+            painter = rememberAssetImagePainter("avatar/avatar_transparent.png"),
             contentDescription = ""
         )
     } else {

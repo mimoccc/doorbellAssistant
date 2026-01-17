@@ -58,3 +58,31 @@ Simply, it allows local area network calls.
     <td><img src="sources/Screenshot_20260115_115830.png" alt="Screen 5" width="200"></td>
   </tr>
 </table>
+
+### Used libraries & sw
+- [Koog Jetbrains](https://www.jetbrains.com/koog/)
+- [Kotlin](https://kotlinlang.org/)
+- [Jetpack Compose](https://developer.android.com/jetpack/compose)
+- [Coroutines](https://developer.android.com/topic/libraries/architecture/coroutines)
+- [OkHttp](https://square.github.io/okhttp/)
+- [Kotlinx Serialization](https://github.com/Kotlin/kotlinx.serialization)
+- [Kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines)
+- [Kotlinx.io](https://github.com/Kotlin/kotlinx.io)
+- [Kotlinx.text](https://github.com/Kotlin/kotlinx.text)
+- [Ktor](https://ktor.io/)
+- [Vosk](https://github.comalphacep/vosk)
+- [Glance](https://developer.android.com/training/wearables/notifications/glance)
+- [ExoPlayer](https://developer.android.com/guide/topics/media/exoplayer)
+- [Appcompanist Permissions](https://github.com/google/accompanist)
+- [Camera2](https://developer.android.com/training/camera/cameradirect)
+- [Kodein](https://github.com/Kodein-Framework/Kodein-DB)
+- [Gson](https://github.com/google/gson)
+- [Stream WebRtc](https://getstream.io/resources/projects/webrtc/platforms/android-kotlin/)
+- [Pallete](https://github.com/google/accompanist)
+- [BouncyCastle](https://github.com/bcgit/bc-java)
+
+### License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+
+<br/><br/><br/><br/><br/><br/>

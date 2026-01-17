@@ -46,7 +46,7 @@ fun CartoonPlayer(
 ) = PhoneTheme {
     if (isPreview) {
         BackgroundLayout(
-            assetImageFile = "avatar_transparent.png",
+            assetImageFile = "avatar/avatar_transparent.png",
         )
     } else {
         VideoPlayer(

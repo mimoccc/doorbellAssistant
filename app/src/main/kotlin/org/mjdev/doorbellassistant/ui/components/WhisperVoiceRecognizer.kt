@@ -27,7 +27,11 @@ import kotlinx.coroutines.withContext
 import org.mjdev.doorbellassistant.ui.components.WhisperRecognizerState.Companion.rememberWhisperVoiceRecognizerState
 import org.mjdev.doorbellassistant.agent.stt.VoiceKit
 import org.mjdev.doorbellassistant.agent.stt.VoiceKitListener
-import org.mjdev.doorbellassistant.agent.stt.WhisperKit
+import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKit
+import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKitModel
+import org.mjdev.doorbellassistant.agent.stt.transcribers.base.KitResult
+import org.mjdev.doorbellassistant.agent.stt.transcribers.whisper.WhisperKit
+import org.mjdev.doorbellassistant.agent.stt.transcribers.whisper.WhisperModelType
 import org.mjdev.doorbellassistant.extensions.ComposeExt.logPosition
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
@@ -36,8 +40,7 @@ import kotlin.Float
 
 class WhisperRecognizerState(
     val context: Context,
-    val filesDir: File? = context.filesDir,
-    val modelType: WhisperKit.WhisperModelType = WhisperKit.WhisperModelType.MEDIUM,
+    val modelType: ITKitModel = WhisperModelType.SMALL,
     val onInitialized: WhisperRecognizerState.() -> Unit = {},
     val onReleased: WhisperRecognizerState.() -> Unit = {},
     var onVoiceDetected: WhisperRecognizerState.() -> Unit = {},
@@ -52,10 +55,11 @@ class WhisperRecognizerState(
     val voiceDetectionSensitivity: Float = 0.2f,
     val stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
     val onThinking: () -> Unit = {},
+    val createKit: (Context) -> ITKit = { context -> WhisperKit(context) },
 ) {
     private var _isThinking: MutableState<Boolean> = mutableStateOf(false)
     private var _isInitialized: MutableState<Boolean> = mutableStateOf(false)
-    private var _isListeningStarted : MutableState<Boolean> = mutableStateOf(false)
+    private var _isListeningStarted: MutableState<Boolean> = mutableStateOf(false)
     private var _isListening: MutableState<Boolean> = mutableStateOf(false)
     private val scope = CoroutineScope(Dispatchers.Default)
 
@@ -66,19 +70,19 @@ class WhisperRecognizerState(
     val isThinking
         get() = _isThinking.value
 
-    private val whisperKit by lazy {
-        WhisperKit(context, filesDir).apply {
+    private val transcribeKit by lazy {
+        createKit(context).apply {
             setModel(modelType)
             setCallback { result ->
                 when (result) {
-                    is WhisperKit.WhisperKitResult.WhisperKitInitialized -> {
+                    is KitResult.Initialized -> {
                         _isInitialized.value = true
                         _isThinking.value = false
                         _isListening.value = false
                         this@WhisperRecognizerState.onInitialized(this@WhisperRecognizerState)
                     }
 
-                    is WhisperKit.WhisperKitResult.WhisperKitText -> {
+                    is KitResult.Text -> {
                         _isThinking.value = false
                         _isListening.value = false
                         this@WhisperRecognizerState.onVoiceTranscribed(
@@ -87,25 +91,25 @@ class WhisperRecognizerState(
                         )
                     }
 
-                    is WhisperKit.WhisperKitResult.WhisperKitError -> {
+                    is KitResult.Error -> {
                         _isThinking.value = false
                         _isListening.value = false
                         this@WhisperRecognizerState.onFailure(result.error)
                     }
 
-                    is WhisperKit.WhisperKitResult.WhisperKitTranscribing -> {
+                    is KitResult.Transcribing -> {
                         _isThinking.value = true
                         _isListening.value = true
                         this@WhisperRecognizerState.onThinking()
                     }
 
-                    is WhisperKit.WhisperKitResult.WhisperKitDownload -> {
+                    is KitResult.Download -> {
                         _isInitialized.value = false
                         _isThinking.value = false
                         this@WhisperRecognizerState.onDownloading(result.percent)
                     }
 
-                    WhisperKit.WhisperKitResult.WhisperKitReleased -> {
+                    is KitResult.Released -> {
                         _isInitialized.value = false
                         _isThinking.value = false
                         _isListening.value = false
@@ -158,7 +162,7 @@ class WhisperRecognizerState(
     }
 
     init {
-        whisperKit.init()
+        transcribeKit.init()
     }
 
     @SuppressLint("MissingPermission")
@@ -173,14 +177,20 @@ class WhisperRecognizerState(
         _isListeningStarted.value = false
         scope.launch {
             voiceKit.stop()
-            whisperKit.release()
+            transcribeKit.release()
         }
     }.onFailure { e ->
         onFailure(e)
     }
 
     private suspend fun onGotVoiceChunk(data: ByteArray) {
-        whisperKit.transcribe(data)
+        runCatching {
+            transcribeKit.transcribe(data)
+        }.onFailure { e ->
+            withContext(Dispatchers.Main) {
+                onFailure(e)
+            }
+        }
     }
 
     companion object {
@@ -188,8 +198,7 @@ class WhisperRecognizerState(
         @Composable
         fun rememberWhisperVoiceRecognizerState(
             context: Context = LocalContext.current,
-            filesDir: File? = context.filesDir,
-            modelType: WhisperKit.WhisperModelType = WhisperKit.WhisperModelType.MEDIUM,
+            modelType: ITKitModel = WhisperModelType.SMALL,
             onInitialized: WhisperRecognizerState.() -> Unit = {},
             onVoiceDetected: WhisperRecognizerState.() -> Unit = {},
             onVoiceStarts: WhisperRecognizerState.() -> Unit = {},
@@ -203,10 +212,10 @@ class WhisperRecognizerState(
             onFailure: WhisperRecognizerState.(e: Throwable) -> Unit = {},
             voiceDetectionSensitivity: Float = 0.2f,
             stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
+            createKit: (Context) -> ITKit = { context -> WhisperKit(context) },
         ) = remember {
             WhisperRecognizerState(
                 context = context,
-                filesDir = filesDir,
                 modelType = modelType,
                 onInitialized = onInitialized,
                 onVoiceDetected = onVoiceDetected,
@@ -218,6 +227,7 @@ class WhisperRecognizerState(
                 onFailure = onFailure,
                 voiceDetectionSensitivity = voiceDetectionSensitivity,
                 stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,
+                createKit = createKit,
             )
         }
     }
@@ -229,17 +239,17 @@ class WhisperRecognizerState(
 fun WhisperVoiceRecognizer(
     modifier: Modifier = Modifier,
     context: Context = LocalContext.current,
-    filesDir: File? = context.filesDir,
-    modelType: WhisperKit.WhisperModelType = WhisperKit.WhisperModelType.MEDIUM,
+    modelType: ITKitModel = WhisperModelType.SMALL,
     voiceDetectionSensitivity: Float = 0.2f,
     stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
     autoStart: Boolean = false,
+    createKit: (Context) -> ITKit = { context -> WhisperKit(context) },
     state: WhisperRecognizerState = rememberWhisperVoiceRecognizerState(
         context = context,
-        filesDir = filesDir,
         modelType = modelType,
         voiceDetectionSensitivity = voiceDetectionSensitivity,
         stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,
+        createKit = createKit,
     )
 ) = PhoneTheme {
     logPosition()

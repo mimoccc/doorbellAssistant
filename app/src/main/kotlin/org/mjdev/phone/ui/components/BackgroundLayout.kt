@@ -19,7 +19,7 @@ import org.mjdev.phone.ui.theme.base.phoneColors
 @Composable
 fun BackgroundLayout(
     modifier: Modifier = Modifier,
-    assetImageFile: String = "avatar_transparent.png",
+    assetImageFile: String = "avatar/avatar_transparent.png",
     imagePainter: Painter = rememberAssetImagePainter(assetImageFile = assetImageFile),
     contentDescription: String = "",
 ) = PhoneTheme {

@@ -1,5 +1,6 @@
 package org.mjdev.doorbellassistant.ui.screens
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.annotation.OptIn
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import org.mjdev.doorbellassistant.enums.VideoSources
 import org.mjdev.doorbellassistant.agent.ai.AIManager.Companion.TAG
+import org.mjdev.doorbellassistant.agent.stt.transcribers.whisper.WhisperKit
 import org.mjdev.doorbellassistant.ui.components.AISpeechRecognizer
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayer
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayerState
@@ -140,7 +142,8 @@ fun MotionAlertScreen(
                         videoState.unavailable()
                     }
                 }
-            }
+            },
+            createKit = { context -> WhisperKit(context) },
         )
         FrontCameraPreview(
             modifier = Modifier

@@ -56,7 +56,6 @@ android {
     compileSdk {
         version = release(36)
     }
-    
     ndkVersion = "29.0.14206865"
     packaging {
         resources {
@@ -150,10 +149,6 @@ dependencies {
     // di
     implementation(libs.kodein.di)
     implementation(libs.kodein.di.framework.compose)
-    // vpn
-    implementation(libs.pcap4j.core)
-    implementation(libs.pcap4j.packetfactory.static)
-    implementation(libs.dnsjava.dnsjava)
     // todo remove
     implementation(libs.gson)
     // todo remove or replace ktor
