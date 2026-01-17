@@ -29,7 +29,7 @@ import org.mjdev.phone.nsd.service.CallNsdService.Companion.start
 class AssistantActivity : UnlockedActivity() {
     val delayHandler by lazy {
         DelayHandler(8000L) {
-            handleMotionLost(false)
+            // handleMotionLost(false)
         }
     }
 
@@ -65,6 +65,9 @@ class AssistantActivity : UnlockedActivity() {
                 onConversationContinued = {
                     delayHandler.restart()
                 },
+                onThinking = {
+                    delayHandler.stop()
+                }
             )
         }
     }

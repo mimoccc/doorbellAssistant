@@ -8,7 +8,6 @@ import kotlin.reflect.KProperty
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-//    alias(libs.plugins.google.services)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -72,6 +71,11 @@ android {
             excludes += "/META-INF/NOTICE.md"
             excludes += "META-INF/io.netty.versions.properties"
             excludes += "META-INF/INDEX.LIST"
+
+            pickFirsts.add("com/sun/jna/**")
+        }
+        jniLibs {
+            pickFirsts.add("**/*.so")
         }
     }
     defaultConfig {
@@ -116,7 +120,6 @@ android {
 
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
-//    implementation(platform(libs.firebase.bom))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.service)
@@ -149,10 +152,6 @@ dependencies {
     // di
     implementation(libs.kodein.di)
     implementation(libs.kodein.di.framework.compose)
-    // vpn
-    implementation(libs.pcap4j.core)
-    implementation(libs.pcap4j.packetfactory.static)
-    implementation(libs.dnsjava.dnsjava)
     // todo remove
     implementation(libs.gson)
     // todo remove or replace ktor
@@ -178,10 +177,16 @@ dependencies {
     implementation(libs.appwidget.viewer)
     // custom ai
     implementation(libs.koog.agents)
-//    implementation(libs.firebase.ai)
-//    implementation(libs.generativeai)
-//    implementation(libs.cactus)
+    implementation(libs.vosk.android)
     // testing
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
+
+configurations.all {
+    resolutionStrategy {
+        // Force AAR variant JNA
+        force("net.java.dev.jna:jna:5.18.1")
+    }
+}
+

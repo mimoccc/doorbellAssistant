@@ -3,10 +3,10 @@ package org.mjdev.doorbellassistant.enums
 enum class VideoSources(
     val path: String
 ) {
-    Welcome("welcome.mp4"),
-    Unavailable("unavailable.mp4"),
-    Warning("warning.mp4"),
-    RecordStarting("record.mp4"),
-    RecordSent("sent.mp4"),
-    Ringing("ringing.mp4"),
+    Welcome("video/welcome.mp4"),
+    Unavailable("video/unavailable.mp4"),
+    Warning("video/warning.mp4"),
+    RecordStarting("video/record.mp4"),
+    RecordSent("video/sent.mp4"),
+    Ringing("video/ringing.mp4"),
 }

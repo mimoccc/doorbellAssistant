@@ -19,17 +19,19 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import org.mjdev.doorbellassistant.enums.VideoSources
 import org.mjdev.doorbellassistant.agent.ai.AIManager.Companion.TAG
+import org.mjdev.doorbellassistant.agent.stt.transcribers.vosk.VoskKit
 import org.mjdev.doorbellassistant.ui.components.AISpeechRecognizer
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayer
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayerState
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayerState.Companion.rememberCartoonState
 import org.mjdev.doorbellassistant.ui.components.FrontCameraPreview
-import org.mjdev.doorbellassistant.ui.components.WhisperRecognizerState
+import org.mjdev.doorbellassistant.ui.components.VoiceRecognizerState
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.components.BackgroundLayout
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 
+@Suppress("ParamsComparedByRef")
 @OptIn(UnstableApi::class)
 @Previews
 @Composable
@@ -42,8 +44,9 @@ fun MotionAlertScreen(
     onConversationContinued: () -> Unit = {},
     onDismiss: () -> Unit = {},
     onCommand: (String) -> Boolean = { false },
+    onThinking: () -> Unit = {},
 ) = PhoneTheme {
-    var voiceRecognizerState: WhisperRecognizerState? = null
+    var voiceRecognizerState: VoiceRecognizerState? = null
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -123,6 +126,7 @@ fun MotionAlertScreen(
 //                videoState.reset()
 //                onDismiss()
             },
+            onThinking = onThinking,
             onError = { e ->
                 when (videoState.source) {
                     VideoSources.Unavailable -> {
@@ -138,7 +142,8 @@ fun MotionAlertScreen(
                         videoState.unavailable()
                     }
                 }
-            }
+            },
+            createKit = { context -> VoskKit(context) },
         )
         FrontCameraPreview(
             modifier = Modifier

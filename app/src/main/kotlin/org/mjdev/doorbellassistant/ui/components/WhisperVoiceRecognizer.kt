@@ -24,74 +24,97 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.mjdev.doorbellassistant.ui.components.WhisperRecognizerState.Companion.rememberWhisperVoiceRecognizerState
+import org.mjdev.doorbellassistant.ui.components.VoiceRecognizerState.Companion.rememberWhisperVoiceRecognizerState
 import org.mjdev.doorbellassistant.agent.stt.VoiceKit
 import org.mjdev.doorbellassistant.agent.stt.VoiceKitListener
-import org.mjdev.doorbellassistant.agent.stt.WhisperKit
+import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKit
+import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKitModel
+import org.mjdev.doorbellassistant.agent.stt.transcribers.base.KitResult
+import org.mjdev.doorbellassistant.agent.stt.transcribers.vosk.VoskKit
+import org.mjdev.doorbellassistant.agent.stt.transcribers.vosk.VoskModelType
 import org.mjdev.doorbellassistant.extensions.ComposeExt.logPosition
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
-import java.io.File
 import kotlin.Float
 
-class WhisperRecognizerState(
+class VoiceRecognizerState(
     val context: Context,
-    val filesDir: File? = context.filesDir,
-    val modelType: WhisperKit.WhisperModelType = WhisperKit.WhisperModelType.MEDIUM,
-    val onInitialized: WhisperRecognizerState.() -> Unit = {},
-    val onReleased: WhisperRecognizerState.() -> Unit = {},
-    var onVoiceDetected: WhisperRecognizerState.() -> Unit = {},
-    var onVoiceStarts: WhisperRecognizerState.() -> Unit = {},
-    val onVoiceTranscribed: WhisperRecognizerState.(
+    val modelType: ITKitModel = VoskModelType.CS_SMALL,
+    val onInitialized: VoiceRecognizerState.() -> Unit = {},
+    val onReleased: VoiceRecognizerState.() -> Unit = {},
+    var onVoiceDetected: VoiceRecognizerState.() -> Unit = {},
+    var onVoiceStarts: VoiceRecognizerState.() -> Unit = {},
+    val onVoiceTranscribed: VoiceRecognizerState.(
         fulltext: String,
         segments: List<String>
     ) -> Unit = { _, _ -> },
-    val onVoiceEnds: WhisperRecognizerState.() -> Unit = {},
+    val onVoiceEnds: VoiceRecognizerState.() -> Unit = {},
     val onDownloading: (percent: Float) -> Unit = {},
-    val onFailure: WhisperRecognizerState.(e: Throwable) -> Unit = {},
+    val onFailure: VoiceRecognizerState.(e: Throwable) -> Unit = {},
     val voiceDetectionSensitivity: Float = 0.2f,
     val stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
+    val maxRecordingDurationMs: Long = 20000L,
+    val minRecordingDurationMs: Long = 2000L,
+    val onThinking: () -> Unit = {},
+    val createKit: (Context) -> ITKit = { context -> VoskKit(context) },
 ) {
-    private var _isInitialized : Boolean = false
-    private var _isListeningStarted = false
+    private var _isThinking: MutableState<Boolean> = mutableStateOf(false)
+    private var _isInitialized: MutableState<Boolean> = mutableStateOf(false)
+    private var _isListeningStarted: MutableState<Boolean> = mutableStateOf(false)
     private var _isListening: MutableState<Boolean> = mutableStateOf(false)
     private val scope = CoroutineScope(Dispatchers.Default)
 
     val isListening
-        get() = _isListening.value
+        get() = _isListening.value || _isListeningStarted.value
     val isInitialized
-        get() = _isInitialized
+        get() = _isInitialized.value
+    val isThinking
+        get() = _isThinking.value
 
-    private val whisperKit by lazy {
-        WhisperKit(context, filesDir).apply {
+    private val transcribeKit by lazy {
+        createKit(context).apply {
             setModel(modelType)
             setCallback { result ->
                 when (result) {
-                    is WhisperKit.WhisperKitResult.WhisperKitInitialized -> {
-                        _isInitialized = true
-                        this@WhisperRecognizerState.onInitialized(this@WhisperRecognizerState)
+                    is KitResult.Initialized -> {
+                        _isInitialized.value = true
+                        _isThinking.value = false
+                        _isListening.value = false
+                        this@VoiceRecognizerState.onInitialized(this@VoiceRecognizerState)
                     }
 
-                    is WhisperKit.WhisperKitResult.WhisperKitText -> {
-                        this@WhisperRecognizerState.onVoiceTranscribed(
+                    is KitResult.Text -> {
+                        _isThinking.value = false
+                        _isListening.value = false
+                        this@VoiceRecognizerState.onVoiceTranscribed(
                             result.text,
                             result.segments
                         )
                     }
 
-                    is WhisperKit.WhisperKitResult.WhisperKitError -> {
-                        _isInitialized = false
-                        this@WhisperRecognizerState.onFailure(result.error)
+                    is KitResult.Error -> {
+                        _isThinking.value = false
+                        _isListening.value = false
+                        this@VoiceRecognizerState.onFailure(result.error)
                     }
 
-                    is WhisperKit.WhisperKitResult.WhisperKitDownload -> {
-                        _isInitialized = false
-                        this@WhisperRecognizerState.onDownloading(result.percent)
+                    is KitResult.Transcribing -> {
+                        _isThinking.value = true
+                        _isListening.value = true
+                        this@VoiceRecognizerState.onThinking()
                     }
 
-                    WhisperKit.WhisperKitResult.WhisperKitReleased -> {
-                        _isInitialized = false
-                        this@WhisperRecognizerState.onReleased(this@WhisperRecognizerState)
+                    is KitResult.Download -> {
+                        _isInitialized.value = false
+                        _isThinking.value = false
+                        this@VoiceRecognizerState.onDownloading(result.percent)
+                    }
+
+                    is KitResult.Released -> {
+                        _isInitialized.value = false
+                        _isThinking.value = false
+                        _isListening.value = false
+                        this@VoiceRecognizerState.onReleased(this@VoiceRecognizerState)
                     }
                 }
             }
@@ -102,33 +125,37 @@ class WhisperRecognizerState(
             context = context,
             voiceDetectionSensitivity = voiceDetectionSensitivity,
             stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,
+            maxRecordingDurationMs = maxRecordingDurationMs,
+            minRecordingDurationMs = minRecordingDurationMs,
             listener = object : VoiceKitListener {
                 @RequiresPermission(Manifest.permission.RECORD_AUDIO)
                 override suspend fun onVoiceDetected() {
                     _isListening.value = true
                     withContext(Dispatchers.Main) {
-                        this@WhisperRecognizerState.onVoiceDetected()
+                        this@VoiceRecognizerState.onVoiceDetected()
                     }
                 }
 
                 override suspend fun onVoiceStarts() {
                     _isListening.value = true
                     withContext(Dispatchers.Main) {
-                        this@WhisperRecognizerState.onVoiceStarts()
+                        this@VoiceRecognizerState.onVoiceStarts()
                     }
                 }
 
                 override suspend fun onGotVoiceChunk(data: ByteArray) {
                     _isListening.value = true
+                    _isThinking.value = true
                     withContext(Dispatchers.Main) {
-                        this@WhisperRecognizerState.onGotVoiceChunk(data)
+                        this@VoiceRecognizerState.onGotVoiceChunk(data)
                     }
                 }
 
                 override suspend fun voiceEnds() {
                     _isListening.value = false
+                    _isThinking.value = false
                     withContext(Dispatchers.Main) {
-                        this@WhisperRecognizerState.onVoiceEnds()
+                        this@VoiceRecognizerState.onVoiceEnds()
                     }
                 }
             }
@@ -136,59 +163,62 @@ class WhisperRecognizerState(
     }
 
     init {
-        whisperKit.init()
+        transcribeKit.init()
     }
 
     @SuppressLint("MissingPermission")
     fun startListen() = scope.launch {
-        if (!_isListeningStarted) {
+        if (!_isListeningStarted.value) {
             voiceKit.start(modelType.frequency, modelType.channels)
-            _isListeningStarted = true
+            _isListeningStarted.value = true
         }
     }
 
     fun stopListening() = runCatching {
-        _isListeningStarted = false
+        _isListeningStarted.value = false
         scope.launch {
             voiceKit.stop()
-            whisperKit.release()
+            transcribeKit.release()
         }
     }.onFailure { e ->
         onFailure(e)
     }
 
     private suspend fun onGotVoiceChunk(data: ByteArray) {
-        whisperKit.transcribe(data)
+        runCatching {
+            transcribeKit.transcribe(data)
+        }.onFailure { e ->
+            withContext(Dispatchers.Main) {
+                onFailure(e)
+            }
+        }
     }
-
-//    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-//    private suspend fun startRecording() {
-//        voiceKit.startRecording()
-//    }
 
     companion object {
         @Suppress("ParamsComparedByRef")
         @Composable
         fun rememberWhisperVoiceRecognizerState(
             context: Context = LocalContext.current,
-            filesDir: File? = context.filesDir,
-            modelType: WhisperKit.WhisperModelType = WhisperKit.WhisperModelType.MEDIUM,
-            onInitialized: WhisperRecognizerState.() -> Unit = {},
-            onVoiceDetected: WhisperRecognizerState.() -> Unit = {},
-            onVoiceStarts: WhisperRecognizerState.() -> Unit = {},
-            onVoiceTranscribed: WhisperRecognizerState.(
+            modelType: ITKitModel = VoskModelType.CS_SMALL,
+            onInitialized: VoiceRecognizerState.() -> Unit = {},
+            onVoiceDetected: VoiceRecognizerState.() -> Unit = {},
+            onVoiceStarts: VoiceRecognizerState.() -> Unit = {},
+            onVoiceTranscribed: VoiceRecognizerState.(
                 fulltext: String,
                 segments: List<String>
             ) -> Unit = { _, _ -> },
-            onVoiceEnds: WhisperRecognizerState.() -> Unit = {},
+            onVoiceEnds: VoiceRecognizerState.() -> Unit = {},
             onDownloading: (percent: Float) -> Unit = {},
-            onFailure: WhisperRecognizerState.(e: Throwable) -> Unit = {},
+            onThinking: () -> Unit = {},
+            onFailure: VoiceRecognizerState.(e: Throwable) -> Unit = {},
             voiceDetectionSensitivity: Float = 0.2f,
             stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
+            maxRecordingDurationMs: Long = 20000L,
+            minRecordingDurationMs: Long = 2000L,
+            createKit: (Context) -> ITKit = { context -> VoskKit(context) },
         ) = remember {
-            WhisperRecognizerState(
+            VoiceRecognizerState(
                 context = context,
-                filesDir = filesDir,
                 modelType = modelType,
                 onInitialized = onInitialized,
                 onVoiceDetected = onVoiceDetected,
@@ -196,9 +226,13 @@ class WhisperRecognizerState(
                 onVoiceTranscribed = onVoiceTranscribed,
                 onVoiceEnds = onVoiceEnds,
                 onDownloading = onDownloading,
+                onThinking = onThinking,
                 onFailure = onFailure,
                 voiceDetectionSensitivity = voiceDetectionSensitivity,
                 stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,
+                maxRecordingDurationMs = maxRecordingDurationMs,
+                minRecordingDurationMs = minRecordingDurationMs,
+                createKit = createKit,
             )
         }
     }
@@ -210,17 +244,21 @@ class WhisperRecognizerState(
 fun WhisperVoiceRecognizer(
     modifier: Modifier = Modifier,
     context: Context = LocalContext.current,
-    filesDir: File? = context.filesDir,
-    modelType: WhisperKit.WhisperModelType = WhisperKit.WhisperModelType.MEDIUM,
+    modelType: ITKitModel = VoskModelType.CS_SMALL,
     voiceDetectionSensitivity: Float = 0.2f,
     stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
+    maxRecordingDurationMs: Long = 20000L,
+    minRecordingDurationMs: Long = 2000L,
     autoStart: Boolean = false,
-    state: WhisperRecognizerState = rememberWhisperVoiceRecognizerState(
+    createKit: (Context) -> ITKit = { context -> VoskKit(context) },
+    state: VoiceRecognizerState = rememberWhisperVoiceRecognizerState(
         context = context,
-        filesDir = filesDir,
         modelType = modelType,
         voiceDetectionSensitivity = voiceDetectionSensitivity,
         stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,
+        maxRecordingDurationMs = maxRecordingDurationMs,
+        minRecordingDurationMs = minRecordingDurationMs,
+        createKit = createKit,
     )
 ) = PhoneTheme {
     logPosition()

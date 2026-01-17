@@ -392,7 +392,7 @@ object CustomExtensions {
 
     @Composable
     fun rememberAssetImage(
-        assetImageFile: String = "avatar_transparent.png",
+        assetImageFile: String = "avatar/avatar_transparent.png",
         onError: (Throwable) -> ImageBitmap = { ImageBitmap(1, 1) },
     ): ImageBitmap {
         val context: Context = LocalContext.current
@@ -410,7 +410,7 @@ object CustomExtensions {
 
     @Composable
     fun rememberAssetImagePainter(
-        assetImageFile: String = "avatar_transparent.png",
+        assetImageFile: String = "avatar/avatar_transparent.png",
         assetImage: ImageBitmap = rememberAssetImage(
             assetImageFile = assetImageFile
         ),
