@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.nsd.NsdServiceInfo
 import android.util.Log
+import androidx.glance.color.DynamicThemeColorProviders.onError
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
@@ -54,7 +55,7 @@ object CaptureRoute {
     ): Bitmap? = runCatching {
         val address = this@getFrame.address
         val port = this@getFrame.port
-        if (address.isNullOrEmpty()) {
+        if (address.isEmpty()) {
             return null
         } else {
             val url = "http://$address:$port/$routeName"
@@ -88,24 +89,16 @@ object CaptureRoute {
     suspend fun Context.sendMotionDetected(
         sender: NsdDevice?,
         types: List<NsdTypes> = listOf(NsdTypes.DOOR_BELL_CLIENT),
-        onError: (Throwable) -> Unit = { e -> e.printStackTrace() },
-        filter: (NsdServiceInfo) -> Boolean = { true },
     ) = sendActionToAll(
         types,
-        onError,
-        filter,
         DoorBellActionMotionDetected(sender)
     )
 
     suspend fun Context.sendMotionUnDetected(
         sender: NsdDevice?,
         types: List<NsdTypes> = listOf(NsdTypes.DOOR_BELL_CLIENT),
-        onError: (Throwable) -> Unit = { e -> e.printStackTrace() },
-        filter: (NsdServiceInfo) -> Boolean = { true },
     ) = sendActionToAll(
         types,
-        onError,
-        filter,
         DoorBellActionMotionUnDetected(sender)
     )
 

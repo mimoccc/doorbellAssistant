@@ -13,6 +13,10 @@ abstract class ServiceEvent {
             val device: NsdDevice
         ) : ServiceEvent()
 
+        data class ServiceNsdDevices(
+            val devicesAround : List<NsdDevice>
+        ): ServiceEvent()
+
         data class ServiceError(
             val error: Throwable
         ) : ServiceEvent()

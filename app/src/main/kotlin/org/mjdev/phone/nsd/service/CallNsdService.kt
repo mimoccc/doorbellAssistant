@@ -28,6 +28,7 @@ import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdDevice.Companion.EMPTY
 import org.mjdev.phone.nsd.device.NsdDevice.Companion.fromData
+import org.mjdev.phone.nsd.device.NsdTypes
 import org.mjdev.phone.rpc.server.INsdServerRPC
 import org.mjdev.phone.rpc.action.NsdAction
 import org.mjdev.phone.rpc.action.NsdActions.SDPStartCall
@@ -39,8 +40,10 @@ import org.mjdev.phone.rpc.action.NsdActions.SDPAnswer
 import org.mjdev.phone.rpc.action.NsdActions.SDPOffer
 import org.mjdev.phone.rpc.server.NsdServerRpc
 import org.mjdev.phone.nsd.service.ServiceCommand.Companion.GetNsdDevice
+import org.mjdev.phone.nsd.service.ServiceCommand.Companion.GetNsdDevices
 import org.mjdev.phone.nsd.service.ServiceCommand.Companion.GetState
 import org.mjdev.phone.nsd.service.ServiceEvent.Companion.ServiceNsdDevice
+import org.mjdev.phone.nsd.service.ServiceEvent.Companion.ServiceNsdDevices
 import org.mjdev.phone.stream.CallEndReason
 import kotlin.jvm.java
 
@@ -101,6 +104,18 @@ abstract class CallNsdService : NsdService() {
                     handler(ServiceNsdDevice(nsdDevice))
                 }
             }
+
+            is GetNsdDevices -> {
+                val types = command.types.let { tt ->
+                    if (tt == null || tt.isEmpty()) NsdTypes.entries else tt
+                }
+                val filteredDevices = devicesAround.filter { d ->
+                    d.serviceType in types
+                }
+                CoroutineScope(Dispatchers.IO).launch {
+                    handler(ServiceNsdDevices(filteredDevices))
+                }
+            }
         }
     }
 
@@ -118,17 +133,26 @@ abstract class CallNsdService : NsdService() {
     open fun onRpcAction(action: NsdAction) {
         when (action) {
             is SDPStartCall -> {
-                Log.d(TAG, "Received SDPStartCall: caller=${action.caller}, callee=${action.callee}")
+                Log.d(
+                    TAG,
+                    "Received SDPStartCall: caller=${action.caller}, callee=${action.callee}"
+                )
                 handleCallReceived(action)
             }
 
             is SDPStartCallStarted -> {
-                Log.d(TAG, "Received SDPStartCallStarted: caller=${action.caller}, callee=${action.callee}")
+                Log.d(
+                    TAG,
+                    "Received SDPStartCallStarted: caller=${action.caller}, callee=${action.callee}"
+                )
                 handleCallStarted(action)
             }
 
             is SDPIceCandidate -> {
-                Log.d(TAG, "Received SDPIceCandidate: sdpMid=${action.sdpMid}, sdpMLineIndex=${action.sdpMLineIndex}, sdp=${action.sdp}")
+                Log.d(
+                    TAG,
+                    "Received SDPIceCandidate: sdpMid=${action.sdpMid}, sdpMLineIndex=${action.sdpMLineIndex}, sdp=${action.sdp}"
+                )
                 handleIceCandidate(action)
             }
 
@@ -159,7 +183,10 @@ abstract class CallNsdService : NsdService() {
     }
 
     private fun handleCallReceived(message: SDPStartCall) {
-        Log.d(TAG, "handleCallReceived: Starting VideoCallActivity for caller=${message.caller}, callee=${message.callee}")
+        Log.d(
+            TAG,
+            "handleCallReceived: Starting VideoCallActivity for caller=${message.caller}, callee=${message.callee}"
+        )
         startCall(
             this::class.java,
             callee = message.callee,
@@ -240,15 +267,45 @@ abstract class CallNsdService : NsdService() {
             handler: (NsdDevice?) -> Unit
         ) {
             val serviceClass: Class<NsdService> = getCallServiceClass()
-            val command: ServiceCommand = GetNsdDevice
             val connection = object : ServiceConnection {
                 override fun onServiceConnected(
                     name: ComponentName,
                     binder: IBinder
                 ) {
                     val service = (binder as LocalBinder).service
-                    service.executeCommand(command) { event ->
+                    service.executeCommand(GetNsdDevice) { event ->
                         handler((event as? ServiceNsdDevice)?.device)
+                    }
+                    unbindService(this)
+                }
+
+                override fun onServiceDisconnected(name: ComponentName) {
+                }
+            }
+            bindService(
+                Intent(this, serviceClass),
+                connection,
+                BIND_AUTO_CREATE
+            )
+        }
+
+        fun Context.nsdDevices(
+            types: List<NsdTypes> = NsdTypes.entries,
+            handler: (List<NsdDevice>) -> Unit
+        ) {
+            val serviceClass: Class<NsdService> = getCallServiceClass()
+            val connection = object : ServiceConnection {
+                override fun onServiceConnected(
+                    name: ComponentName,
+                    binder: IBinder
+                ) {
+                    val service = (binder as LocalBinder).service
+                    service.executeCommand(
+                        GetNsdDevices(
+                            types
+                        )
+                    ) { event ->
+                        handler(((event as? ServiceNsdDevices)?.devicesAround) ?: emptyList())
                     }
                     unbindService(this)
                 }
@@ -274,7 +331,7 @@ abstract class CallNsdService : NsdService() {
                         name: ComponentName,
                         binder: IBinder
                     ) {
-                        trySend( (binder as LocalBinder).service as CallNsdService?)
+                        trySend((binder as LocalBinder).service as CallNsdService?)
                     }
 
                     override fun onServiceDisconnected(name: ComponentName) {

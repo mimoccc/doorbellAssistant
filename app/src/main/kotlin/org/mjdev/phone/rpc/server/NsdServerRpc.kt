@@ -1,7 +1,6 @@
 package org.mjdev.phone.rpc.server
 
 import android.content.Context
-import android.net.nsd.NsdServiceInfo
 import android.util.Log
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
@@ -16,7 +15,6 @@ import io.ktor.server.routing.RoutingCall
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import okhttp3.MediaType.Companion.toMediaType
@@ -27,12 +25,12 @@ import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.logging.HttpLoggingInterceptor.Level
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdTypes
-import org.mjdev.phone.nsd.device.nsdDeviceListFlow
 import kotlin.reflect.KClass
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
+import org.mjdev.phone.nsd.service.CallNsdService.Companion.nsdDevices
 import org.mjdev.phone.rpc.action.NsdActions.SDPAccept
 import org.mjdev.phone.rpc.action.NsdActions.SDPOffer
 import org.mjdev.phone.rpc.action.NsdActions.SDPAnswer
@@ -268,14 +266,14 @@ open class NsdServerRpc(
             }
         }
 
-        suspend fun Context.sendActionToAll(
+        fun Context.sendActionToAll(
             types: List<NsdTypes> = NsdTypes.entries,
-            onError: (Throwable) -> Unit = { e -> e.printStackTrace() },
-            filter: (NsdServiceInfo) -> Boolean = { true },
             action: NsdAction,
-        ) = nsdDeviceListFlow(this, types, onError, filter).collectLatest { devices ->
+        ) = nsdDevices(types) { devices ->
             devices.forEach { device ->
-                device.sendAction(action)
+                if (device.address != currentWifiIP) {
+                    device.sendAction(action)
+                }
             }
         }
     }

@@ -14,11 +14,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.mjdev.doorbellassistant.R
 import org.mjdev.phone.enums.ChannelId
 import org.mjdev.phone.enums.NotificationId
 import org.mjdev.phone.extensions.CustomExtensions.ANDROID_ID
 import org.mjdev.phone.nsd.device.NsdTypes
 import org.mjdev.phone.nsd.device.NsdTypes.Companion.serviceName
+import org.mjdev.phone.nsd.device.createNsdDeviceList
 import org.mjdev.phone.nsd.manager.NsdManagerFlow
 import org.mjdev.phone.nsd.registration.RegistrationEvent
 import org.mjdev.phone.rpc.server.INsdServerRPC
@@ -30,14 +32,19 @@ abstract class NsdService : BindableService() {
     // todo
 //    private val notificationManager : AppNotificationManager by di.instance()
 
-    private val nsdManagerFlow by lazy {
+    protected val nsdManagerFlow by lazy {
         NsdManagerFlow(this)
+    }
+    protected val devicesAround by lazy {
+        createNsdDeviceList(applicationContext)
     }
     private var registrationJob: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
     abstract val serviceType: NsdTypes
     abstract val rpcServer: INsdServerRPC
+
+
 
     val powerManager
         get() = getSystemService(POWER_SERVICE) as PowerManager
@@ -97,7 +104,7 @@ abstract class NsdService : BindableService() {
 
     private fun createNotification() = runCatching {
         NotificationCompat.Builder(this, ChannelId.NSD.id)
-//            .setSmallIcon(R.mipmap.ic_launcher) // todo
+            .setSmallIcon(R.mipmap.ic_launcher) // todo
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setVisibility(NotificationCompat.VISIBILITY_SECRET)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
@@ -107,7 +114,7 @@ abstract class NsdService : BindableService() {
             .build()
     }.getOrElse {
         NotificationCompat.Builder(this, ChannelId.NSD.id)
-//            .setSmallIcon(R.mipmap.ic_launcher) // todo
+            .setSmallIcon(R.mipmap.ic_launcher) // todo
             .build()
     }
 

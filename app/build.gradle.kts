@@ -177,7 +177,11 @@ dependencies {
     implementation(libs.appwidget.viewer)
     // custom ai
     implementation(libs.koog.agents)
+    // stt
     implementation(libs.vosk.android)
+    // tts
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.23.2")
+    implementation("androidx.media3:media3-session:1.9.0")
     // testing
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

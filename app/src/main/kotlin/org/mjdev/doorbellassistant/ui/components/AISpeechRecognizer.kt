@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.mjdev.doorbellassistant.agent.ai.AIManager.Companion.TAG
 import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKit
 import org.mjdev.doorbellassistant.agent.stt.transcribers.vosk.VoskKit
@@ -38,6 +39,7 @@ import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("unused")
 @Previews
 @SuppressLint("MissingPermission")
@@ -50,7 +52,7 @@ fun AISpeechRecognizer(
     maxRecordingDurationMs: Long = 20000L,
     minRecordingDurationMs: Long = 2000L,
     onVoiceRecognizerInitialized: (VoiceRecognizerState) -> Unit = {},
-    onConversationEnds: () -> Unit = {},
+    onConversationEnds: (String) -> Unit = {},
     onDownloading: (Float) -> Unit = {},
     onVoiceDetected: () -> Unit = {},
     onVoiceUnDetected: () -> Unit = {},
@@ -63,7 +65,7 @@ fun AISpeechRecognizer(
 ) = PhoneTheme {
     val bckColor = phoneColors.colorLabelsBackground
     var isFirstText by remember { mutableStateOf(true) }
-    var textState by remember { mutableStateOf("...") }
+    var textState by remember { mutableStateOf("Welcome...") }
     val recognizerState = rememberWhisperVoiceRecognizerState(
         stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,
         voiceDetectionSensitivity = voiceDetectionSensitivity,
@@ -80,9 +82,16 @@ fun AISpeechRecognizer(
             onVoiceDetected()
         },
         onVoiceEnds = {
+            textState = "Thinking..."
             stopListening()
             onVoiceUnDetected()
-            // todo ai action
+            if (onCommand(textState)) {
+                onConversationResponded()
+                stopListening()
+            } else {
+                textState = ""
+                startListen()
+            }
         },
         onDownloading = { percent ->
             textState = "Downloading model ${(percent * 100).toInt()} %."
@@ -172,7 +181,7 @@ fun AISpeechRecognizer(
                 )
             }
         }
-        WhisperVoiceRecognizer(
+        VoiceRecognizer(
             modifier = Modifier
                 .size(64.dp)
                 .background(

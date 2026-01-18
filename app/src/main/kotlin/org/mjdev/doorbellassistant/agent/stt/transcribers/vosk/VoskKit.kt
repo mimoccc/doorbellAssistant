@@ -1,11 +1,11 @@
 package org.mjdev.doorbellassistant.agent.stt.transcribers.vosk
 
 import android.content.Context
+import kotlinx.coroutines.CloseableCoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
@@ -15,24 +15,22 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKit
 import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKitModel
-import org.mjdev.doorbellassistant.agent.stt.transcribers.base.KitResult
+import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKitResult
+import org.mjdev.doorbellassistant.helpers.DataBus
 import org.vosk.Model
 import org.vosk.Recognizer
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.concurrent.Executors
 import java.util.zip.ZipInputStream
 
-@OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
-class VoskKit(
+class VoskKit @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class) constructor(
     private val context: Context,
     private val filesDir: File? = context.filesDir,
-    private var callback: suspend (KitResult) -> Unit = { }
-) : ITKit {
-    private val voskContext = newSingleThreadContext("VoskKit")
-    private val scope: CoroutineScope = CoroutineScope(voskContext)
+    private val voskContext: CloseableCoroutineDispatcher = newSingleThreadContext("VoskKit"),
+    override val scope: CoroutineScope = CoroutineScope(voskContext),
+) : DataBus<ITKitResult>(), ITKit {
     private val mutex = Mutex()
     private var modelType: VoskModelType = VoskModelType.CS_SMALL
     private var model: Model? = null
@@ -44,20 +42,15 @@ class VoskKit(
             ?: throw IllegalArgumentException("Invalid model type")
     }
 
-    override fun setCallback(callback: suspend (KitResult) -> Unit) {
-        this.callback = callback
-    }
-
     private fun modelDir(): File = File(
         filesDir,
         "vosk/${modelType.lang.id}/${modelType.size.id}"
     )
 
-    private fun modelMarkerFile(dir: File): File = File(dir, ".ready")
+    private fun modelMarkerFile(dir: File): File =
+        File(dir, ".ready")
 
-    private suspend fun checkAndDownloadModel(
-        onDownloading: suspend (percent: Float) -> Unit = {}
-    ) {
+    private suspend fun checkAndDownloadModel() {
         runCatching {
             val dir = modelDir()
             val marker = modelMarkerFile(dir)
@@ -79,29 +72,34 @@ class VoskKit(
                     downloadToFile(
                         url = modelType.url,
                         dest = zipFile,
-                        onProgress = onDownloading
+                        onProgress = { percent ->
+                            send(ITKitResult.Download(percent))
+                        }
                     )
                 }
                 unzip(zipFile, dir)
                 val actualModelPath = findActualModelRoot(dir)
                     ?: throw IllegalStateException("Unzipped model root not found in ${dir.absolutePath}")
                 marker.writeText(actualModelPath.absolutePath)
-                onDownloading(1f)
+                send(ITKitResult.Download(1f))
             }
         }.onFailure { e ->
             isDownloading = false
-            postResult(KitResult.Error(e))
+            send(ITKitResult.Error(e))
         }.onSuccess {
+            if(isDownloading) {
+                send(ITKitResult.Download(1f))
+            }
             isDownloading = false
         }
     }
 
     override fun init() {
         scope.launch {
-            checkAndDownloadModel { percent ->
-                postResult(KitResult.Download(percent))
+            checkAndDownloadModel()
+            while (isDownloading) {
+                delay(100)
             }
-            while (isDownloading) delay(100)
             recognizer?.close()
             recognizer = null
             model?.close()
@@ -115,7 +113,7 @@ class VoskKit(
                 ?: throw IllegalStateException("Model not ready: ${dir.absolutePath}")
             model = Model(actualModelPath.absolutePath)
             recognizer = Recognizer(model, modelType.frequency.toFloat())
-            postResult(KitResult.Initialized)
+            send(ITKitResult.Initialized)
         }
     }
 
@@ -125,7 +123,7 @@ class VoskKit(
             recognizer = null
             model?.close()
             model = null
-            postResult(KitResult.Released)
+            send(ITKitResult.Released)
         }
     }
 
@@ -134,9 +132,9 @@ class VoskKit(
         scope.launch {
             mutex.withLock {
                 if (recognizer == null) {
-                    postResult(KitResult.Error(IllegalStateException("Vosk not initialized")))
+                    send(ITKitResult.Error(IllegalStateException("Vosk not initialized")))
                 } else {
-                    postResult(KitResult.Transcribing)
+                    send(ITKitResult.Transcribing)
                     val accepted = recognizer?.acceptWaveForm(data, data.size)
                     val json = if (accepted == true) recognizer?.result
                     else recognizer?.partialResult
@@ -147,9 +145,18 @@ class VoskKit(
                         ?: obj?.optString("partial")
                         ?: ""
                     val segments = if (text.isBlank()) emptyList() else listOf(text)
-                    postResult(KitResult.Text(text, segments))
+                    send(ITKitResult.Text(text, segments))
                 }
             }
+        }
+    }
+
+    override fun subscribe(
+        onError: (Throwable) -> Unit,
+        onEvent: (ITKitResult) -> Unit
+    ) {
+        (this as DataBus<*>).subscribe(onError) { ev ->
+            onEvent( ev as ITKitResult )
         }
     }
 
@@ -185,12 +192,6 @@ class VoskKit(
             }
         }
         conn.disconnect()
-    }
-
-    private suspend fun postResult(result: KitResult) {
-        withContext(Dispatchers.Main) {
-            callback(result)
-        }
     }
 
     private fun unzip(

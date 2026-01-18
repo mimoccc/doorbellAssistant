@@ -43,7 +43,6 @@ fun NsdList(
         })
     } else rememberNsdDeviceList(
         types = types,
-        onError = onError,
         filter = { s ->
             val serviceIP = s.host?.hostAddress ?: ""
             currentIP.contentEquals(serviceIP).not()

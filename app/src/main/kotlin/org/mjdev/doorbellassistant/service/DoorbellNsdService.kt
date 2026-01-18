@@ -10,7 +10,8 @@ import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantEnabled
 import org.mjdev.doorbellassistant.extensions.ComposeExt.rememberDeviceCapture
 import org.mjdev.doorbellassistant.helpers.DelayHandler
-import org.mjdev.doorbellassistant.rpc.DoorBellActions
+import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionUnDetected
+import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionDetected
 import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc
 import org.mjdev.doorbellassistant.ui.components.FrontCameraPreview
 import org.mjdev.doorbellassistant.ui.window.ComposeFloatingWindow
@@ -91,13 +92,13 @@ class DoorbellNsdService : CallNsdService() {
     ) {
         super.onRpcAction(action)
         when (action) {
-            is DoorBellActions.DoorBellActionMotionDetected -> {
+            is DoorBellActionMotionDetected -> {
                 if (action.device?.address != currentWifiIP) {
                     showAlert(action.device)
                 }
             }
 
-            is DoorBellActions.DoorBellActionMotionUnDetected -> {
+            is DoorBellActionMotionUnDetected -> {
                 hideAlert(action.device)
             }
         }

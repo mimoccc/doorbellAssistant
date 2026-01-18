@@ -17,9 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.mjdev.doorbellassistant.enums.VideoSources
 import org.mjdev.doorbellassistant.agent.ai.AIManager.Companion.TAG
+import org.mjdev.doorbellassistant.agent.ai.AIManager.Companion.rememberAiManager
 import org.mjdev.doorbellassistant.agent.stt.transcribers.vosk.VoskKit
+import org.mjdev.doorbellassistant.agent.tts.PiperTTSEngine.Companion.rememberPiperTTS
 import org.mjdev.doorbellassistant.ui.components.AISpeechRecognizer
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayer
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayerState
@@ -31,8 +34,9 @@ import org.mjdev.phone.ui.components.BackgroundLayout
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 
+@ExperimentalCoroutinesApi
 @Suppress("ParamsComparedByRef")
-@OptIn(UnstableApi::class)
+@OptIn(UnstableApi::class, ExperimentalCoroutinesApi::class, ExperimentalCoroutinesApi::class)
 @Previews
 @Composable
 fun MotionAlertScreen(
@@ -47,6 +51,8 @@ fun MotionAlertScreen(
     onThinking: () -> Unit = {},
 ) = PhoneTheme {
     var voiceRecognizerState: VoiceRecognizerState? = null
+    val aiManager = rememberAiManager(onCommand = onCommand)
+    val tts = rememberPiperTTS()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -65,7 +71,7 @@ fun MotionAlertScreen(
             onResumed = {
                 true
             },
-            onVideoFinish = { p ->
+            onVideoFinish = {
                 when (videoState.videoState.value) {
                     VideoSources.Unavailable -> {
                         onDismiss() // todo records ?
@@ -102,7 +108,13 @@ fun MotionAlertScreen(
                 voiceRecognizerState = state
             },
             onConversationResponded = onConversationContinued,
-            onCommand = onCommand,
+            onCommand = { prompt ->
+                aiManager.transcript(prompt) { result ->
+                    Log.d(TAG, result)
+                    tts.talk(result)
+                }
+                false
+            },
             onDownloading = { percent ->
                 if (percent < 1f) {
                     videoState.mute()
@@ -122,7 +134,14 @@ fun MotionAlertScreen(
             onVoiceUnDetected = {
 //                videoState.unmute()
             },
-            onConversationEnds = {
+            onConversationEnds = { text ->
+                onThinking()
+                aiManager.transcript(
+                    text,
+                    onError = {}
+                ) { result ->
+                    Log.d(TAG, result)
+                }
 //                videoState.reset()
 //                onDismiss()
             },
