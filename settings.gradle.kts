@@ -23,3 +23,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "DoorBellAssistant"
 include(":app")
+include(":piper")

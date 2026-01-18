@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.mjdev.doorbellassistant.enums.VideoSources
 import org.mjdev.doorbellassistant.extensions.ComposeExt.VisibleState
 import org.mjdev.doorbellassistant.helpers.ActivityState.Companion.rememberActivityState
@@ -14,6 +15,7 @@ import org.mjdev.phone.extensions.CustomExtensions.isPreview
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Previews
 @Composable
 fun MainScreen(

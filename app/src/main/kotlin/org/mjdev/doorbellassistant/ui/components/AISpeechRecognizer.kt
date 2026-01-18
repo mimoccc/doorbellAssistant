@@ -58,7 +58,7 @@ fun AISpeechRecognizer(
     onVoiceUnDetected: () -> Unit = {},
     onConversationResponded: () -> Unit = {},
     onInterruptions: () -> Unit = {},
-    onCommand: (String) -> Boolean = { false },
+    onPrompt: (String) -> Unit = {},
     onError: (Throwable) -> Unit = { e -> Log.e(TAG, "Error in ai.", e) },
     onThinking: () -> Unit = {},
     createKit: (Context) -> ITKit = { context -> VoskKit(context) },
@@ -82,16 +82,11 @@ fun AISpeechRecognizer(
             onVoiceDetected()
         },
         onVoiceEnds = {
-            textState = "Thinking..."
             stopListening()
             onVoiceUnDetected()
-            if (onCommand(textState)) {
-                onConversationResponded()
-                stopListening()
-            } else {
-                textState = ""
-                startListen()
-            }
+            // todo, unfinisher, and remove stupid listeners
+            onPrompt(textState)
+            textState = "Thinking..."
         },
         onDownloading = { percent ->
             textState = "Downloading model ${(percent * 100).toInt()} %."

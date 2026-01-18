@@ -4,6 +4,7 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
 
+@Suppress("CanBeParameter")
 class AudioPlayer(
     private val sampleRate: Int
 ) {

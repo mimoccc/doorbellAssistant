@@ -21,12 +21,12 @@ import kotlin.coroutines.EmptyCoroutineContext
 
 @Suppress("unused", "CanBeParameter")
 open class DataBus<T : Any>(
-    val replay: Int = 0,
-    val extraBufferCapacity: Int = 64,
-    val onBufferOverflow: BufferOverflow = BufferOverflow.DROP_OLDEST,
-    val scopeContext: CoroutineContext = Dispatchers.Default,
-    open val scope: CoroutineScope = CoroutineScope(SupervisorJob() + scopeContext),
-    val config: DataBus<T>.() -> Unit = {}
+    private val replay: Int = 0,
+    private val extraBufferCapacity: Int = 64,
+    private val onBufferOverflow: BufferOverflow = BufferOverflow.DROP_OLDEST,
+    private val scopeContext: CoroutineContext = Dispatchers.Default,
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + scopeContext),
+    private val config: DataBus<T>.() -> Unit = {}
 ) {
     private val _events = MutableSharedFlow<T>(
         replay,

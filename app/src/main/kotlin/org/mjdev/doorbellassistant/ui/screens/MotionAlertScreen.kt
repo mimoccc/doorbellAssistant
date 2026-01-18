@@ -108,12 +108,12 @@ fun MotionAlertScreen(
                 voiceRecognizerState = state
             },
             onConversationResponded = onConversationContinued,
-            onCommand = { prompt ->
+            onPrompt = { prompt ->
+                // todo, unfinished yet
                 aiManager.transcript(prompt) { result ->
                     Log.d(TAG, result)
                     tts.talk(result)
                 }
-                false
             },
             onDownloading = { percent ->
                 if (percent < 1f) {

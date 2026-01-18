@@ -120,6 +120,10 @@ android {
 
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
+    // logs
+    implementation(libs.slf4j.api)
+    implementation(libs.logback.android)
+    // base
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.service)
@@ -180,8 +184,7 @@ dependencies {
     // stt
     implementation(libs.vosk.android)
     // tts
-    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.23.2")
-    implementation("androidx.media3:media3-session:1.9.0")
+    implementation(project(":piper"))
     // testing
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

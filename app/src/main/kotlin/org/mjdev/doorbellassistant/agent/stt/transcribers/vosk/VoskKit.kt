@@ -29,8 +29,11 @@ class VoskKit @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::cl
     private val context: Context,
     private val filesDir: File? = context.filesDir,
     private val voskContext: CloseableCoroutineDispatcher = newSingleThreadContext("VoskKit"),
-    override val scope: CoroutineScope = CoroutineScope(voskContext),
-) : DataBus<ITKitResult>(), ITKit {
+    private val voskScope: CoroutineScope = CoroutineScope(voskContext),
+) : DataBus<ITKitResult>(
+    scopeContext = voskContext,
+    scope = voskScope
+), ITKit {
     private val mutex = Mutex()
     private var modelType: VoskModelType = VoskModelType.CS_SMALL
     private var model: Model? = null
@@ -87,7 +90,7 @@ class VoskKit @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::cl
             isDownloading = false
             send(ITKitResult.Error(e))
         }.onSuccess {
-            if(isDownloading) {
+            if (isDownloading) {
                 send(ITKitResult.Download(1f))
             }
             isDownloading = false
@@ -95,7 +98,7 @@ class VoskKit @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::cl
     }
 
     override fun init() {
-        scope.launch {
+        voskScope.launch {
             checkAndDownloadModel()
             while (isDownloading) {
                 delay(100)
@@ -118,7 +121,7 @@ class VoskKit @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::cl
     }
 
     override fun release() {
-        scope.launch {
+        voskScope.launch {
             recognizer?.close()
             recognizer = null
             model?.close()
@@ -129,7 +132,7 @@ class VoskKit @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::cl
 
     @Suppress("unused")
     override fun transcribe(data: ByteArray) {
-        scope.launch {
+        voskScope.launch {
             mutex.withLock {
                 if (recognizer == null) {
                     send(ITKitResult.Error(IllegalStateException("Vosk not initialized")))
@@ -156,7 +159,7 @@ class VoskKit @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::cl
         onEvent: (ITKitResult) -> Unit
     ) {
         (this as DataBus<*>).subscribe(onError) { ev ->
-            onEvent( ev as ITKitResult )
+            onEvent(ev as ITKitResult)
         }
     }
 
