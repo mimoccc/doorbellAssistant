@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.agent.stt.transcribers.vosk
 
 import android.content.Context
@@ -16,7 +26,7 @@ import org.json.JSONObject
 import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKit
 import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKitModel
 import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKitResult
-import org.mjdev.doorbellassistant.helpers.DataBus
+import org.mjdev.phone.helpers.DataBus
 import org.vosk.Model
 import org.vosk.Recognizer
 import java.io.File

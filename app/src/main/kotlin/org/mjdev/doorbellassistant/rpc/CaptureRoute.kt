@@ -1,11 +1,19 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.rpc
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.nsd.NsdServiceInfo
 import android.util.Log
-import androidx.glance.color.DynamicThemeColorProviders.onError
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
@@ -17,11 +25,11 @@ import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.logging.HttpLoggingInterceptor.Level
 import org.mjdev.doorbellassistant.helpers.MotionDetector
+import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionDetected
+import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionUnDetected
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdTypes
 import org.mjdev.phone.rpc.server.NsdServerRpc.Companion.sendActionToAll
-import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionUnDetected
-import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionDetected
 import java.io.ByteArrayOutputStream
 
 @Suppress("RedundantSuspendModifier")

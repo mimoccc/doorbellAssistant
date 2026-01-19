@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.activity
 
 import android.content.Context
@@ -10,8 +20,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.mjdev.phone.activity.base.UnlockedActivity
-import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
-import org.mjdev.phone.extensions.CustomExtensions.intent
+import org.mjdev.phone.extensions.ContextExt.currentWifiIP
+import org.mjdev.phone.extensions.ContextExt.intent
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.helpers.ToolsJson.asJson
 import org.mjdev.phone.helpers.ToolsJson.fromJson

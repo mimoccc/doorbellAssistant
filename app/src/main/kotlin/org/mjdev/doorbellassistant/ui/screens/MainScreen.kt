@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.ui.screens
 
 import androidx.compose.foundation.layout.Box
@@ -7,11 +17,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.mjdev.doorbellassistant.enums.VideoSources
-import org.mjdev.doorbellassistant.extensions.ComposeExt.VisibleState
-import org.mjdev.doorbellassistant.helpers.ActivityState.Companion.rememberActivityState
 import org.mjdev.doorbellassistant.helpers.MotionDetector
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayerState.Companion.rememberCartoonState
-import org.mjdev.phone.extensions.CustomExtensions.isPreview
+import org.mjdev.phone.extensions.ComposeExt.VisibleState
+import org.mjdev.phone.extensions.CustomExt.isPreview
+import org.mjdev.phone.helpers.ActivityState.Companion.rememberActivityState
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 
@@ -54,10 +64,10 @@ fun MainScreen(
                 onConversationContinued = onConversationContinued,
                 onDismiss = onDismiss,
                 onThinking = onThinking,
-                onCommand = { cmd ->
-                    // todo
-                    true
-                }
+//                onCommand = { cmd ->
+//                    // todo
+//                    true
+//                }
             )
         }
     }

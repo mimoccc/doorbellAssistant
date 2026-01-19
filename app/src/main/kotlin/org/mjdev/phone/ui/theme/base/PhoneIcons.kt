@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 @file:Suppress("UnusedImport")
 
 package org.mjdev.phone.ui.theme.base
@@ -15,10 +25,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.material.icons.filled.VolumeDown
-import androidx.compose.material.icons.filled.VolumeUp
-import androidx.compose.ui.input.key.Key.Companion.VolumeDown
-import org.mjdev.phone.extensions.CustomExtensions.provideDelegate
+import org.mjdev.phone.helpers.ImageVectorDelegate.Companion.provideDelegate
 
 class PhoneIcons {
     val videoCallRendererUser: Painter by Icons.Filled.AccountCircle

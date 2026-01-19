@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.ui.shape
 
 import androidx.compose.ui.geometry.Rect
@@ -8,7 +18,8 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 
-val OvalShape = object: Shape {
+@Suppress("unused")
+class OvalShape : Shape {
     override fun createOutline(
         size: Size,
         layoutDirection: LayoutDirection,

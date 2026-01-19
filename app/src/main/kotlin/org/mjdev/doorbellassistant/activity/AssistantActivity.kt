@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.activity
 
 import android.annotation.SuppressLint
@@ -8,38 +18,47 @@ import android.os.Bundle
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import org.mjdev.doorbellassistant.extensions.ComposeExt.acquireWakeLock
-import org.mjdev.doorbellassistant.extensions.ComposeExt.dismissWakeLock
-import org.mjdev.doorbellassistant.extensions.ComposeExt.unregisterMotionDetector
-import org.mjdev.doorbellassistant.helpers.DelayHandler
 import org.mjdev.doorbellassistant.helpers.MotionDetector.Companion.sendMotionIntent
 import org.mjdev.doorbellassistant.receiver.MotionBroadcastReceiver.Companion.rememberMotionDetector
+import org.mjdev.doorbellassistant.service.AIService
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
 import org.mjdev.doorbellassistant.service.MotionDetectionService
+import org.mjdev.doorbellassistant.service.STTService
+import org.mjdev.doorbellassistant.service.TTSService
 import org.mjdev.doorbellassistant.ui.screens.MainScreen
 import org.mjdev.phone.activity.VideoCallActivity
 import org.mjdev.phone.activity.base.UnlockedActivity
-import org.mjdev.phone.extensions.CustomExtensions.bringToFront
-import org.mjdev.phone.extensions.CustomExtensions.dismissKeyguard
-import org.mjdev.phone.extensions.CustomExtensions.isRunning
-import org.mjdev.phone.extensions.CustomExtensions.turnDisplayOff
-import org.mjdev.phone.extensions.CustomExtensions.turnDisplayOn
-import org.mjdev.phone.nsd.service.CallNsdService.Companion.start
+import org.mjdev.phone.extensions.ActivityExt.bringToFront
+import org.mjdev.phone.extensions.ActivityExt.isRunning
+import org.mjdev.phone.extensions.ActivityExt.turnDisplayOff
+import org.mjdev.phone.extensions.ActivityExt.turnDisplayOn
+import org.mjdev.phone.extensions.ContextExt.startForeground
+import org.mjdev.phone.extensions.ContextExt.startService
+import org.mjdev.phone.extensions.KeyGuardExt.dismissKeyguard
+import org.mjdev.phone.extensions.WakeLockExt.acquireWakeLock
+import org.mjdev.phone.extensions.WakeLockExt.dismissWakeLock
+import org.mjdev.phone.helpers.DelayHandler
+import org.mjdev.phone.nsd.device.NsdTypes
+import org.mjdev.phone.nsd.service.CallNsdService.Companion.setNsdDeviceType
 
 class AssistantActivity : UnlockedActivity() {
-    val delayHandler by lazy {
-        DelayHandler(8000L) {
-            // handleMotionLost(false)
+    private val isMotionDetected = mutableStateOf(false)
+
+    private val delayHandler by lazy {
+        DelayHandler(DEFAULT_DELAY_MOTION_DETECTION) {
+            handleMotionLost(false)
         }
     }
 
-    val isInCall
+    private val isInCall: Boolean
         get() = isRunning<VideoCallActivity>()
-
-    private val isMotionDetected = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setNsdDeviceType(NsdTypes.DOOR_BELL_ASSISTANT)
+        startService<STTService>()
+        startService<TTSService>()
+        startService<AIService>()
         setContent {
             rememberMotionDetector(
                 onNoMotionDetected = {
@@ -74,7 +93,7 @@ class AssistantActivity : UnlockedActivity() {
 
     override fun onStart() {
         super.onStart()
-        start<DoorbellNsdService>()
+        startForeground<DoorbellNsdService>()
         isMotionDetected.value = false
     }
 
@@ -94,7 +113,7 @@ class AssistantActivity : UnlockedActivity() {
     private fun handleMotionDetected(fromIntent: Boolean) {
         if (!isInCall && !isMotionDetected.value) {
             isMotionDetected.value = true
-            bringToFront()
+            bringToFront<AssistantActivity>()
             turnDisplayOn()
             dismissKeyguard()
             acquireWakeLock()
@@ -104,6 +123,7 @@ class AssistantActivity : UnlockedActivity() {
         }
     }
 
+    @Suppress("SameParameterValue")
     private fun handleMotionLost(fromIntent: Boolean) {
         if (isMotionDetected.value) {
             isMotionDetected.value = false
@@ -134,6 +154,8 @@ class AssistantActivity : UnlockedActivity() {
     }
 
     companion object {
+        const val DEFAULT_DELAY_MOTION_DETECTION = 10000L
+
         val Context.isAssistantRunning
             get() = isRunning<AssistantActivity>()
 

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.di
 
 import android.app.Application
@@ -9,8 +19,8 @@ import android.view.WindowManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import okhttp3.OkHttpClient
 import okhttp3.Cache
+import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.kodein.di.DI
 import org.kodein.di.bindProvider
@@ -18,7 +28,7 @@ import org.kodein.di.bindSingleton
 import org.kodein.di.instance
 import org.mjdev.doorbellassistant.BuildConfig
 import org.mjdev.doorbellassistant.helpers.AppNotificationManager
-import org.mjdev.phone.extensions.CustomExtensions.isPreview
+import org.mjdev.phone.extensions.CustomExt.isPreview
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -30,13 +40,6 @@ val appModule = DI.Module("appModule") {
         (context.applicationContext as? Application)
             ?: error("Context is not an Application instance.")
     }
-//    bindProvider<PreferencesManager> {
-//        PreferencesManager(
-//            context = instance()
-//        ).setName("app_preferences")
-//            .setMode(MODE_PRIVATE)
-//            .init()
-//    }
     bindProvider<Cache> {
         val context: Context = instance()
         val systemCachePath = System.getProperty("java.io.tmpdir")

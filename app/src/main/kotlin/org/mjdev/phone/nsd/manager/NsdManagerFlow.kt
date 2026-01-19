@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.nsd.manager
 
 import android.content.Context
@@ -24,6 +34,8 @@ class NsdManagerFlow(
     constructor(
         context: Context
     ) : this(NsdManagerCompatImpl.fromContext(context))
+    
+    private var registrationListeners = mutableListOf<NsdManager.RegistrationListener>()
 
     fun discoverServices(
         discoveryConfiguration: DiscoveryConfiguration
@@ -52,6 +64,8 @@ class NsdManagerFlow(
     fun registerService(
         registrationConfiguration: RegistrationConfiguration
     ): Flow<RegistrationEvent> = callbackFlow {
+        val listener = RegistrationListenerFlow(this)
+        registrationListeners.add(listener)
         nsdManagerCompat.registerService(
             serviceInfo = NsdServiceInfo().apply {
                 serviceName = registrationConfiguration.serviceName
@@ -59,7 +73,7 @@ class NsdManagerFlow(
                 serviceType = registrationConfiguration.serviceType
             },
             protocolType = registrationConfiguration.protocolType,
-            listener = RegistrationListenerFlow(this)
+            listener = listener
         )
         awaitClose()
     }
@@ -71,6 +85,8 @@ class NsdManagerFlow(
         @ProtocolType
         protocolType: Int = NsdManager.PROTOCOL_DNS_SD
     ): Flow<RegistrationEvent> = callbackFlow {
+        val listener = RegistrationListenerFlow(this)
+        registrationListeners.add(listener)
         nsdManagerCompat.registerService(
             serviceInfo = NsdServiceInfo().apply {
                 this.serviceName = serviceName
@@ -78,7 +94,7 @@ class NsdManagerFlow(
                 this.serviceType = serviceType
             },
             protocolType = protocolType,
-            listener = RegistrationListenerFlow(this)
+            listener = listener
         )
         awaitClose()
     }
@@ -90,6 +106,15 @@ class NsdManagerFlow(
             serviceInfo = serviceInfo,
             listener = ResolveListenerFlow(this)
         )
+        awaitClose()
+    }
+
+    fun unregisterService() : Flow<RegistrationEvent> = callbackFlow {
+        val listenersToUnregister = registrationListeners.toList()
+        listenersToUnregister.forEach { listener ->
+            nsdManagerCompat.unregisterService(listener)
+        }
+        registrationListeners.clear()
         awaitClose()
     }
 }

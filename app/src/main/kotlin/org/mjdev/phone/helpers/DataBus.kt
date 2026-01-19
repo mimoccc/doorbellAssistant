@@ -1,5 +1,17 @@
-package org.mjdev.doorbellassistant.helpers
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
 
+package org.mjdev.phone.helpers
+
+import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -16,6 +28,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.Serializable
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -59,6 +72,28 @@ open class DataBus<T : Any>(
             onEvent = { value ->
                 withContext(Dispatchers.Main) {
                     onEvent(value)
+                }
+            }
+        )
+
+        fun <T : Any> DataBus<T>.subscribeWithEventBroadcast(
+            context: Context,
+            packageName: String = context.packageName,
+            onError: (Throwable) -> Unit = {},
+        ): Job = suspendSubscribe(
+            onError = { e ->
+                withContext(Dispatchers.Main) {
+                    onError(e)
+                }
+            },
+            onEvent = { value ->
+                withContext(Dispatchers.Main) {
+                    val className = value::class.java.simpleName
+                    val action = "$packageName.$className"
+                    val eventData = value as Serializable
+                    context.sendBroadcast(Intent(action).apply {
+                        putExtra(Intent.ACTION_ATTACH_DATA, eventData)
+                    })
                 }
             }
         )

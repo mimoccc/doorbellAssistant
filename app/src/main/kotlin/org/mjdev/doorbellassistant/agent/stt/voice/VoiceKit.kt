@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.agent.stt.voice
 
 import android.Manifest
@@ -16,7 +26,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.mjdev.doorbellassistant.helpers.DataBus
+import org.mjdev.phone.helpers.DataBus
 import kotlin.math.sqrt
 
 @Suppress("CanBeParameter", "UNCHECKED_CAST")
@@ -29,7 +39,7 @@ class VoiceKit(
     var channelCount: Int = 1,
     val maxRecordingDurationMs: Long = 20000L,
     val minRecordingDurationMs: Long = 2000L,
-    val configure : VoiceKit.() -> Unit = {}
+    val configure: VoiceKit.() -> Unit = {}
 ) : DataBus<VoiceKitResult>(
     config = configure as DataBus<VoiceKitResult>.() -> Unit
 ) {
@@ -49,6 +59,12 @@ class VoiceKit(
         AudioFormat.ENCODING_PCM_16BIT
     )
     private val bufferSize = maxOf(minBufferSize, sampleRate / 2)
+
+    fun init() {
+    }
+
+    fun release() {
+    }
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     suspend fun start() = mutex.withLock {
@@ -141,9 +157,10 @@ class VoiceKit(
                     val totalRecordingTime = currentTime - startTime
                     val silenceDuration = currentTime - lastVoiceTime
                     if (totalRecordingTime >= maxRecordingDurationMs ||
-                        (totalRecordingTime >= minRecordingDurationMs && 
-                         hasVoiceBeenDetected && 
-                         silenceDuration > silenceDurationMs)) {
+                        (totalRecordingTime >= minRecordingDurationMs &&
+                                hasVoiceBeenDetected &&
+                                silenceDuration > silenceDurationMs)
+                    ) {
                         break
                     }
                 }

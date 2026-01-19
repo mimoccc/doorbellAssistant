@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.rpc.server
 
 import android.content.Context
@@ -14,7 +24,10 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingCall
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import okhttp3.MediaType.Companion.toMediaType
@@ -23,29 +36,26 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.logging.HttpLoggingInterceptor.Level
+import org.mjdev.phone.extensions.ContextExt.currentWifiIP
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdTypes
-import kotlin.reflect.KClass
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.nsdDevices
+import org.mjdev.phone.rpc.action.NsdAction
+import org.mjdev.phone.rpc.action.NsdActionRegistry
 import org.mjdev.phone.rpc.action.NsdActions.SDPAccept
-import org.mjdev.phone.rpc.action.NsdActions.SDPOffer
 import org.mjdev.phone.rpc.action.NsdActions.SDPAnswer
 import org.mjdev.phone.rpc.action.NsdActions.SDPDismiss
 import org.mjdev.phone.rpc.action.NsdActions.SDPIceCandidate
+import org.mjdev.phone.rpc.action.NsdActions.SDPOffer
 import org.mjdev.phone.rpc.action.NsdActions.SDPStartCall
 import org.mjdev.phone.rpc.action.NsdActions.SDPStartCallStarted
-import org.mjdev.phone.rpc.action.NsdAction
-import org.mjdev.phone.rpc.action.NsdActionRegistry
 import org.mjdev.phone.rpc.plugins.StartupPlugin.StartupPlugin
 import org.mjdev.phone.rpc.plugins.StopingPlugin.StopingPlugin
 import org.mjdev.phone.rpc.routing.NsdRouting
 import org.mjdev.phone.rpc.routing.NsdRoutingContext
 import org.mjdev.phone.stream.ICallManager
 import org.webrtc.IceCandidate
+import kotlin.reflect.KClass
 
 @OptIn(
     ExperimentalCoroutinesApi::class, ExperimentalSerializationApi::class,

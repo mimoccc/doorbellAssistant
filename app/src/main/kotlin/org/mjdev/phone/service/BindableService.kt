@@ -1,4 +1,14 @@
-package org.mjdev.phone.nsd.service
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
+package org.mjdev.phone.service
 
 import android.content.ComponentName
 import android.content.Context
@@ -6,22 +16,20 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Binder
 import android.os.IBinder
+import androidx.annotation.CallSuper
 import androidx.lifecycle.LifecycleService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.mjdev.phone.helpers.DataBus
+import org.mjdev.phone.helpers.DataBus.Companion.subscribe
+import org.mjdev.phone.service.ServiceEvent.Companion.NotYetImplemented
 
 @Suppress("unused")
 open class BindableService : LifecycleService() {
-    private val _events = MutableSharedFlow<ServiceEvent>(extraBufferCapacity = 1)
-    val events = _events.asSharedFlow()
+    private val eventBus = DataBus<ServiceEvent>()
     private val binder = LocalBinder()
 
     inner class LocalBinder : Binder() {
@@ -29,16 +37,15 @@ open class BindableService : LifecycleService() {
     }
 
     fun sendEvent(event: ServiceEvent) {
-        CoroutineScope(Dispatchers.Main).launch {
-            _events.emit(event)
-        }
+        eventBus.send(event)
     }
 
+    @CallSuper
     open fun executeCommand(
         command: ServiceCommand,
         handler: (ServiceEvent) -> Unit
     ) {
-        handler(ServiceEvent.Companion.NotYetImplemented)
+        handler(NotYetImplemented)
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -52,7 +59,12 @@ open class BindableService : LifecycleService() {
             val connection = object : ServiceConnection {
                 override fun onServiceConnected(name: ComponentName, binder: IBinder) {
                     val service = (binder as LocalBinder).service
-                    job = launch { service.events.collectLatest { trySend(it) } }
+                    job = launch {
+                        service.eventBus.subscribe { ev ->
+                            trySend(ev)
+                        }
+                    }
+                    trySend(ServiceEvent.Companion.ServiceConnected)
                 }
 
                 override fun onServiceDisconnected(name: ComponentName) {
@@ -76,15 +88,16 @@ open class BindableService : LifecycleService() {
         fun Context.serviceState(
             handler: (ServiceEvent) -> Unit
         ) {
-            val command: ServiceCommand = ServiceCommand.Companion.GetState
             val connection = object : ServiceConnection {
                 override fun onServiceConnected(name: ComponentName, binder: IBinder) {
                     val service = (binder as LocalBinder).service
-                    service.executeCommand(command, handler)
+                    service.executeCommand(ServiceCommand.Companion.GetState, handler)
                     unbindService(this)
                 }
 
-                override fun onServiceDisconnected(name: ComponentName) {}
+                override fun onServiceDisconnected(name: ComponentName) {
+                    handler(ServiceEvent.Companion.ServiceDisconnected)
+                }
             }
             bindService(
                 Intent(

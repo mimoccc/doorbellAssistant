@@ -1,11 +1,23 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.tts.engine.base
 
 interface TtsEngine {
     fun initialize()
     fun generate(
         text: String,
+        autoplay: Boolean = true,
         speed: Float = 1.0f,
         voice: String? = null,
+        onPlayerFinish: () -> Unit = {},
         callback: (FloatArray) -> Unit
     )
     fun getSampleRate(): Int

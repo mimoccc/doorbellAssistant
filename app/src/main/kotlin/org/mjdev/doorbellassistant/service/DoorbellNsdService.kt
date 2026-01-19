@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.service
 
 import android.content.Context
@@ -7,28 +17,25 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantEnabled
-import org.mjdev.doorbellassistant.extensions.ComposeExt.rememberDeviceCapture
-import org.mjdev.doorbellassistant.helpers.DelayHandler
-import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionUnDetected
+import org.mjdev.doorbellassistant.extensions.CustomAppExt.rememberDeviceCapture
 import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionDetected
+import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionUnDetected
 import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc
 import org.mjdev.doorbellassistant.ui.components.FrontCameraPreview
 import org.mjdev.doorbellassistant.ui.window.ComposeFloatingWindow
 import org.mjdev.doorbellassistant.ui.window.ComposeFloatingWindow.Companion.alertLayoutParams
-import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
+import org.mjdev.phone.extensions.ContextExt.currentWifiIP
+import org.mjdev.phone.helpers.DelayHandler
 import org.mjdev.phone.nsd.device.NsdDevice
-import org.mjdev.phone.nsd.device.NsdTypes
-import org.mjdev.phone.rpc.server.INsdServerRPC
-import org.mjdev.phone.rpc.action.NsdAction
+import org.mjdev.phone.nsd.device.NsdTypes.DOOR_BELL_CLIENT
 import org.mjdev.phone.nsd.service.CallNsdService
+import org.mjdev.phone.rpc.action.NsdAction
+import org.mjdev.phone.rpc.server.INsdServerRPC
 
 // todo automatic user login with wifi access
-class DoorbellNsdService : CallNsdService() {
-    override val serviceType: NsdTypes
-        get() = if (baseContext.isDoorBellAssistantEnabled) NsdTypes.DOOR_BELL_ASSISTANT
-        else NsdTypes.DOOR_BELL_CLIENT
-
+class DoorbellNsdService : CallNsdService(
+    serviceNsdType = DOOR_BELL_CLIENT
+) {
     override val rpcServer: INsdServerRPC by lazy {
         DoorBellAssistantServerRpc(
             context = baseContext,
@@ -36,7 +43,10 @@ class DoorbellNsdService : CallNsdService() {
         )
     }
 
-    override fun onStarted(address: String, port: Int) {
+    override fun onStarted(
+        address: String,
+        port: Int
+    ) {
         super.onStarted(address, port)
         nsdPort = port
     }

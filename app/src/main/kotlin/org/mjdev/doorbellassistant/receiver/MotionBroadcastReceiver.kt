@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.receiver
 
 import android.annotation.SuppressLint
@@ -13,11 +23,11 @@ import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.activity.AssistantActivity
 import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantEnabled
 import org.mjdev.doorbellassistant.enums.IntentAction
-import org.mjdev.doorbellassistant.extensions.ComposeExt.registerMotionDetector
-import org.mjdev.doorbellassistant.extensions.ComposeExt.unregisterMotionDetector
+import org.mjdev.doorbellassistant.extensions.CustomAppExt.registerMotionDetector
+import org.mjdev.doorbellassistant.extensions.CustomAppExt.unregisterMotionDetector
 import org.mjdev.doorbellassistant.rpc.CaptureRoute.sendMotionDetected
 import org.mjdev.doorbellassistant.rpc.CaptureRoute.sendMotionUnDetected
-import org.mjdev.phone.extensions.CustomExtensions.startOrResume
+import org.mjdev.phone.extensions.ActivityExt.startOrResume
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.nsdDevice
 
 class MotionBroadcastReceiver : BroadcastReceiver() {
@@ -36,7 +46,7 @@ class MotionBroadcastReceiver : BroadcastReceiver() {
         val isMotionDetected = intent.action == IntentAction.MOTION_DETECTED.action
         val isAssistantEnabled = context.isDoorBellAssistantEnabled
         if (isAssistantEnabled) {
-            startOrResume<AssistantActivity>(context)
+            context.startOrResume<AssistantActivity>()
         }
         receivers.forEach { receiver ->
             receiver.invoke(isMotionDetected)

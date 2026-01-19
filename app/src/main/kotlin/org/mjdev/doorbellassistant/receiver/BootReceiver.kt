@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.receiver
 
 import android.content.BroadcastReceiver
@@ -7,8 +17,8 @@ import org.mjdev.doorbellassistant.activity.AssistantActivity
 import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isAppSetAsHomeLauncher
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
 import org.mjdev.doorbellassistant.service.MotionDetectionService
-import org.mjdev.phone.extensions.CustomExtensions.startOrResume
-import org.mjdev.phone.nsd.service.CallNsdService.Companion.start
+import org.mjdev.phone.extensions.ActivityExt.startOrResume
+import org.mjdev.phone.extensions.ContextExt.startForeground
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(
@@ -16,11 +26,10 @@ class BootReceiver : BroadcastReceiver() {
         intent: Intent
     ) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            context.start<DoorbellNsdService>()
-            context.start<DoorbellNsdService>()
+            context.startForeground<DoorbellNsdService>()
             if (context.isAppSetAsHomeLauncher) {
                 MotionDetectionService.start(context)
-                startOrResume<AssistantActivity>(context)
+                context.startOrResume<AssistantActivity>()
             }
         }
     }

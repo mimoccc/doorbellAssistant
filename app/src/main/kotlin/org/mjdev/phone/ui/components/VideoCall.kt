@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.ui.components
 
 import android.content.Context
@@ -17,11 +27,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import org.mjdev.phone.extensions.CustomExtensions.isPreview
+import org.mjdev.phone.extensions.CustomExt.isPreview
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
-import org.mjdev.phone.rpc.server.INsdServerRPC
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.rememberCallNsdService
+import org.mjdev.phone.rpc.server.INsdServerRPC
 import org.mjdev.phone.stream.CallEndReason
 import org.mjdev.phone.stream.CallManager
 import org.mjdev.phone.ui.theme.base.PhoneTheme

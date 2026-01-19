@@ -1,10 +1,20 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.nsd.device
 
 import android.net.nsd.NsdServiceInfo
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import org.mjdev.phone.extensions.CustomExtensions.toInetAddress
+import org.mjdev.phone.extensions.StringExt.toInetAddress
 import org.mjdev.phone.nsd.device.NsdTypes.Companion.serviceName
 
 @Suppress("TRANSIENT_IS_REDUNDANT", "unused", "DEPRECATION")

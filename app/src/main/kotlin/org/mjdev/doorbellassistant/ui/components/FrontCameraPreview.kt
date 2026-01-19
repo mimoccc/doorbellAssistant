@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.ui.components
 
 import android.annotation.SuppressLint
@@ -20,7 +30,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import org.mjdev.doorbellassistant.extensions.ComposeExt.EmptyBitmap
+import org.mjdev.phone.extensions.CustomExt.EmptyBitmap
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.components.MovieCard
 import org.mjdev.phone.ui.theme.base.PhoneTheme

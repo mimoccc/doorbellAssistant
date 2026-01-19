@@ -1,48 +1,60 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.agent.ai
 
 import android.content.Context
-import android.util.Log
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
+import org.mjdev.doorbellassistant.agent.ai.base.AiResult
 import org.mjdev.doorbellassistant.agent.ai.base.IAiAgent
 import org.mjdev.doorbellassistant.agent.ai.ollama.OllamaAgent
+import org.mjdev.phone.helpers.DataBus
 
-@Suppress("unused")
+@Suppress("unused", "UNCHECKED_CAST", "CanBeParameter")
 class AIManager(
     val context: Context,
-    var onCommand: (String) -> Boolean = { false },
-    var onError: (Throwable) -> Unit = { e -> Log.e(TAG, "Error in ai.", e) },
-    val createAgent: (Context) -> IAiAgent = { OllamaAgent() }
+    val agent: IAiAgent = OllamaAgent(),
+    val configure: AIManager.() -> Unit = {}
+) : DataBus<AiResult>(
+    config = configure as DataBus<AiResult>.() -> Unit
 ) {
-    val aiAgent by lazy {
-        OllamaAgent()
-    }
-
     fun transcript(
         text: String,
         onError: (Throwable) -> Unit = {},
         onResult: (String) -> Unit = { result ->
-            Log.d(TAG, result)
+            send(AiResult.Response(result, ""))
         }
-    ) = aiAgent.call(text, onError, onResult)
+    ) {
+        runCatching {
+            agent.call(text, onError, onResult)
+        }.onFailure { e ->
+            send(AiResult.Error(e))
+        }
+    }
+
+    fun init() {
+        runCatching {
+            agent.init()
+        }.onFailure { e ->
+            send(AiResult.Error(e))
+        }
+    }
+
+    fun release() {
+        runCatching {
+            agent.release()
+        }.onFailure { e ->
+            send(AiResult.Error(e))
+        }
+    }
 
     companion object {
         val TAG = AIManager::class.simpleName
-
-        @Composable
-        fun rememberAiManager(
-            onCommand: (String) -> Boolean = { false },
-            onError: (Throwable) -> Unit = { e -> Log.e(TAG, "Error in ai.", e) }
-        ): AIManager {
-            val context: Context = LocalContext.current
-            return remember {
-                AIManager(
-                    context = context,
-                    onCommand = onCommand,
-                    onError = onError
-                )
-            }
-        }
     }
 }

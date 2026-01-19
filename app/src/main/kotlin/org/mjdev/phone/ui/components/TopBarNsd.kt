@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.ui.components
 
 import android.content.Context
@@ -19,9 +29,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.mjdev.phone.extensions.CustomExtensions.currentSystemUser
-import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
-import org.mjdev.phone.extensions.CustomExtensions.currentWifiSSID
+import org.mjdev.phone.extensions.ContextExt.currentSystemUser
+import org.mjdev.phone.extensions.ContextExt.currentWifiIP
+import org.mjdev.phone.extensions.ContextExt.currentWifiSSID
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors

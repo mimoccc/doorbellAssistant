@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.activity
 
 import android.os.Bundle
@@ -7,13 +17,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantEnabled
 import org.mjdev.phone.activity.VideoCallActivity.Companion.startCall
 import org.mjdev.phone.activity.base.UnlockedActivity
 import org.mjdev.phone.application.CallApplication.Companion.getCallServiceClass
-import org.mjdev.phone.helpers.GlanceNotificationManager
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdTypes
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.nsdDevice
+import org.mjdev.phone.nsd.service.CallNsdService.Companion.setNsdDeviceType
 import org.mjdev.phone.nsd.service.NsdService
 import org.mjdev.phone.ui.components.NsdList
 import org.mjdev.phone.ui.theme.base.PhoneTheme
@@ -23,6 +34,11 @@ import org.mjdev.phone.ui.theme.base.phoneColors
 open class IntercomActivity : UnlockedActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (isDoorBellAssistantEnabled) {
+            setNsdDeviceType(NsdTypes.DOOR_BELL_ASSISTANT)
+        } else {
+            setNsdDeviceType(NsdTypes.DOOR_BELL_CLIENT)
+        }
         setContent {
             MainScreen()
         }

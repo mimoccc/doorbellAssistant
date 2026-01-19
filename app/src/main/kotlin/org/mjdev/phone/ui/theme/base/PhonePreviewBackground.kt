@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.ui.theme.base
 
 import androidx.compose.foundation.background
@@ -8,7 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import org.mjdev.phone.extensions.CustomExtensions.dashedBorder
+import org.mjdev.phone.extensions.ModifierExt.dashedBorder
 import org.mjdev.phone.helpers.Previews
 
 // todo

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.ui.components
 
 import android.content.Context
@@ -22,7 +32,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.enums.VideoSources
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayerState.Companion.rememberCartoonState
-import org.mjdev.phone.extensions.CustomExtensions.isPreview
+import org.mjdev.phone.extensions.CustomExt.isPreview
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.components.BackgroundLayout
 import org.mjdev.phone.ui.theme.base.PhoneTheme

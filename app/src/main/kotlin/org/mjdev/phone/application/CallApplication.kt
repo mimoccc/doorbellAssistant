@@ -1,8 +1,19 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.application
 
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.util.Log
 import org.mjdev.phone.nsd.service.NsdService
 
@@ -19,8 +30,24 @@ abstract class CallApplication<T : NsdService> : Application() {
 
     fun startNsdService() {
         Log.d(TAG, "Starting service ${service.simpleName}")
-        Intent(this, service).also { intent ->
-            startForegroundService(intent)
+        try {
+            Intent(this, service).also { intent ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(intent)
+                } else {
+                    startService(intent)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start foreground service: ${e.message}", e)
+            // Fallback to regular service start if foreground service fails
+            try {
+                Intent(this, service).also { intent ->
+                    startService(intent)
+                }
+            } catch (fallbackEx: Exception) {
+                Log.e(TAG, "Failed to start service entirely: ${fallbackEx.message}", fallbackEx)
+            }
         }
     }
 

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.agent.ai.ollama
 
 import ai.koog.agents.core.agent.AIAgent
@@ -19,9 +29,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.agent.ai.base.IAiAgent
 import java.net.Inet4Address
@@ -44,7 +57,7 @@ class OllamaAgent(
         networkScanner.scanLocalNetworkForOllamaServers().also { ns ->
             emit(ns.firstOrNull())
         }
-    }
+    }.shareIn(scope = scope, started = SharingStarted.Eagerly, replay = 1)
     val allTools by lazy {
         tools()
     }
@@ -65,23 +78,33 @@ class OllamaAgent(
         } else null
     }
 
-    fun call(
-        prompt: String = "Hello! How can you help me?",
-        onError: (Throwable) -> Unit = {},
-        onResult: (String) -> Unit = { result -> Log.d(TAG, result) }
-    ) = scope.launch {
-        runCatching {
-            agent.first()?.run(prompt) ?: throw (OllamaException("No server found."))
-        }.onFailure { e ->
-            onResult(e.message ?: "An unknown error occurred.")
-            onError(e)
-        }.getOrNull()?.let { result ->
-            onResult(result)
+    override fun init() {
+        scope.launch {
+            server.collectLatest { ip ->
+                Log.d(TAG, "Got server $ip")
+            }
         }
     }
 
-    fun release() {
-        // todo
+    override fun release() {
+        // todo if needed
+    }
+
+    override fun call(
+        prompt: String,
+        onError: (Throwable) -> Unit,
+        onResult: (String) -> Unit
+    ) {
+        scope.launch {
+            runCatching {
+                agent.first()?.run(prompt) ?: throw (OllamaException("No server found."))
+            }.onFailure { e ->
+                onResult(e.message ?: "An unknown error occurred.")
+                onError(e)
+            }.getOrNull()?.let { result ->
+                onResult(result)
+            }
+        }
     }
 
     class OllamaException(

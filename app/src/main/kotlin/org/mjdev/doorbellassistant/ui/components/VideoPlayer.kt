@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.ui.components
 
 import android.graphics.Color
@@ -24,10 +34,10 @@ import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
-import org.mjdev.doorbellassistant.extensions.ComposeExt.createExoPlayer
-import org.mjdev.phone.extensions.CustomExtensions.applyIf
-import org.mjdev.phone.extensions.CustomExtensions.isPreview
-import org.mjdev.phone.extensions.CustomExtensions.rememberAssetImagePainter
+import org.mjdev.doorbellassistant.extensions.CustomAppExt.createExoPlayer
+import org.mjdev.phone.extensions.ComposeExt.rememberAssetImagePainter
+import org.mjdev.phone.extensions.CustomExt.isPreview
+import org.mjdev.phone.extensions.ModifierExt.applyIf
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.helpers.views.CustomPlayerView
 import org.mjdev.phone.ui.theme.base.PhoneTheme
@@ -41,7 +51,7 @@ fun VideoPlayer(
     videoUri: Uri = Uri.EMPTY,
     autoPlay: Boolean= true,
     showControls: Boolean = false,
-    keepAspect: Boolean = false,
+    keepAspect: Boolean = true,
     onVideoSizeChange: (VideoSize, Float) -> Unit = { s, f -> },
     onMetadataReceived: (Metadata) -> Unit = {},
     onFirstFrameRendered: () -> Unit = {},

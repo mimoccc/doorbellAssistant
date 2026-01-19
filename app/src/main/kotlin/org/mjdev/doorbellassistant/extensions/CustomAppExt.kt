@@ -1,22 +1,26 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.extensions
 
 import android.content.Context
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.PowerManager
-import android.os.PowerManager.WakeLock
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.annotation.OptIn
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.createBitmap
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
@@ -27,7 +31,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.mjdev.doorbellassistant.R
 import org.mjdev.doorbellassistant.enums.IntentAction
 import org.mjdev.doorbellassistant.receiver.MotionBroadcastReceiver
 import org.mjdev.doorbellassistant.rpc.CaptureRoute.getFrame
@@ -35,9 +38,7 @@ import org.mjdev.doorbellassistant.service.MotionDetectionService
 import org.mjdev.phone.nsd.device.NsdDevice
 
 @Suppress("MemberVisibilityCanBePrivate", "DEPRECATION")
-object ComposeExt {
-
-    private val TAG_WAKE_LOCK: Int = R.string.wake_lock
+object CustomAppExt {
 
 //    fun String.toByteArray(): ByteArray = split(".").map {
 //        it.toInt().toByte()
@@ -73,28 +74,6 @@ object ComposeExt {
 //        return BitmapDrawable(view.context.resources, bitmap)
 //    }
 
-    var ComponentActivity.wakeLock: WakeLock?
-        get() = runCatching {
-            window.decorView.getTag(TAG_WAKE_LOCK) as? WakeLock
-        }.onFailure { e ->
-            e.printStackTrace()
-        }.getOrNull()
-        set(value) {
-            window.decorView.setTag(TAG_WAKE_LOCK, value)
-        }
-
-
-//    val Context.wifiManager
-//        get() = getSystemService(Context.WIFI_SERVICE) as? WifiManager
-
-//    val Context.connectivityManager
-//        get() = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-
-//    val Context.allNetworks: Map<Network, NetworkCapabilities?>
-//        get() = connectivityManager?.allNetworks?.associate { n ->
-//            n to connectivityManager?.getNetworkCapabilities(n)
-//        } ?: emptyMap()
-
 //    val Context.currentPublicIP: String
 //        get() = NetworkInterface.getNetworkInterfaces()
 //            .toList()
@@ -108,36 +87,6 @@ object ComposeExt {
 //            .firstOrNull { n ->
 //                n is Inet4Address && !n.isLoopbackAddress
 //            }?.hostAddress ?: "..."
-
-    val EmptyBitmap
-        get() = createBitmap(1, 1)
-
-//    fun postDelayed(
-//        timeout: Long,
-//        block: () -> Unit
-//    ) = Handler().postDelayed(block, timeout)
-
-    fun ComponentActivity.acquireWakeLock() = runCatching {
-        dismissWakeLock()
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        this.wakeLock = powerManager.newWakeLock(
-            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-            "MotionLauncher::AlertWakeLock"
-        )
-        wakeLock?.acquire(5_000)
-    }.onFailure { e ->
-        e.printStackTrace()
-    }
-
-    fun ComponentActivity.dismissWakeLock() {
-        runCatching {
-            this.wakeLock?.release()
-        }.onFailure { e ->
-            e.printStackTrace()
-        }
-        this.wakeLock = null
-    }
-
 
     fun Context.registerMotionDetector(
         motionReceiver: MotionBroadcastReceiver
@@ -218,22 +167,6 @@ object ComposeExt {
         }
     }
 
-    operator fun PaddingValues.plus(other: PaddingValues) = object : PaddingValues {
-        override fun calculateLeftPadding(layoutDirection: LayoutDirection) =
-            this@plus.calculateLeftPadding(layoutDirection) +
-                    other.calculateLeftPadding(layoutDirection)
-
-        override fun calculateTopPadding() =
-            this@plus.calculateTopPadding() + other.calculateTopPadding()
-
-        override fun calculateRightPadding(layoutDirection: LayoutDirection) =
-            this@plus.calculateRightPadding(layoutDirection) +
-                    other.calculateRightPadding(layoutDirection)
-
-        override fun calculateBottomPadding() =
-            this@plus.calculateBottomPadding() + other.calculateBottomPadding()
-    }
-
     @Suppress("ParamsComparedByRef")
     @Composable
     fun rememberDeviceCapture(
@@ -252,18 +185,7 @@ object ComposeExt {
         image
     }
 
-    @Composable
-    fun VisibleState(
-        visible: Boolean = false,
-        content: @Composable () -> Unit = {},
-    ) {
-        if (visible) {
-            content()
-        }
-    }
-
     fun logPosition() {
         RuntimeException("POSITION").printStackTrace()
     }
-
 }

@@ -22,6 +22,8 @@ internal class NsdManagerCompatImpl(
     ) {
         runCatching {
             nsdManager.unregisterService(listener)
+        }.onFailure { e ->
+            e.printStackTrace()
         }
     }
 

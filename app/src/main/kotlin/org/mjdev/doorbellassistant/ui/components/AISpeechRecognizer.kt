@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.ui.components
 
 import android.annotation.SuppressLint
@@ -16,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,10 +40,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.mjdev.doorbellassistant.agent.ai.AIManager.Companion.TAG
 import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKit
 import org.mjdev.doorbellassistant.agent.stt.transcribers.vosk.VoskKit
-import org.mjdev.doorbellassistant.extensions.ComposeExt.VisibleState
-import org.mjdev.doorbellassistant.ui.components.VoiceRecognizerState.Companion.rememberWhisperVoiceRecognizerState
 import org.mjdev.doorbellassistant.ui.theme.Red
 import org.mjdev.doorbellassistant.ui.theme.White
+import org.mjdev.phone.extensions.ComposeExt.VisibleState
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
@@ -51,7 +59,6 @@ fun AISpeechRecognizer(
     stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
     maxRecordingDurationMs: Long = 20000L,
     minRecordingDurationMs: Long = 2000L,
-    onVoiceRecognizerInitialized: (VoiceRecognizerState) -> Unit = {},
     onConversationEnds: (String) -> Unit = {},
     onDownloading: (Float) -> Unit = {},
     onVoiceDetected: () -> Unit = {},
@@ -66,57 +73,58 @@ fun AISpeechRecognizer(
     val bckColor = phoneColors.colorLabelsBackground
     var isFirstText by remember { mutableStateOf(true) }
     var textState by remember { mutableStateOf("Welcome...") }
-    val recognizerState = rememberWhisperVoiceRecognizerState(
-        stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,
-        voiceDetectionSensitivity = voiceDetectionSensitivity,
-        maxRecordingDurationMs = maxRecordingDurationMs,
-        minRecordingDurationMs = minRecordingDurationMs,
-        onInitialized = {
-            textState = "Welcome..."
-            onVoiceRecognizerInitialized(this)
-        },
-        onVoiceDetected = {
-            onVoiceDetected()
-        },
-        onVoiceStarts = {
-            onVoiceDetected()
-        },
-        onVoiceEnds = {
-            stopListening()
-            onVoiceUnDetected()
-            // todo, unfinisher, and remove stupid listeners
-            onPrompt(textState)
-            textState = "Thinking..."
-        },
-        onDownloading = { percent ->
-            textState = "Downloading model ${(percent * 100).toInt()} %."
-            onDownloading(percent)
-        },
-        onThinking = {
-            onThinking()
-        },
-        onVoiceTranscribed = { text, segments ->
-            if (isFirstText) {
-                isFirstText = false
-                textState = text
-            } else {
-                textState += " $text"
-            }
-        },
-        onFailure = { e ->
-            Log.e(TAG, "Voice recognizer failed.", e)
-            textState = "${e.message}"
-            onFailure(e)
-        },
-    )
-    val thinkingState by remember(recognizerState.isThinking, recognizerState.isListening) {
+
+//    val recognizerState = rememberWhisperVoiceRecognizerState(
+//        stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,
+//        voiceDetectionSensitivity = voiceDetectionSensitivity,
+//        maxRecordingDurationMs = maxRecordingDurationMs,
+//        minRecordingDurationMs = minRecordingDurationMs,
+//        onInitialized = {
+//            textState = "Welcome..."
+//            onVoiceRecognizerInitialized(this)
+//        },
+//        onVoiceDetected = {
+//            onVoiceDetected()
+//        },
+//        onVoiceStarts = {
+//            onVoiceDetected()
+//        },
+//        onVoiceEnds = {
+//            stopListening()
+//            onVoiceUnDetected()
+//            // todo, unfinisher, and remove stupid listeners
+//            onPrompt(textState)
+//            textState = "Thinking..."
+//        },
+//        onDownloading = { percent ->
+//            textState = "Downloading model ${(percent * 100).toInt()} %."
+//            onDownloading(percent)
+//        },
+//        onThinking = {
+//            onThinking()
+//        },
+//        onVoiceTranscribed = { text, segments ->
+//            if (isFirstText) {
+//                isFirstText = false
+//                textState = text
+//            } else {
+//                textState += " $text"
+//            }
+//        },
+//        onFailure = { e ->
+//            Log.e(TAG, "Voice recognizer failed.", e)
+//            textState = "${e.message}"
+//            onFailure(e)
+//        },
+//    )
+    val thinkingState by remember() {
         derivedStateOf {
-            recognizerState.isThinking || recognizerState.isListening
+            false
         }
     }
-    val listenState by remember(recognizerState.isListening) {
+    val listenState by remember() {
         derivedStateOf {
-            recognizerState.isListening
+            false
         }
     }
     val colorStateThinking by remember(thinkingState) {
@@ -186,18 +194,11 @@ fun AISpeechRecognizer(
                 .border(2.dp, Color.White, CircleShape)
                 .padding(2.dp)
                 .align(Alignment.CenterStart),
-            state = recognizerState,
             autoStart = autoStart,
             voiceDetectionSensitivity = 0.2f,
             stopListeningWhenNoVoiceAtLeast = 2.0f,
             maxRecordingDurationMs = 20000L,
             minRecordingDurationMs = 2000L,
-            createKit = createKit,
         )
-    }
-    DisposableEffect(Unit) {
-        onDispose {
-            recognizerState.stopListening()
-        }
     }
 }

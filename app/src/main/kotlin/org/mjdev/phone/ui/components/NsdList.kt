@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.ui.components
 
 import android.net.nsd.NsdServiceInfo
@@ -16,8 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
-import org.mjdev.phone.extensions.CustomExtensions.isPreview
+import org.mjdev.phone.extensions.ContextExt.currentWifiIP
+import org.mjdev.phone.extensions.CustomExt.isPreview
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdTypes
@@ -72,8 +82,8 @@ fun NsdList(
                 .weight(1f)
         ) {
             items(
-                items = devices.distinctBy { device -> device.serviceName },
-                key = { device -> device.serviceName }
+                items = devices.toList().distinctBy { device -> device.address },
+                key = { device -> device.address }
             ) { device ->
                 NsdItem(
                     device = device,

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.application
 
 import android.util.Log
@@ -13,7 +23,6 @@ import org.mjdev.doorbellassistant.ui.theme.Item
 import org.mjdev.doorbellassistant.ui.theme.Label
 import org.mjdev.doorbellassistant.ui.theme.White
 import org.mjdev.phone.application.CallApplication
-import org.mjdev.phone.nsd.service.CallNsdService.Companion.start
 import org.mjdev.phone.ui.theme.base.phoneCustomizer
 import java.security.Security
 
@@ -46,8 +55,15 @@ class App : CallApplication<DoorbellNsdService>(), DIAware {
             colorsLight.colorLabelText = Label
             colorsDark.colorLabelText = Label
         }
-        start<DoorbellNsdService>()
+        // startForeground<DoorbellNsdService>() - moved to MainActivity.onStart()
 //        startLockScreenService()
+    }
+
+    override fun onTerminate() {
+        super.onTerminate()
+//        stopService<STTService>()
+//        stopService<TTSService>()
+//        stopService<AIService>()
     }
 
     private fun setupExceptionHandler() {

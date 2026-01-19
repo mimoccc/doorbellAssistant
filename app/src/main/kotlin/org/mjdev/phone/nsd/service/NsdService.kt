@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.nsd.service
 
 import android.annotation.SuppressLint
@@ -9,26 +19,34 @@ import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.mjdev.doorbellassistant.R
 import org.mjdev.phone.enums.ChannelId
 import org.mjdev.phone.enums.NotificationId
-import org.mjdev.phone.extensions.CustomExtensions.ANDROID_ID
+import org.mjdev.phone.extensions.ContextExt.ANDROID_ID
+import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdTypes
 import org.mjdev.phone.nsd.device.NsdTypes.Companion.serviceName
 import org.mjdev.phone.nsd.device.createNsdDeviceList
 import org.mjdev.phone.nsd.manager.NsdManagerFlow
 import org.mjdev.phone.nsd.registration.RegistrationEvent
 import org.mjdev.phone.rpc.server.INsdServerRPC
+import org.mjdev.phone.service.BindableService
+import org.mjdev.phone.service.ServiceEvent
 import kotlin.uuid.ExperimentalUuidApi
 
 @SuppressLint("HardwareIds")
 @OptIn(ExperimentalUuidApi::class, ExperimentalCoroutinesApi::class)
-abstract class NsdService : BindableService() {
+abstract class NsdService(
+    serviceNsdType: NsdTypes
+) : BindableService() {
     // todo
 //    private val notificationManager : AppNotificationManager by di.instance()
 
@@ -41,10 +59,9 @@ abstract class NsdService : BindableService() {
     private var registrationJob: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
-    abstract val serviceType: NsdTypes
+    var serviceType: NsdTypes = serviceNsdType
+
     abstract val rpcServer: INsdServerRPC
-
-
 
     val powerManager
         get() = getSystemService(POWER_SERVICE) as PowerManager
@@ -56,33 +73,39 @@ abstract class NsdService : BindableService() {
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG)
     }
 
-    private fun startRpcServer() {
+    protected fun startRpcServer() {
         lifecycleScope.launch {
             rpcServer.start(
                 onStarted = { a, p ->
-                    registerNsdService(a, p)
+                    registerNsdService(a, p, serviceType)
                 }
             )
         }
     }
 
-    private fun stopRpcServer() {
+    protected suspend fun stopRpcServer() {
         lifecycleScope.launch {
-            rpcServer.stop()
+            unregisterNsdService {
+                rpcServer.stop()
+            }
         }
     }
 
     private fun startAsForeground() {
         createNotificationChannel()
         val notification = createNotification()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                NotificationId.NSD.id,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            )
-        } else {
-            startForeground(NotificationId.NSD.id, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    NotificationId.NSD.id,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            } else {
+                startForeground(NotificationId.NSD.id, notification)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start as foreground service: ${e.message}", e)
         }
     }
 
@@ -118,10 +141,25 @@ abstract class NsdService : BindableService() {
             .build()
     }
 
+    protected fun unregisterNsdService(
+        onUnregistered: suspend () -> Unit = {}
+    ) {
+        lifecycleScope.launch {
+            nsdManagerFlow.unregisterService().onEach { event ->
+                Log.d(TAG, "NSD Registration event: $event")
+            }.onEach { ev ->
+                if (ev is RegistrationEvent.ServiceUnregistered) {
+                    onUnregistered()
+                }
+            }.collect()
+        }
+    }
+
     @Suppress("unused")
     protected fun registerNsdService(
         address: String,
         port: Int,
+        serviceType: NsdTypes,
         onRegistered: (RegistrationEvent) -> Unit = {}
     ) {
         if (port <= 0) {
@@ -150,12 +188,51 @@ abstract class NsdService : BindableService() {
 
     override fun onDestroy() {
         registrationJob?.cancel()
-        stopRpcServer()
+        lifecycleScope.launch {
+            stopRpcServer()
+        }
         if (wakeLock?.isHeld == true) wakeLock?.release()
         super.onDestroy()
     }
 
+    fun changeType(
+        type: NsdTypes,
+        onChanged: (NsdTypes, NsdTypes) -> Unit
+    ) {
+        Log.d(TAG, "changeType called: current=$serviceType, new=$type")
+        if (serviceType != type) {
+            Log.d(TAG, "Service types differ, proceeding with change")
+            lifecycleScope.launch {
+                Log.d(TAG, "Before stopRpcServer")
+                stopRpcServer()
+                Log.d(TAG, "After stopRpcServer")
+                serviceType = type
+                Log.d(TAG, "Service type changed to: $serviceType")
+                startRpcServer()
+                Log.d(TAG, "After startRpcServer")
+                withContext(Dispatchers.Main) {
+                    onChanged(serviceType, type)
+                }
+            }
+        } else {
+            Log.d(TAG, "Service types are the same, no change needed")
+        }
+    }
+
     companion object {
         private val TAG = NsdService::class.simpleName
+
+        data class NsdStateEvent(
+            val address: String,
+            val port: Int
+        ) : ServiceEvent()
+
+        data class NsdDeviceEvent(
+            val device: NsdDevice?
+        ) : ServiceEvent()
+
+        data class NsdDevicesEvent(
+            val devicesAround: List<NsdDevice>
+        ) : ServiceEvent()
     }
 }

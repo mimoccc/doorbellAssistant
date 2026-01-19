@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.nsd.service
 
 import android.content.ComponentName
@@ -15,7 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -23,33 +33,40 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import org.mjdev.phone.activity.VideoCallActivity.Companion.startCall
 import org.mjdev.phone.application.CallApplication.Companion.getCallServiceClass
-import org.mjdev.phone.extensions.CustomExtensions.ANDROID_ID
-import org.mjdev.phone.extensions.CustomExtensions.currentWifiIP
+import org.mjdev.phone.extensions.ContextExt.ANDROID_ID
+import org.mjdev.phone.extensions.ContextExt.currentWifiIP
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdDevice.Companion.EMPTY
 import org.mjdev.phone.nsd.device.NsdDevice.Companion.fromData
 import org.mjdev.phone.nsd.device.NsdTypes
-import org.mjdev.phone.rpc.server.INsdServerRPC
+import org.mjdev.phone.nsd.service.NsdService.Companion.NsdDeviceEvent
+import org.mjdev.phone.nsd.service.NsdService.Companion.NsdDevicesEvent
+import org.mjdev.phone.nsd.service.NsdService.Companion.NsdStateEvent
 import org.mjdev.phone.rpc.action.NsdAction
-import org.mjdev.phone.rpc.action.NsdActions.SDPStartCall
-import org.mjdev.phone.rpc.action.NsdActions.SDPStartCallStarted
-import org.mjdev.phone.rpc.action.NsdActions.SDPIceCandidate
-import org.mjdev.phone.rpc.action.NsdActions.SDPDismiss
 import org.mjdev.phone.rpc.action.NsdActions.SDPAccept
 import org.mjdev.phone.rpc.action.NsdActions.SDPAnswer
+import org.mjdev.phone.rpc.action.NsdActions.SDPDismiss
+import org.mjdev.phone.rpc.action.NsdActions.SDPIceCandidate
 import org.mjdev.phone.rpc.action.NsdActions.SDPOffer
+import org.mjdev.phone.rpc.action.NsdActions.SDPStartCall
+import org.mjdev.phone.rpc.action.NsdActions.SDPStartCallStarted
+import org.mjdev.phone.rpc.server.INsdServerRPC
 import org.mjdev.phone.rpc.server.NsdServerRpc
-import org.mjdev.phone.nsd.service.ServiceCommand.Companion.GetNsdDevice
-import org.mjdev.phone.nsd.service.ServiceCommand.Companion.GetNsdDevices
-import org.mjdev.phone.nsd.service.ServiceCommand.Companion.GetState
-import org.mjdev.phone.nsd.service.ServiceEvent.Companion.ServiceNsdDevice
-import org.mjdev.phone.nsd.service.ServiceEvent.Companion.ServiceNsdDevices
+import org.mjdev.phone.service.ServiceCommand
+import org.mjdev.phone.service.ServiceCommand.Companion.GetNsdDevice
+import org.mjdev.phone.service.ServiceCommand.Companion.GetNsdDevices
+import org.mjdev.phone.service.ServiceCommand.Companion.GetState
+import org.mjdev.phone.service.ServiceEvent
+import org.mjdev.phone.service.ServiceEvent.Companion.ServiceConnected
+import org.mjdev.phone.service.ServiceEvent.Companion.ServiceDisconnected
+import org.mjdev.phone.service.ServiceEvent.Companion.ServiceError
 import org.mjdev.phone.stream.CallEndReason
-import kotlin.jvm.java
 
 // todo automatic user login with wifi access
 @Suppress("unused")
-abstract class CallNsdService : NsdService() {
+abstract class CallNsdService(
+    serviceNsdType: NsdTypes
+) : NsdService(serviceNsdType) {
     override val rpcServer: INsdServerRPC by lazy {
         NsdServerRpc(
             context = baseContext,
@@ -71,7 +88,7 @@ abstract class CallNsdService : NsdService() {
 
     override fun onDestroy() {
         super.onDestroy()
-        sendEvent(ServiceEvent.Companion.ServiceDisconnected)
+        sendEvent(ServiceDisconnected)
         isRunning.value = false
     }
 
@@ -83,14 +100,14 @@ abstract class CallNsdService : NsdService() {
         when (command) {
             is GetState -> {
                 if (rpcServer.isRunning) {
-                    handler(ServiceEvent.Companion.ServiceConnected(currentWifiIP, rpcServer.port))
+                    handler(NsdStateEvent(currentWifiIP, rpcServer.port))
                 } else {
-                    handler(ServiceEvent.Companion.ServiceDisconnected)
+                    handler(ServiceDisconnected)
                 }
             }
 
             is GetNsdDevice -> {
-                CoroutineScope(Dispatchers.IO).launch {
+                lifecycleScope.launch(Dispatchers.IO) {
                     val nsdDevice: NsdDevice = if (rpcServer.isRunning) {
                         fromData(
                             address = rpcServer.address,
@@ -101,32 +118,39 @@ abstract class CallNsdService : NsdService() {
                     } else {
                         EMPTY
                     }
-                    handler(ServiceNsdDevice(nsdDevice))
+                    handler(NsdDeviceEvent(nsdDevice))
                 }
             }
 
             is GetNsdDevices -> {
-                val types = command.types.let { tt ->
-                    if (tt == null || tt.isEmpty()) NsdTypes.entries else tt
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val types = command.types.let { tt ->
+                        if (tt.isNullOrEmpty()) NsdTypes.entries else tt
+                    }
+                    val filteredDevices = devicesAround.filter { d ->
+                        d.serviceType in types
+                    }
+                    handler(NsdDevicesEvent(filteredDevices))
                 }
-                val filteredDevices = devicesAround.filter { d ->
-                    d.serviceType in types
-                }
-                CoroutineScope(Dispatchers.IO).launch {
-                    handler(ServiceNsdDevices(filteredDevices))
-                }
+            }
+
+            else -> {
+                super.executeCommand(command, handler)
             }
         }
     }
 
     @CallSuper
-    open fun onStarted(address: String, port: Int) {
-        sendEvent(ServiceEvent.Companion.ServiceConnected(address = address, port = port))
+    open fun onStarted(
+        address: String,
+        port: Int
+    ) {
+        sendEvent(NsdStateEvent(address = address, port = port))
     }
 
     @CallSuper
     open fun onStopped() {
-        sendEvent(ServiceEvent.Companion.ServiceDisconnected)
+        sendEvent(ServiceDisconnected)
     }
 
     @CallSuper
@@ -184,8 +208,11 @@ abstract class CallNsdService : NsdService() {
 
     private fun handleCallReceived(message: SDPStartCall) {
         Log.d(
-            TAG,
-            "handleCallReceived: Starting VideoCallActivity for caller=${message.caller}, callee=${message.callee}"
+            TAG, "Starting VideoCallActivity for caller=${
+                message.caller
+            }, callee=${
+                message.callee
+            }"
         )
         startCall(
             this::class.java,
@@ -241,26 +268,29 @@ abstract class CallNsdService : NsdService() {
 
         val isRunning = mutableStateOf(false)
 
-        inline fun <reified T : CallNsdService> Context.start() = runCatching {
-            if (isRunning.value.not()) Intent(
-                this,
-                T::class.java
-            ).also { intent ->
-                startForegroundService(intent)
-            }
-        }.onFailure { e ->
-            e.printStackTrace()
-        }
+        fun Context.setNsdDeviceType(
+            type: NsdTypes
+        ) {
+            val serviceClass: Class<NsdService> = getCallServiceClass()
+            val connection = object : ServiceConnection {
+                override fun onServiceConnected(
+                    name: ComponentName,
+                    binder: IBinder
+                ) {
+                    val service = (binder as LocalBinder).service
+                    (service as? NsdService)?.changeType(type) { old, new ->
+                        unbindService(this)
+                    }
+                }
 
-        inline fun <reified T : CallNsdService> Context.stop() = runCatching {
-            if (isRunning.value) Intent(
-                this,
-                T::class.java
-            ).also { intent ->
-                stopService(intent)
+                override fun onServiceDisconnected(name: ComponentName) {
+                }
             }
-        }.onFailure { e ->
-            e.printStackTrace()
+            bindService(
+                Intent(this, serviceClass),
+                connection,
+                BIND_AUTO_CREATE
+            )
         }
 
         fun Context.nsdDevice(
@@ -274,7 +304,7 @@ abstract class CallNsdService : NsdService() {
                 ) {
                     val service = (binder as LocalBinder).service
                     service.executeCommand(GetNsdDevice) { event ->
-                        handler((event as? ServiceNsdDevice)?.device)
+                        handler((event as? NsdDeviceEvent)?.device)
                     }
                     unbindService(this)
                 }
@@ -301,11 +331,9 @@ abstract class CallNsdService : NsdService() {
                 ) {
                     val service = (binder as LocalBinder).service
                     service.executeCommand(
-                        GetNsdDevices(
-                            types
-                        )
+                        GetNsdDevices(types)
                     ) { event ->
-                        handler(((event as? ServiceNsdDevices)?.devicesAround) ?: emptyList())
+                        handler(((event as? NsdDevicesEvent)?.devicesAround) ?: emptyList())
                     }
                     unbindService(this)
                 }
@@ -353,18 +381,18 @@ abstract class CallNsdService : NsdService() {
             val context = LocalContext.current
             val event by context.bindableServiceFlow().collectAsState(initial = null)
             when (event) {
-                is ServiceEvent.Companion.ServiceConnected -> {
-                    val address = (event as ServiceEvent.Companion.ServiceConnected).address
-                    val port = (event as ServiceEvent.Companion.ServiceConnected).port
+                is ServiceConnected -> {
+                    val address = (event as NsdStateEvent).address
+                    val port = (event as NsdStateEvent).port
                     Text("Connected: $address:$port")
                 }
 
-                is ServiceEvent.Companion.ServiceError -> {
-                    val error = (event as ServiceEvent.Companion.ServiceError).error
+                is ServiceError -> {
+                    val error = (event as ServiceError).error
                     Text("Error: ${error.message}")
                 }
 
-                ServiceEvent.Companion.ServiceDisconnected -> {
+                ServiceDisconnected -> {
                     Text("Disconnected")
                 }
 
