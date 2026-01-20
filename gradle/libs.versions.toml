@@ -2,6 +2,7 @@
 accompanistPermissions = "0.37.3"
 agp = "9.1.0-alpha05"
 appwidgetHost = "0.2.2"
+mavenPublish = "0.30.0"
 appwidgetPreview = "0.1.2"
 bcprovJdk18on = "1.83"
 cameraCamera2 = "1.5.2"
@@ -101,3 +102,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }

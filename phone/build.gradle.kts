@@ -12,6 +12,8 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    `maven-publish`
+
 }
 
 android {
@@ -19,12 +21,10 @@ android {
     compileSdk {
         version = release(36)
     }
-
     defaultConfig {
         minSdk = 24
         consumerProguardFiles("consumer-rules.pro")
     }
-
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -38,8 +38,25 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
-
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/mimoccc/doorbellAssistant")
+            credentials {
+                username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
+                password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     // logs
@@ -69,9 +86,6 @@ dependencies {
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
-    // di
-    implementation(libs.kodein.di)
-    implementation(libs.kodein.di.framework.compose)
     // todo remove
     implementation(libs.gson)
     // todo remove or replace ktor
