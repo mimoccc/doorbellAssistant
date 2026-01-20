@@ -16,7 +16,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.llm.OllamaModels
 import android.util.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -37,6 +36,7 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.agent.ai.base.IAiAgent
+import org.mjdev.doorbellassistant.agent.ai.ollama.OllamaModels.PHI.PHI_3_MINI
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.util.concurrent.ConcurrentHashMap
@@ -46,7 +46,7 @@ class OllamaAgent(
     serverPort: Int = DEFAULT_OLLAMA_PORT,
     connectionTimeout: Long = 10000,
     systemPrompt: String = DEFAULT_SYSTEM_PROMPT,
-    model: LLModel = OllamaModels.Meta.LLAMA_3_2,
+    model: LLModel = PHI_3_MINI,
     tools: () -> List<Tool<*, String>> = { listOf(SayToUser) }
 ) : IAiAgent {
     val scope = CoroutineScope(Dispatchers.Default)
@@ -180,7 +180,7 @@ class OllamaAgent(
                 }
             }
         }.onFailure { e ->
-            Log.e(TAG, "${e.message}")
+            // Log.e(TAG, "${e.message}")
             discoveredServers.remove(ip)
         }
 

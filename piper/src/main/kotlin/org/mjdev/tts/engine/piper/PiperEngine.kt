@@ -14,21 +14,17 @@ import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import android.content.Context
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import com.google.gson.Gson
 import kotlinx.coroutines.CloseableCoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.mjdev.tts.engine.audio.AudioPlayer
 import org.mjdev.tts.engine.base.TtsEngine
 import org.mjdev.tts.engine.espeak.EspeakWrapper
 import org.mjdev.tts.engine.helpers.MisakiToPiperIPA
@@ -39,12 +35,16 @@ import java.io.File
 import java.nio.FloatBuffer
 import java.nio.LongBuffer
 
+// todo sound customization
 @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 @Suppress("CanBeParameter")
 class PiperEngine(
     private val context: Context,
     private val language: String,
-    private val sampleRate: Int,
+    private val sampleRate: Int,              // sound freq
+    private val lengthScale: Float? = 0.85f,  // speed
+    private val noiseScale: Float? = 0.5f,    // coldness
+    private val noiseW: Float? = 0.6f ,       // energy
     private val assetDir: String,
     private val modelFileName: String,
     private val jsonFileName: String,
@@ -75,9 +75,7 @@ class PiperEngine(
     private val modelFile = File(localFileDir, modelFileName)
     private val jsonFile = File(localFileDir, jsonFileName)
     private val mutex = Mutex()
-    private val texts = mutableListOf<String>()
 
-    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     override fun initialize() {
         if (initialized) return
         piperScope.launch(Dispatchers.IO) {
@@ -158,7 +156,6 @@ class PiperEngine(
                     }
                     initialized = true
                     Log.i(TAG, "PiperEngine initialized successfully.")
-                    playNextText()
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to initialize PiperEngine", e)
                 }
@@ -166,126 +163,93 @@ class PiperEngine(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
-    private fun playNextText() = piperScope.launch {
-        delay(200)
-        mutex.withLock {
-            if (texts.isNotEmpty()) {
-                val t = texts.first()
-                texts.removeFirst()
-                generate(
-                    autoplay = true,
-                    text = t,
-                    onPlayerFinish = {
-//                        Handler().postDelayed() {
-//                            playNextText()
-//                        }
-                    }
-                ) {
-                    // no op
-                }
-            }
-        }
-    }
-
     override fun generate(
         text: String,
-        autoplay: Boolean,
         speed: Float,
         voice: String?,
-        onPlayerFinish: () -> Unit,
-        callback: (FloatArray) -> Unit,
+        callback: (FloatArray) -> Unit
     ) {
-        if (!initialized) {
-            Log.e(TAG, "Uninitialized PiperEngine.")
-            texts.add(text)
-        } else {
-            piperScope.launch {
-                mutex.withLock {
-                    val session = ortSession!!
-                    val env = ortEnv!!
-                    val conf = config!!
-                    val rawPhonemes: String
-                    if (misakiG2P != null) {
-                        val misakiResult = misakiG2P!!.phonemize(text)
-                        rawPhonemes = MisakiToPiperIPA.convert(misakiResult)
-                        Log.d(TAG, "Misaki Phonemes: $misakiResult")
-                        Log.d(TAG, "Converted to IPA: $rawPhonemes")
+        if (!initialized) throw (RuntimeException("Uninitialized PiperEngine."))
+        piperScope.launch {
+            mutex.withLock {
+                val session = ortSession!!
+                val env = ortEnv!!
+                val conf = config!!
+                val rawPhonemes: String
+                if (misakiG2P != null) {
+                    val misakiResult = misakiG2P!!.phonemize(text)
+                    rawPhonemes = MisakiToPiperIPA.convert(misakiResult)
+                    Log.d(TAG, "Misaki Phonemes: $misakiResult")
+                    Log.d(TAG, "Converted to IPA: $rawPhonemes")
+                } else {
+                    rawPhonemes = espeak?.textToPhonemesSafe(text, conf.espeak.voice) ?: ""
+                    Log.d(TAG, "eSpeak Phonemes: $rawPhonemes")
+                }
+                Log.d(TAG, "Raw Phonemes: $rawPhonemes")
+                val idMap = conf.phonemeIdMap
+                val tokenIds = mutableListOf<Long>()
+                idMap[BOS]?.forEach { tokenIds.add(it.toLong()) }
+                idMap[PAD]?.forEach { tokenIds.add(it.toLong()) }
+                for (char in rawPhonemes) {
+                    val charStr = char.toString()
+                    if (idMap.containsKey(charStr)) {
+                        idMap[charStr]?.forEach { tokenIds.add(it.toLong()) }
+                        idMap[PAD]?.forEach { tokenIds.add(it.toLong()) }
                     } else {
-                        rawPhonemes = espeak?.textToPhonemesSafe(text, conf.espeak.voice) ?: ""
-                        Log.d(TAG, "eSpeak Phonemes: $rawPhonemes")
+                        // ???
                     }
-                    Log.d(TAG, "Raw Phonemes: $rawPhonemes")
-                    val idMap = conf.phonemeIdMap
-                    val tokenIds = mutableListOf<Long>()
-                    idMap[BOS]?.forEach { tokenIds.add(it.toLong()) }
-                    idMap[PAD]?.forEach { tokenIds.add(it.toLong()) }
-                    for (char in rawPhonemes) {
-                        val charStr = char.toString()
-                        if (idMap.containsKey(charStr)) {
-                            idMap[charStr]?.forEach { tokenIds.add(it.toLong()) }
-                            idMap[PAD]?.forEach { tokenIds.add(it.toLong()) }
-                        } else {
-                            // ???
-                        }
-                    }
-                    idMap[EOS]?.forEach { tokenIds.add(it.toLong()) }
-                    if (tokenIds.size <= 2) {
-                        Log.e(
-                            TAG, "No valid phonemes generated for text: '${
-                                text
-                            }'. Voice likely does not support this language/script."
-                        )
-                    } else {
-                        val inputIds = tokenIds.toLongArray()
-                        val inputLengths = longArrayOf(inputIds.size.toLong())
-                        val baseLengthScale = conf.inference.lengthScale
-                        val finalLengthScale = baseLengthScale / speed
-                        Log.i(
-                            TAG,
-                            "Generating with speed=$speed, baseScale=$baseLengthScale, finalScale=$finalLengthScale. Token Count: ${tokenIds.size}"
-                        )
-                        Log.d(TAG, "Token IDs: $tokenIds")
-                        val scales = floatArrayOf(
-                            conf.inference.noiseScale,
-                            finalLengthScale,
-                            conf.inference.noiseW
-                        )
-                        val inputTensor = OnnxTensor.createTensor(
-                            env,
-                            LongBuffer.wrap(inputIds),
-                            longArrayOf(1, inputIds.size.toLong())
-                        )
-                        val lengthTensor = OnnxTensor
-                            .createTensor(env, LongBuffer.wrap(inputLengths), longArrayOf(1))
-                        val scalesTensor = OnnxTensor
-                            .createTensor(env, FloatBuffer.wrap(scales), longArrayOf(3))
-                        val inputs = mapOf(
-                            "input" to inputTensor,
-                            "input_lengths" to lengthTensor,
-                            "scales" to scalesTensor
-                        )
-                        try {
-                            val outputs = session.run(inputs)
-                            val audioTensor =
-                                outputs[0] as OnnxTensor // Output is usually just 'output'
-                            val floatBuf = audioTensor.floatBuffer
-                            val audio = FloatArray(floatBuf.remaining())
-                            floatBuf.get(audio)
-                            callback(audio)
-                            if (autoplay) {
-                                AudioPlayer(sampleRate).play(audio) {
-                                    onPlayerFinish()
-                                }
-                            }
-                            outputs.close()
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Inference failed", e)
-                        } finally {
-                            inputTensor.close()
-                            lengthTensor.close()
-                            scalesTensor.close()
-                        }
+                }
+                idMap[EOS]?.forEach { tokenIds.add(it.toLong()) }
+                if (tokenIds.size <= 2) {
+                    Log.e(
+                        TAG, "No valid phonemes generated for text: '${
+                            text
+                        }'. Voice likely does not support this language/script."
+                    )
+                } else {
+                    val inputIds = tokenIds.toLongArray()
+                    val inputLengths = longArrayOf(inputIds.size.toLong())
+                    val baseLengthScale = lengthScale ?: conf.inference.lengthScale
+                    val finalLengthScale = baseLengthScale / speed
+                    Log.i(
+                        TAG,
+                        "Generating with speed=$speed, baseScale=$baseLengthScale, finalScale=$finalLengthScale. Token Count: ${tokenIds.size}"
+                    )
+                    Log.d(TAG, "Token IDs: $tokenIds")
+                    val scales = floatArrayOf(
+                        conf.inference.noiseScale,
+                        finalLengthScale,
+                        conf.inference.noiseW
+                    )
+                    val inputTensor = OnnxTensor.createTensor(
+                        env,
+                        LongBuffer.wrap(inputIds),
+                        longArrayOf(1, inputIds.size.toLong())
+                    )
+                    val lengthTensor = OnnxTensor
+                        .createTensor(env, LongBuffer.wrap(inputLengths), longArrayOf(1))
+                    val scalesTensor = OnnxTensor
+                        .createTensor(env, FloatBuffer.wrap(scales), longArrayOf(3))
+                    val inputs = mapOf(
+                        "input" to inputTensor,
+                        "input_lengths" to lengthTensor,
+                        "scales" to scalesTensor
+                    )
+                    try {
+                        val outputs = session.run(inputs)
+                        val audioTensor =
+                            outputs[0] as OnnxTensor // Output is usually just 'output'
+                        val floatBuf = audioTensor.floatBuffer
+                        val audio = FloatArray(floatBuf.remaining())
+                        floatBuf.get(audio)
+                        callback(audio)
+                        outputs.close()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Inference failed", e)
+                    } finally {
+                        inputTensor.close()
+                        lengthTensor.close()
+                        scalesTensor.close()
                     }
                 }
             }
@@ -297,7 +261,7 @@ class PiperEngine(
     override fun isInitialized(): Boolean = initialized
 
     override fun release() {
-        if (!initialized) return
+        if(!initialized) return
         piperScope.launch {
             mutex.withLock {
                 ortSession?.close()

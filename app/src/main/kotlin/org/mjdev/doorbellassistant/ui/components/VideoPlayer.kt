@@ -35,11 +35,11 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import org.mjdev.doorbellassistant.extensions.CustomAppExt.createExoPlayer
+import org.mjdev.doorbellassistant.helpers.CustomPlayerView
 import org.mjdev.phone.extensions.ComposeExt.rememberAssetImagePainter
 import org.mjdev.phone.extensions.CustomExt.isPreview
 import org.mjdev.phone.extensions.ModifierExt.applyIf
 import org.mjdev.phone.helpers.Previews
-import org.mjdev.phone.helpers.views.CustomPlayerView
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 
 @Suppress("unused")
@@ -49,7 +49,7 @@ import org.mjdev.phone.ui.theme.base.PhoneTheme
 fun VideoPlayer(
     modifier: Modifier = Modifier,
     videoUri: Uri = Uri.EMPTY,
-    autoPlay: Boolean= true,
+    autoPlay: Boolean = true,
     showControls: Boolean = false,
     keepAspect: Boolean = true,
     onVideoSizeChange: (VideoSize, Float) -> Unit = { s, f -> },
@@ -75,7 +75,7 @@ fun VideoPlayer(
             onVideoStart = onVideoStart,
             onVideoFinish = onVideoFinish,
             onFrame = onFrame,
-        ).apply{
+        ).apply {
             onCreated(this)
         }
     }

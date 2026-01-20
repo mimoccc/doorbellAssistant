@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.DoorBellAssistant" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowShowWallpaper">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:backgroundTint">@color/primary_background</item>
+        <item name="android:windowBackground">@color/primary_background</item>
+        <item name="android:statusBarColor">@color/primary_background</item>
+        <item name="android:navigationBarColor">@color/primary_background</item>
+        <item name="android:colorBackground">@color/primary_background</item>
+    </style>
+
+</resources>

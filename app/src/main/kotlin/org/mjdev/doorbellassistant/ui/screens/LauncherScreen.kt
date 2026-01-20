@@ -65,7 +65,7 @@ fun LauncherScreen(
     }
     LaunchedEffect(ttsService) {
         if (ttsService != null) {
-            ttsService?.talk("Hello from door bell assistant.")
+            ttsService?.talk("Vítejte v aplikaci bytový asistent.")
         }
     }
 }

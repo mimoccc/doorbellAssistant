@@ -1,19 +1,77 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.doorbellassistant.agent.ai.ollama
 
-// todo
+import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 
-enum class OllamaModels(
-    val model : String
-) {
-    META_LLAMA("llama3.2:latest"),
-    META_LLAMA_3_2("meta-llama-3-2"),
-    META_LLAMA_3_2_12B("meta-llama-3-2-12b"),
-    META_LLAMA_3_2_7B("meta-llama-3-2-7b"),
-    META_LLAMA_3_2_3B("meta-llama-3-2-3b"),
-    META_LLAMA_3_2_1B("meta-llama-3-2-1b"),
+object OllamaModels {
+    object PHI {
+        val PHI_3_MINI: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "phi3:mini",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Tools
+            ),
+            contextLength = 131_072,
+        )
+        val PHI_3_MINI_INSTRUCT: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "phi3:mini-instruct",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Tools
+            ),
+            contextLength = 131_072,
+        )
+    }
 
-    QWEN3_CODER_480B_CLOUD("qwen3-coder:480b-cloud"),
-
-    GPT_OSS_20B_CLOUD("gpt-oss:20b-cloud"),
-    GPT_OSS_120B_CLOUD("gpt-oss:120b-cloud"),
+    object Cloud {
+        object QWEN3 {
+            val QWEN3_CODER_480B_CLOUD: LLModel = LLModel(
+                provider = LLMProvider.Ollama,
+                id = "qwen3-coder:480b-cloud",
+                capabilities = listOf(
+                    LLMCapability.Temperature,
+                    LLMCapability.Schema.JSON.Basic,
+                    LLMCapability.Tools
+                ),
+                contextLength = 131_072,
+            )
+        }
+        object GPT {
+            val GPT_OSS_120B_CLOUD: LLModel = LLModel(
+                provider = LLMProvider.Ollama,
+                id = "gpt-oss:120b-cloud",
+                capabilities = listOf(
+                    LLMCapability.Temperature,
+                    LLMCapability.Schema.JSON.Basic,
+                    LLMCapability.Tools
+                ),
+                contextLength = 131_072,
+            )
+            val GPT_OSS_20B_CLOUD: LLModel = LLModel(
+                provider = LLMProvider.Ollama,
+                id = "gpt-oss:20b-cloud",
+                capabilities = listOf(
+                    LLMCapability.Temperature,
+                    LLMCapability.Schema.JSON.Basic,
+                    LLMCapability.Tools
+                ),
+                contextLength = 131_072,
+            )
+        }
+    }
 }

@@ -16,6 +16,7 @@ import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.rpc.action.NsdAction
 
 object DoorBellActions {
+
     @Serializable
     @SerialName("DoorBellActionMotionDetected")
     class DoorBellActionMotionDetected(
@@ -27,4 +28,5 @@ object DoorBellActions {
     class DoorBellActionMotionUnDetected(
         val device: NsdDevice?
     ) : NsdAction()
+
 }

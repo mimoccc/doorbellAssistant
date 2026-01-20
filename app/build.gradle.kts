@@ -1,8 +1,16 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 @file:Suppress("UnstableApiUsage")
 
 import SafeMap.Companion.toSafeMap
-import kotlin.apply
-import kotlin.collections.forEach
 import kotlin.reflect.KProperty
 
 plugins {
@@ -120,6 +128,10 @@ android {
 
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
+    // tts
+    implementation(project(":piper"))
+    // phone
+    implementation(project(":phone"))
     // logs
     implementation(libs.slf4j.api)
     implementation(libs.logback.android)
@@ -183,8 +195,6 @@ dependencies {
     implementation(libs.koog.agents)
     // stt
     implementation(libs.vosk.android)
-    // tts
-    implementation(project(":piper"))
     // testing
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

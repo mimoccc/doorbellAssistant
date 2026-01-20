@@ -14,10 +14,8 @@ interface TtsEngine {
     fun initialize()
     fun generate(
         text: String,
-        autoplay: Boolean = true,
         speed: Float = 1.0f,
         voice: String? = null,
-        onPlayerFinish: () -> Unit = {},
         callback: (FloatArray) -> Unit
     )
     fun getSampleRate(): Int

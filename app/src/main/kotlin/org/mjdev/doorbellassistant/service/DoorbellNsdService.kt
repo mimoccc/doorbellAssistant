@@ -17,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantEnabled
 import org.mjdev.doorbellassistant.extensions.CustomAppExt.rememberDeviceCapture
 import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionDetected
 import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionUnDetected
@@ -27,6 +28,7 @@ import org.mjdev.doorbellassistant.ui.window.ComposeFloatingWindow.Companion.ale
 import org.mjdev.phone.extensions.ContextExt.currentWifiIP
 import org.mjdev.phone.helpers.DelayHandler
 import org.mjdev.phone.nsd.device.NsdDevice
+import org.mjdev.phone.nsd.device.NsdTypes.DOOR_BELL_ASSISTANT
 import org.mjdev.phone.nsd.device.NsdTypes.DOOR_BELL_CLIENT
 import org.mjdev.phone.nsd.service.CallNsdService
 import org.mjdev.phone.rpc.action.NsdAction
@@ -54,14 +56,14 @@ class DoorbellNsdService : CallNsdService(
     private fun showAlert(
         device: NsdDevice?,
         context: Context = applicationContext,
-        dismissDelay : Long = 10000
+        dismissDelay: Long = 10000
     ) = CoroutineScope(Dispatchers.Main).launch {
         ComposeFloatingWindow(
             context = context,
             windowParams = alertLayoutParams(context),
             onShown = {
-                DelayHandler(dismissDelay){
-                   hide()
+                DelayHandler(dismissDelay) {
+                    hide()
                 }.start()
             }
         ) {
@@ -111,6 +113,14 @@ class DoorbellNsdService : CallNsdService(
             is DoorBellActionMotionUnDetected -> {
                 hideAlert(action.device)
             }
+        }
+    }
+
+    override fun checkDeviceType() {
+        if (isDoorBellAssistantEnabled) {
+            setNsdDeviceType(DOOR_BELL_ASSISTANT)
+        } else {
+            setNsdDeviceType(DOOR_BELL_CLIENT)
         }
     }
 
