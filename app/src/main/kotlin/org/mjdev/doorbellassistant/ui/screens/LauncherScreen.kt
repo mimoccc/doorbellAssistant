@@ -14,7 +14,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BackHand
@@ -24,7 +23,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import org.mjdev.doorbellassistant.service.TTSService.Companion.rememberTTSService
 import org.mjdev.doorbellassistant.ui.theme.Black
@@ -48,9 +46,7 @@ fun LauncherScreen(
         contentAlignment = Alignment.Center
     ) {
         BackgroundLayout(
-            Modifier
-                .fillMaxSize()
-                .alpha(0.8f)
+            Modifier.fillMaxSize()
         )
         GlowButton(
             modifier = Modifier.size(120.dp),
@@ -58,7 +54,6 @@ fun LauncherScreen(
         ) {
             Icon(
                 modifier = Modifier
-                    .padding(15.dp)
                     .fillMaxSize(),
                 contentDescription = "",
                 tint = if (isPreview) {

@@ -44,7 +44,6 @@ import org.mjdev.phone.extensions.ColorExt.darker
 import org.mjdev.phone.extensions.ColorExt.lighter
 import org.mjdev.phone.extensions.ComposeExt.rememberAssetImage
 import org.mjdev.phone.extensions.CustomExt.isPreview
-import org.mjdev.phone.extensions.ModifierExt.applyIf
 import org.mjdev.phone.extensions.ModifierExt.neonStroke
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
@@ -56,8 +55,8 @@ import kotlin.math.min
 fun MovieCard(
     modifier: Modifier = Modifier,
     bitmap: ImageBitmap? = rememberAssetImage("avatar/avatar_yellow.png"),
-    title: String = "title",
-    subtitle: String = "subtitle",
+    title: String? = if (isPreview) "title" else null,
+    subtitle: String? = if (isPreview) "subtitle" else null,
     contentScale: ContentScale = ContentScale.Inside,
     roundCorners: Boolean = true,
     roundCornersSize: Dp? = null,
@@ -68,18 +67,19 @@ fun MovieCard(
     glowColor: Color = if (isSystemInDarkTheme()) Color.White else Color.Black,
     glowRadius: Float = 8f,
     lightColor: Color? = null,
-    lightRatio : Float = 0.8f,
-    lightColorRatio : Float = 0.4f,
+    lightRatio: Float = 0.8f,
+    lightColorRatio: Float = 0.4f,
     shadowingColor: Color? = null,
-    shadowRatio : Float = 0.6f,
-    shadowColorRatio:Float = 0.2f,
+    shadowRatio: Float = 0.6f,
+    shadowColorRatio: Float = 0.2f,
     content: @Composable () -> Unit = {},
 ) = PhoneTheme {
     BoxWithConstraints(
-        modifier.applyIf(isPreview) {
-            background(Color.Black)
-            padding(24.dp)
-        }
+        modifier
+//            .applyIf(isPreview) {
+//                background(Color.Black)
+//                padding(24.dp)
+//            }
     ) {
         val size = min(constraints.maxWidth, constraints.maxHeight)
         val shape = if (roundCorners) {
@@ -88,8 +88,11 @@ fun MovieCard(
         } else RectangleShape
         val background = if (useBackgroundFromPic) rememberMajorColor(bitmap)
         else backgroundColor ?: Color.Transparent
-        val shadow = if (useBackgroundFromPic) background.darker(shadowColorRatio) else shadowingColor ?: Color.Black
-        val light = if (useBackgroundFromPic) background.lighter(lightColorRatio) else lightColor ?: Color.White
+        val shadow =
+            if (useBackgroundFromPic) background.darker(shadowColorRatio) else shadowingColor
+                ?: Color.Black
+        val light = if (useBackgroundFromPic) background.lighter(lightColorRatio) else lightColor
+            ?: Color.White
         val border = BorderStroke(
             ((borderSize?.value ?: (size / 60f))).dp,
             background
@@ -157,13 +160,13 @@ fun MovieCard(
                         .align(Alignment.BottomStart)
                         .padding(12.dp)
                 ) {
-                    Text(
+                    if (title != null) Text(
                         text = title,
                         style = MaterialTheme.typography.titleSmall,
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
+                    if (subtitle != null) Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.7f)
