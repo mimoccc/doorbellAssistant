@@ -11,9 +11,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.serialization)
     `maven-publish`
-
 }
 
 android {
@@ -58,7 +56,8 @@ publishing {
     }
 }
 dependencies {
-    implementation(platform(libs.androidx.compose.bom))
+    // stupid gson reflection dependency
+    implementation(kotlin("reflect"))
     // logs
     implementation(libs.slf4j.api)
     implementation(libs.logback.android)
@@ -66,11 +65,12 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.service)
-    implementation(libs.androidx.ui)
+    implementation(libs.androidx.compose.ui)
     // permissions
     implementation(libs.accompanist.permissions)
     // compose
-    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.activity)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -78,22 +78,21 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material.icons.extended)
     // ktor
+    implementation(libs.ktor.serialization.gson)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cio)
     implementation(libs.ktor.server.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
-    // todo remove
+    // json
     implementation(libs.gson)
     // todo remove or replace ktor
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     // webrtc
     implementation(libs.stream.webrtc.android)
-    // helpers for webrtc & etc
+    // helpers
     implementation(libs.conscrypt.android)
     implementation(libs.bcprov.jdk18on)
     implementation(libs.bctls.jdk18on)

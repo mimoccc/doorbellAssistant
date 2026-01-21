@@ -31,7 +31,9 @@ import androidx.compose.ui.unit.sp
 import org.mjdev.phone.extensions.CustomExt.isPreview
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
-import org.mjdev.phone.nsd.device.NsdTypes
+import org.mjdev.phone.nsd.device.NsdDevice.Companion.imageVector
+import org.mjdev.phone.nsd.device.NsdDevice.Companion.label
+import org.mjdev.phone.nsd.device.NsdType
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 import org.mjdev.phone.ui.theme.base.phoneIcons
@@ -96,7 +98,7 @@ fun NsdItem(
                 .padding(8.dp),
             contentDescription = "",
             tint = phoneColors.colorIconTint,
-            imageVector = device?.imageVector ?: NsdTypes.UNSPECIFIED.imageVector,
+            imageVector = device?.imageVector ?: NsdType.UNSPECIFIED.imageVector,
         )
         if (showCallButton) Icon(
             modifier = Modifier

@@ -21,6 +21,9 @@ import org.mjdev.phone.nsd.discovery.DiscoveryConfiguration
 import org.mjdev.phone.nsd.discovery.DiscoveryEvent
 import org.mjdev.phone.nsd.discovery.DiscoveryListenerFlow
 import org.mjdev.phone.nsd.registration.RegistrationConfiguration
+import org.mjdev.phone.nsd.registration.RegistrationConfiguration.Companion.port
+import org.mjdev.phone.nsd.registration.RegistrationConfiguration.Companion.serviceName
+import org.mjdev.phone.nsd.registration.RegistrationConfiguration.Companion.serviceType
 import org.mjdev.phone.nsd.registration.RegistrationEvent
 import org.mjdev.phone.nsd.registration.RegistrationListenerFlow
 import org.mjdev.phone.nsd.resolve.ResolveEvent

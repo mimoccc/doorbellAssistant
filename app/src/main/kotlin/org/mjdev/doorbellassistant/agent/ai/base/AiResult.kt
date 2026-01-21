@@ -10,17 +10,26 @@
 
 package org.mjdev.doorbellassistant.agent.ai.base
 
-sealed class AiResult {
+import org.mjdev.phone.helpers.json.Serializable
+
+@Serializable
+open class AiResult {
+
+    @Serializable
     object Initialized : AiResult()
 
+    @Serializable
     object Released : AiResult()
 
+    @Serializable
     data class Error(
         val error: Throwable
     ) : AiResult()
 
+    @Serializable
     data class Response(
         val data: String,
         val command: String
     ) : AiResult()
+
 }

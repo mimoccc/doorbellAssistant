@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.vector
 
 import androidx.compose.ui.graphics.Brush
@@ -17,7 +27,7 @@ import androidx.compose.ui.graphics.vector.DefaultTrimPathStart
 import androidx.compose.ui.graphics.vector.EmptyPath
 import androidx.compose.ui.graphics.vector.toPath
 
-internal class PathComponent : VNode() {
+class PathComponent : VNode() {
     var name = DefaultPathName
         set(value) {
             field = value

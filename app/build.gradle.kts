@@ -16,7 +16,6 @@ import kotlin.reflect.KProperty
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.serialization)
 }
 
 class SafeMap : HashMap<String, String>() {
@@ -127,11 +126,13 @@ android {
 }
 
 dependencies {
-    implementation(platform(libs.androidx.compose.bom))
+    // stupid gson reflection dependency
+    implementation(kotlin("reflect"))
     // tts
     implementation(project(":piper"))
     // phone
     implementation(project(":phone"))
+//    implementation("org.mjdev:phone:1.0.0")
     // logs
     implementation(libs.slf4j.api)
     implementation(libs.logback.android)
@@ -139,11 +140,11 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.service)
-    implementation(libs.androidx.ui)
     // permissions
     implementation(libs.accompanist.permissions)
     // compose
-    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.activity)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -155,27 +156,29 @@ dependencies {
     implementation(libs.androidx.media3.ui)
     // camera
     implementation(libs.androidx.camera.camera2)
-    implementation(libs.camera.lifecycle)
+    implementation(libs.androidx.camera.lifecycle)
     // ktor
+    implementation(libs.ktor.serialization.gson)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cio)
     implementation(libs.ktor.server.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.kotlinx.serialization.json)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     // di
     implementation(libs.kodein.di)
     implementation(libs.kodein.di.framework.compose)
-    // todo remove
+    // ai
+    implementation(libs.koog.agents)
+    implementation(libs.vosk.android)
+    // json
     implementation(libs.gson)
     // todo remove or replace ktor
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     // webrtc
     implementation(libs.stream.webrtc.android)
-    // helpers for webrtc & etc
+    // helpers
     implementation(libs.conscrypt.android)
     implementation(libs.bcprov.jdk18on)
     implementation(libs.bctls.jdk18on)
@@ -191,10 +194,6 @@ dependencies {
     implementation(libs.appwidget.host)
     implementation(libs.appwidget.preview)
     implementation(libs.appwidget.viewer)
-    // custom ai
-    implementation(libs.koog.agents)
-    // stt
-    implementation(libs.vosk.android)
     // testing
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

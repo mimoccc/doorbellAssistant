@@ -31,22 +31,25 @@ import org.mjdev.phone.R
 import org.mjdev.phone.enums.ChannelId
 import org.mjdev.phone.enums.NotificationId
 import org.mjdev.phone.extensions.ContextExt.ANDROID_ID
+import org.mjdev.phone.extensions.ContextExt.powerManager
+import org.mjdev.phone.helpers.json.Serializable
 import org.mjdev.phone.nsd.device.NsdDevice
-import org.mjdev.phone.nsd.device.NsdTypes
-import org.mjdev.phone.nsd.device.NsdTypes.Companion.serviceName
+import org.mjdev.phone.nsd.device.NsdType
+import org.mjdev.phone.nsd.device.NsdType.Companion.serviceName
 import org.mjdev.phone.nsd.device.createNsdDeviceFlow
 import org.mjdev.phone.nsd.manager.NsdManagerFlow
 import org.mjdev.phone.nsd.registration.RegistrationEvent
 import org.mjdev.phone.rpc.server.INsdServerRPC
-import org.mjdev.phone.service.BindableService
+import org.mjdev.phone.service.LocalBindableService
 import org.mjdev.phone.service.ServiceEvent
 import kotlin.uuid.ExperimentalUuidApi
 
+@Suppress("RedundantSuspendModifier")
 @SuppressLint("HardwareIds")
 @OptIn(ExperimentalUuidApi::class, ExperimentalCoroutinesApi::class)
 abstract class NsdService(
-    serviceNsdType: NsdTypes
-) : BindableService() {
+    serviceNsdType: NsdType,
+) : LocalBindableService() {
     // todo
 //    private val notificationManager : AppNotificationManager by di.instance()
 
@@ -59,17 +62,19 @@ abstract class NsdService(
     private var registrationJob: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
-    var serviceType: NsdTypes = serviceNsdType
-
+    var serviceType: NsdType = serviceNsdType
     abstract val rpcServer: INsdServerRPC
 
-    val powerManager
-        get() = getSystemService(POWER_SERVICE) as PowerManager
+    val address: String
+        get() = rpcServer.address
+    val port: Int
+        get() = rpcServer.port
 
     override fun onCreate() {
         startAsForeground()
         super.onCreate()
         startRpcServer()
+        // todo check disposition
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG)
     }
 
@@ -83,7 +88,7 @@ abstract class NsdService(
         }
     }
 
-    protected suspend fun stopRpcServer() {
+    protected fun stopRpcServer() {
         lifecycleScope.launch {
             unregisterNsdService {
                 rpcServer.stop()
@@ -160,7 +165,7 @@ abstract class NsdService(
     protected fun registerNsdService(
         address: String,
         port: Int,
-        serviceType: NsdTypes,
+        serviceType: NsdType,
         onRegistered: (RegistrationEvent) -> Unit = {}
     ) {
         if (port <= 0) {
@@ -189,16 +194,14 @@ abstract class NsdService(
 
     override fun onDestroy() {
         registrationJob?.cancel()
-        lifecycleScope.launch {
-            stopRpcServer()
-        }
+        stopRpcServer()
         if (wakeLock?.isHeld == true) wakeLock?.release()
         super.onDestroy()
     }
 
     fun changeType(
-        type: NsdTypes,
-        onChanged: (NsdTypes, NsdTypes) -> Unit
+        type: NsdType,
+        onChanged: (NsdType, NsdType) -> Unit
     ) {
         Log.d(TAG, "changeType called: current=$serviceType, new=$type")
         if (serviceType != type) {
@@ -215,23 +218,24 @@ abstract class NsdService(
                     onChanged(serviceType, type)
                 }
             }
-        } else {
-            Log.d(TAG, "Service types are the same, no change needed")
         }
     }
 
     companion object {
         private val TAG = NsdService::class.simpleName
 
+        @Serializable
         data class NsdStateEvent(
             val address: String,
             val port: Int
         ) : ServiceEvent()
 
+        @Serializable
         data class NsdDeviceEvent(
             val device: NsdDevice?
         ) : ServiceEvent()
 
+        @Serializable
         data class NsdDevicesEvent(
             val devicesAround: List<NsdDevice>
         ) : ServiceEvent()

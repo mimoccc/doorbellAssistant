@@ -1,11 +1,11 @@
 /*
  * Copyright (c) Milan Jurkulák 2026.
  * Contact:
- * e: [mimoccc@gmail.com](mailto:mimoccc@gmail.com)
- * e: [mj@mjdev.org](mailto:mj@mjdev.org)
- * w: [https://mjdev.org](https://mjdev.org)
- * w: [https://github.com/mimoccc](https://github.com/mimoccc)
- * w: [https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/](https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/)
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
  */
 
 package org.mjdev.doorbellassistant.agent.tts
@@ -21,6 +21,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.mjdev.phone.helpers.json.Serializable
 import org.mjdev.tts.engine.audio.AudioPlayer
 import org.mjdev.tts.engine.piper.PiperEngine
 import java.io.File
@@ -30,6 +31,7 @@ import kotlin.coroutines.resume
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+@Serializable
 @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 class PiperTTSEngine(
     private val context: Context,

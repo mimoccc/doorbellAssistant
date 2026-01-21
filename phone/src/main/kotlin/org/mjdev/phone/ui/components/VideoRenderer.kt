@@ -26,7 +26,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.viewinterop.AndroidView
 import org.mjdev.phone.extensions.CustomExt.isPreview
 import org.mjdev.phone.helpers.Previews
-import org.mjdev.phone.helpers.views.VideoTextureViewRenderer
+import org.mjdev.phone.helpers.VideoTextureViewRenderer
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 import org.mjdev.phone.ui.theme.base.phoneIcons

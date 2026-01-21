@@ -10,13 +10,11 @@
 
 package org.mjdev.phone.activity.base
 
-import org.mjdev.phone.extensions.ActivityExt.turnDisplayOn
 import org.mjdev.phone.extensions.KeyGuardExt.dismissKeyguard
 
 open class UnlockedActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         dismissKeyguard()
-        turnDisplayOn()
     }
 }

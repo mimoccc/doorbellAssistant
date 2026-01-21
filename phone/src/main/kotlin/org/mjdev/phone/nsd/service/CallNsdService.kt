@@ -17,11 +17,7 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
 import androidx.annotation.CallSuper
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -40,7 +36,7 @@ import org.mjdev.phone.helpers.DelayHandler
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdDevice.Companion.EMPTY
 import org.mjdev.phone.nsd.device.NsdDevice.Companion.fromData
-import org.mjdev.phone.nsd.device.NsdTypes
+import org.mjdev.phone.nsd.device.NsdType
 import org.mjdev.phone.nsd.service.NsdService.Companion.NsdDeviceEvent
 import org.mjdev.phone.nsd.service.NsdService.Companion.NsdDevicesEvent
 import org.mjdev.phone.nsd.service.NsdService.Companion.NsdStateEvent
@@ -58,21 +54,19 @@ import org.mjdev.phone.rpc.server.INsdServerRPC
 import org.mjdev.phone.rpc.server.NsdServerRpc
 import org.mjdev.phone.rpc.server.NsdServerRpc.Companion.sendAction
 import org.mjdev.phone.service.ServiceCommand
-import org.mjdev.phone.service.ServiceCommand.Companion.GetNsdDevice
-import org.mjdev.phone.service.ServiceCommand.Companion.GetNsdDevices
-import org.mjdev.phone.service.ServiceCommand.Companion.GetState
+import org.mjdev.phone.service.ServiceCommand.GetNsdDevice
+import org.mjdev.phone.service.ServiceCommand.GetNsdDevices
+import org.mjdev.phone.service.ServiceCommand.GetState
 import org.mjdev.phone.service.ServiceEvent
-import org.mjdev.phone.service.ServiceEvent.Companion.ServiceConnected
-import org.mjdev.phone.service.ServiceEvent.Companion.ServiceDisconnected
-import org.mjdev.phone.service.ServiceEvent.Companion.ServiceError
+import org.mjdev.phone.service.ServiceEvent.ServiceDisconnected
 import org.mjdev.phone.stream.CallEndReason
 
 // todo automatic user login with wifi access
 @Suppress("unused")
 abstract class CallNsdService(
-    val serviceNsdType: NsdTypes,
+    val serviceNsdType: NsdType,
     val deviceTypeCheckDelay: Long = 1000L
-) : NsdService(serviceNsdType) {
+) : NsdService(serviceNsdType,) {
     private val delayedHandler by lazy {
         DelayHandler(
             timeout = deviceTypeCheckDelay,
@@ -98,12 +92,13 @@ abstract class CallNsdService(
     override fun onCreate() {
         isRunning.value = true
         super.onCreate()
+//        sendEvent(ServiceConnected(rpcServer.address, rpcServer.port))
         delayedHandler.start()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        sendEvent(ServiceDisconnected)
+//        sendEvent(ServiceDisconnected)
         isRunning.value = false
     }
 
@@ -142,7 +137,7 @@ abstract class CallNsdService(
             is GetNsdDevices -> {
                 lifecycleScope.launch(Dispatchers.IO) {
                     val types = command.types.let { tt ->
-                        if (tt.isNullOrEmpty()) NsdTypes.entries else tt
+                        if (tt == null || tt.isEmpty()) NsdType.entries else tt
                     }
                     val filteredDevices = devicesAround.first().filter { d ->
                         d.serviceType in types
@@ -158,16 +153,13 @@ abstract class CallNsdService(
     }
 
     @CallSuper
-    open fun onStarted(
-        address: String,
-        port: Int
-    ) {
-        sendEvent(NsdStateEvent(address = address, port = port))
+    open fun onStarted(address: String, port: Int) {
+//        sendEvent(ServiceConnected(address = address, port = port))
     }
 
     @CallSuper
     open fun onStopped() {
-        sendEvent(ServiceDisconnected)
+//        sendEvent(ServiceDisconnected)
     }
 
     @CallSuper
@@ -297,7 +289,7 @@ abstract class CallNsdService(
         val isRunning = mutableStateOf(false)
 
         fun Context.setNsdDeviceType(
-            type: NsdTypes
+            type: NsdType
         ) {
             val serviceClass: Class<NsdService> = getCallServiceClass()
             val connection = object : ServiceConnection {
@@ -333,8 +325,8 @@ abstract class CallNsdService(
                     val service = (binder as LocalBinder).service
                     service.executeCommand(GetNsdDevice) { event ->
                         handler((event as? NsdDeviceEvent)?.device)
+                        unbindService(this)
                     }
-                    unbindService(this)
                 }
 
                 override fun onServiceDisconnected(name: ComponentName) {
@@ -348,7 +340,7 @@ abstract class CallNsdService(
         }
 
         fun Context.nsdDevices(
-            types: List<NsdTypes> = NsdTypes.entries,
+            types: List<NsdType> = NsdType.entries,
             handler: (List<NsdDevice>) -> Unit
         ) {
             val serviceClass: Class<NsdService> = getCallServiceClass()
@@ -362,8 +354,8 @@ abstract class CallNsdService(
                         GetNsdDevices(types)
                     ) { event ->
                         handler(((event as? NsdDevicesEvent)?.devicesAround) ?: emptyList())
+                        unbindService(this)
                     }
-                    unbindService(this)
                 }
 
                 override fun onServiceDisconnected(name: ComponentName) {
@@ -377,55 +369,31 @@ abstract class CallNsdService(
         }
 
         @Composable
-        fun rememberCallNsdService(
-            context: Context = LocalContext.current
-        ): Flow<CallNsdService?> = remember {
-            callbackFlow {
-                val serviceClass: Class<NsdService> = context.getCallServiceClass()
-                val connection = object : ServiceConnection {
-                    override fun onServiceConnected(
-                        name: ComponentName,
-                        binder: IBinder
-                    ) {
-                        trySend((binder as LocalBinder).service as CallNsdService?)
+        fun rememberCallNsdService(): Flow<CallNsdService?> = with(
+            LocalContext.current
+        ) {
+            remember {
+                callbackFlow {
+                    val serviceClass: Class<NsdService> = getCallServiceClass()
+                    val connection = object : ServiceConnection {
+                        override fun onServiceConnected(
+                            name: ComponentName,
+                            binder: IBinder
+                        ) {
+                            trySend((binder as LocalBinder).service as CallNsdService?)
+                        }
+
+                        override fun onServiceDisconnected(name: ComponentName) {
+                        }
                     }
-
-                    override fun onServiceDisconnected(name: ComponentName) {
+                    bindService(
+                        Intent(this@with, serviceClass),
+                        connection,
+                        BIND_AUTO_CREATE
+                    )
+                    awaitClose {
+                        unbindService(connection)
                     }
-                }
-                context.bindService(
-                    Intent(context, serviceClass),
-                    connection,
-                    BIND_AUTO_CREATE
-                )
-                awaitClose {
-                    context.unbindService(connection)
-                }
-            }
-        }
-
-        @Composable
-        fun ServiceState() {
-            val context = LocalContext.current
-            val event by context.bindableServiceFlow().collectAsState(initial = null)
-            when (event) {
-                is ServiceConnected -> {
-                    val address = (event as NsdStateEvent).address
-                    val port = (event as NsdStateEvent).port
-                    Text("Connected: $address:$port")
-                }
-
-                is ServiceError -> {
-                    val error = (event as ServiceError).error
-                    Text("Error: ${error.message}")
-                }
-
-                ServiceDisconnected -> {
-                    Text("Disconnected")
-                }
-
-                null -> {
-                    CircularProgressIndicator()
                 }
             }
         }

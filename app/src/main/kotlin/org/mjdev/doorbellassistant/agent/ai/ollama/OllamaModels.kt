@@ -13,9 +13,15 @@ package org.mjdev.doorbellassistant.agent.ai.ollama
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import org.mjdev.phone.helpers.json.Serializable
 
+@Serializable
 object OllamaModels {
+
+    @Serializable
     object PHI {
+
+        @Serializable
         val PHI_3_MINI: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "phi3:mini",
@@ -26,6 +32,8 @@ object OllamaModels {
             ),
             contextLength = 131_072,
         )
+
+        @Serializable
         val PHI_3_MINI_INSTRUCT: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "phi3:mini-instruct",
@@ -38,8 +46,13 @@ object OllamaModels {
         )
     }
 
+    @Serializable
     object Cloud {
+
+        @Serializable
         object QWEN3 {
+
+            @Serializable
             val QWEN3_CODER_480B_CLOUD: LLModel = LLModel(
                 provider = LLMProvider.Ollama,
                 id = "qwen3-coder:480b-cloud",
@@ -50,8 +63,13 @@ object OllamaModels {
                 ),
                 contextLength = 131_072,
             )
+
         }
+
+        @Serializable
         object GPT {
+
+            @Serializable
             val GPT_OSS_120B_CLOUD: LLModel = LLModel(
                 provider = LLMProvider.Ollama,
                 id = "gpt-oss:120b-cloud",
@@ -62,6 +80,8 @@ object OllamaModels {
                 ),
                 contextLength = 131_072,
             )
+
+            @Serializable
             val GPT_OSS_20B_CLOUD: LLModel = LLModel(
                 provider = LLMProvider.Ollama,
                 id = "gpt-oss:20b-cloud",

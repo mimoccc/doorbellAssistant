@@ -10,41 +10,34 @@
 
 package org.mjdev.phone.rpc.action
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import org.mjdev.phone.helpers.json.Serializable
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.webrtc.IceCandidate
 
 object NsdActions {
-
     @Serializable
-    @SerialName("NsdActionCall")
-    open class SDPGetState(
-        open val sender: NsdDevice?,
+    data class SDPGetState(
+        val sender: NsdDevice?,
     ) : NsdAction()
 
     @Serializable
-    @SerialName("NsdActionCall")
-    open class SDPState(
-        open val receiver: NsdDevice?,
+    data class SDPState(
+        val receiver: NsdDevice?,
     ) : NsdAction()
 
     @Serializable
-    @SerialName("NsdActionCall")
-    open class SDPStartCall(
-        open val caller: NsdDevice?,
-        open val callee: NsdDevice?
+    data class SDPStartCall(
+        val caller: NsdDevice?,
+        val callee: NsdDevice?
     ) : NsdAction()
 
     @Serializable
-    @SerialName("SDPStartCallStarted")
-    open class SDPStartCallStarted(
-        open val caller: NsdDevice?,
-        open val callee: NsdDevice?
+    data class SDPStartCallStarted(
+        val caller: NsdDevice?,
+        val callee: NsdDevice?
     ) : NsdAction()
 
     @Serializable
-    @SerialName("SDPIceCandidate")
     data class SDPIceCandidate(
         val device: NsdDevice?,
         val sdpMid: String,
@@ -63,31 +56,26 @@ object NsdActions {
     }
 
     @Serializable
-    @SerialName("SDPAnswer")
     data class SDPAnswer(
         val device: NsdDevice?,
         val sdp: String,
     ) : NsdAction()
 
     @Serializable
-    @SerialName("SDPOffer")
     data class SDPOffer(
         val device: NsdDevice?,
         val sdp: String,
     ) : NsdAction()
 
     @Serializable
-    @SerialName("SDPDismiss")
     data class SDPDismiss(
         val device: NsdDevice?,
         val sdp: String,
     ) : NsdAction()
 
     @Serializable
-    @SerialName("SDPAccept")
     data class SDPAccept(
         val device: NsdDevice?,
         val sdp: String,
     ) : NsdAction()
-
 }

@@ -10,12 +10,20 @@
 
 package org.mjdev.doorbellassistant.agent.tts
 
+import org.mjdev.phone.helpers.json.Serializable
+
+@Serializable
 @Suppress("unused")
-enum class PiperVoiceTuning(
+open class PiperVoiceTuning(
     val lengthScale: Float = 0.85f,  // speed
     val noiseScale: Float = 0.5f,    // coldness
     val noiseW: Float = 0.6f ,       // energy
 ) {
-    YoungCool(lengthScale = 0.85f, noiseScale = 0.5f, noiseW = 0.6f),
-    Default(1.0f, 0.667f, 0.8f)
+
+    @Serializable
+    object YoungCool : PiperVoiceTuning(lengthScale = 0.85f, noiseScale = 0.5f, noiseW = 0.6f)
+
+    @Serializable
+    object Default : PiperVoiceTuning(1.0f, 0.667f, 0.8f)
+
 }

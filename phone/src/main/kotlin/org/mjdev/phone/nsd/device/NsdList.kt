@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.mjdev.phone.nsd.device.NsdTypes.Companion.serviceName
+import org.mjdev.phone.nsd.device.NsdType.Companion.serviceName
 import org.mjdev.phone.nsd.discovery.DiscoveryConfiguration
 import org.mjdev.phone.nsd.discovery.DiscoveryEvent
 import org.mjdev.phone.nsd.manager.NsdManagerFlow
@@ -36,7 +36,7 @@ import org.mjdev.phone.nsd.resolve.ResolveEvent
 
 @Composable
 fun rememberNsdDeviceList(
-    types: List<NsdTypes> = NsdTypes.entries,
+    types: List<NsdType> = NsdType.entries,
     onError: (Throwable) -> Unit = {},
     filter: (NsdServiceInfo) -> Boolean = { true }
 ): State<List<NsdDevice>> {
@@ -55,7 +55,7 @@ fun rememberNsdDeviceList(
 fun createNsdDeviceFlow(
     context: Context,
     scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
-    types: List<NsdTypes> = NsdTypes.entries,
+    types: List<NsdType> = NsdType.entries,
     onError: (Throwable) -> Unit = {},
     filter: (NsdServiceInfo) -> Boolean = { true }
 ): StateFlow<List<NsdDevice>> {

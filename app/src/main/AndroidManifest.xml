@@ -174,20 +174,25 @@
                     android:value="VPN ad blocking service" />
         </service>
 
-        <service
-                android:name=".service.STTService"
-                android:enabled="true"
-                android:exported="true" />
+<!--        <service-->
+<!--                android:name=".service.STTService"-->
+<!--                android:process=":STTService"-->
+<!--                android:enabled="true"-->
+<!--                android:exported="true" />-->
 
         <service
                 android:name=".service.TTSService"
+                android:process=":TTSService"
+                android:directBootAware="true"
+                android:stopWithTask="false"
                 android:enabled="true"
                 android:exported="true" />
 
-        <service
-                android:name=".service.AIService"
-                android:enabled="true"
-                android:exported="true" />
+<!--        <service-->
+<!--                android:name=".service.AIService"-->
+<!--                android:process=":AIService"-->
+<!--                android:enabled="true"-->
+<!--                android:exported="true" />-->
 
         <receiver
                 android:name=".receiver.MotionBroadcastReceiver"

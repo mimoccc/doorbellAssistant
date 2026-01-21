@@ -32,7 +32,7 @@ import org.mjdev.phone.extensions.ContextExt.currentWifiIP
 import org.mjdev.phone.extensions.CustomExt.isPreview
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
-import org.mjdev.phone.nsd.device.NsdTypes
+import org.mjdev.phone.nsd.device.NsdType
 import org.mjdev.phone.nsd.device.rememberNsdDeviceList
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneStrings
@@ -44,7 +44,7 @@ import org.mjdev.phone.ui.theme.base.phoneStrings
 fun NsdList(
     modifier: Modifier = Modifier,
     onCallClick: (NsdDevice?) -> Unit = {},
-    types: List<NsdTypes> = NsdTypes.entries,
+    types: List<NsdType> = NsdType.entries,
 ) = PhoneTheme {
     val context = LocalContext.current
     val currentIP = context.currentWifiIP

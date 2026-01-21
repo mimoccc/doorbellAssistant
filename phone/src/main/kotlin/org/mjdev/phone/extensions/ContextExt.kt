@@ -13,6 +13,7 @@ package org.mjdev.phone.extensions
 import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
+import android.content.Context.POWER_SERVICE
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
@@ -20,6 +21,7 @@ import android.net.NetworkCapabilities
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import java.net.Inet4Address
 import java.net.NetworkInterface
@@ -45,6 +47,9 @@ object ContextExt {
 
     val Context.wifiManager
         get() = getSystemService(Context.WIFI_SERVICE) as? WifiManager
+
+    val Context.powerManager
+        get() = getSystemService(POWER_SERVICE) as PowerManager
 
     val Context.connectivityManager
         get() = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager

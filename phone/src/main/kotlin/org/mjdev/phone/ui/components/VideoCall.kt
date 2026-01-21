@@ -28,8 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import org.mjdev.phone.extensions.CustomExt.isPreview
+import org.mjdev.phone.extensions.CustomExt.postDelayed
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
+import org.mjdev.phone.nsd.device.NsdDevice.Companion.isAutoAnswerCall
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.rememberCallNsdService
 import org.mjdev.phone.rpc.server.INsdServerRPC
 import org.mjdev.phone.stream.CallEndReason
@@ -148,6 +150,7 @@ fun VideoCall(
                 )
             }
             if (!isAccepted) {
+                callManager?.mute()
                 CallScreen(
                     modifier = Modifier.fillMaxSize(),
                     caller = caller,
@@ -159,8 +162,10 @@ fun VideoCall(
                     },
                     onDeny = {
                         isAccepted = false
-                        callManager?.unmute()
                         callManager?.dismissCall(true)
+                        postDelayed(500L) {
+                            callManager?.unmute()
+                        }
                     }
                 )
             } else {

@@ -79,7 +79,7 @@ fun CallerInfo(
         )
         Text(
             modifier = Modifier.padding(top = 4.dp),
-            text = who.value.serviceType.name,
+            text = who.value.serviceType.label,
             color = phoneColors.colorCallScreenText,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold

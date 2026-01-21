@@ -10,22 +10,34 @@
 
 package org.mjdev.doorbellassistant.service
 
-import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
-import android.os.IBinder
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.callbackFlow
 import org.mjdev.doorbellassistant.agent.tts.PiperTTSEngine
-import org.mjdev.phone.service.BindableService
+import org.mjdev.phone.helpers.DataBus
+import org.mjdev.phone.helpers.DataBus.Companion.subscribe
+import org.mjdev.phone.helpers.json.Serializable
+import org.mjdev.phone.service.RemoteBindableService
+import org.mjdev.phone.service.ServiceCommand
+import org.mjdev.phone.service.ServiceEvent
 
-class TTSService : BindableService() {
-    val tts by lazy {
+// todo queue
+class TTSService : RemoteBindableService() {
+    private val tts by lazy {
         PiperTTSEngine(applicationContext)
     }
+    private val eventBus: DataBus<String> = DataBus {
+        subscribe { text ->
+            if (lastText?.equals(text)?.not() ?: true) {
+                talk(text)
+            }
+        }
+    }
+    private var lastText: String? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -37,38 +49,50 @@ class TTSService : BindableService() {
         tts.release()
     }
 
-    fun talk(text: String) {
-        tts.talk(text)
+    override fun executeCommand(
+        command: ServiceCommand,
+        handler: (ServiceEvent) -> Unit
+    ) {
+        super.executeCommand(command, handler)
+        val command = command as? TalkCommand
+        if (command != null) {
+            eventBus.send(command.text)
+        }
     }
+
+    fun talk(text: String) {
+        if (text.trim().isNotEmpty()) {
+            lastText = text
+            tts.talk(text)
+        }
+    }
+
+    class TTSServiceConnector(
+        context: Context,
+    ) : ServiceConnector<TTSService>(context, TTSService::class) {
+        fun talk(
+            text: String
+        ) = send(TalkCommand(text))
+    }
+
+    @Serializable
+    data class TalkCommand(
+        val text: String
+    ) : ServiceCommand()
 
     companion object {
         @Composable
-        fun rememberTTSService(
-            context: Context = LocalContext.current
-        ): State<TTSService?> = produceState(null, context) {
-            val connection = object : ServiceConnection {
-                override fun onServiceConnected(
-                    name: ComponentName,
-                    binder: IBinder
-                ) {
-                    value = (binder as LocalBinder).service as TTSService?
-                }
-
-                override fun onServiceDisconnected(name: ComponentName) {
-                    value = null
+        fun rememberTTSService() = LocalContext.current.let { context ->
+            remember(context) {
+                callbackFlow {
+                    val connector = TTSServiceConnector(context)
+                    connector.connect()
+                    send(connector)
+                    awaitClose {
+                        connector.disconnect()
+                    }
                 }
             }
-            context.bindService(
-                Intent(
-                    context,
-                    TTSService::class.java
-                ),
-                connection,
-                BIND_AUTO_CREATE
-            )
-            awaitDispose {
-                context.unbindService(connection)
-            }
-        }
+        }.collectAsState(null)
     }
 }

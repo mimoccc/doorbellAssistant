@@ -28,7 +28,7 @@ import org.mjdev.doorbellassistant.helpers.MotionDetector
 import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionDetected
 import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionUnDetected
 import org.mjdev.phone.nsd.device.NsdDevice
-import org.mjdev.phone.nsd.device.NsdTypes
+import org.mjdev.phone.nsd.device.NsdType
 import org.mjdev.phone.rpc.server.NsdServerRpc.Companion.sendActionToAll
 import java.io.ByteArrayOutputStream
 
@@ -96,7 +96,7 @@ object CaptureRoute {
 
     suspend fun Context.sendMotionDetected(
         sender: NsdDevice?,
-        types: List<NsdTypes> = listOf(NsdTypes.DOOR_BELL_CLIENT),
+        types: List<NsdType> = listOf(NsdType.DOOR_BELL_CLIENT),
     ) = sendActionToAll(
         types,
         DoorBellActionMotionDetected(sender)
@@ -104,10 +104,9 @@ object CaptureRoute {
 
     suspend fun Context.sendMotionUnDetected(
         sender: NsdDevice?,
-        types: List<NsdTypes> = listOf(NsdTypes.DOOR_BELL_CLIENT),
+        types: List<NsdType> = listOf(NsdType.DOOR_BELL_CLIENT),
     ) = sendActionToAll(
         types,
         DoorBellActionMotionUnDetected(sender)
     )
-
 }

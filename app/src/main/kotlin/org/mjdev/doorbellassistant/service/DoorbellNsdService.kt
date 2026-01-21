@@ -28,8 +28,8 @@ import org.mjdev.doorbellassistant.ui.window.ComposeFloatingWindow.Companion.ale
 import org.mjdev.phone.extensions.ContextExt.currentWifiIP
 import org.mjdev.phone.helpers.DelayHandler
 import org.mjdev.phone.nsd.device.NsdDevice
-import org.mjdev.phone.nsd.device.NsdTypes.DOOR_BELL_ASSISTANT
-import org.mjdev.phone.nsd.device.NsdTypes.DOOR_BELL_CLIENT
+import org.mjdev.phone.nsd.device.NsdType.DOOR_BELL_ASSISTANT
+import org.mjdev.phone.nsd.device.NsdType.DOOR_BELL_CLIENT
 import org.mjdev.phone.nsd.service.CallNsdService
 import org.mjdev.phone.rpc.action.NsdAction
 import org.mjdev.phone.rpc.server.INsdServerRPC

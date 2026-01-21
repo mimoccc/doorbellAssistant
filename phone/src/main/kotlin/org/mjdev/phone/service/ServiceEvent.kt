@@ -10,15 +10,24 @@
 
 package org.mjdev.phone.service
 
-abstract class ServiceEvent {
-    companion object {
-        data class ServiceError(
-            val error: Throwable
-        ) : ServiceEvent()
+import org.mjdev.phone.helpers.json.Serializable
 
-        object NotYetImplemented : ServiceEvent()
-        object ServiceConnected : ServiceEvent()
-        object ServiceDisconnected : ServiceEvent()
-        object ServiceAlive : ServiceEvent()
-    }
+@Serializable
+open class ServiceEvent {
+    @Serializable
+    data class ServiceError(
+        val error: Throwable
+    ) : ServiceEvent()
+
+    @Serializable
+    object NotYetImplemented : ServiceEvent()
+
+    @Serializable
+    data class ServiceConnected(
+        val address:String,
+        val port:Int
+    ) : ServiceEvent()
+
+    @Serializable
+    object ServiceDisconnected : ServiceEvent()
 }

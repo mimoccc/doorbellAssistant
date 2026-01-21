@@ -16,15 +16,14 @@ import android.os.Bundle
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.mjdev.phone.activity.base.UnlockedActivity
+import org.mjdev.phone.extensions.ActivityExt.turnDisplayOff
+import org.mjdev.phone.extensions.ActivityExt.turnDisplayOn
 import org.mjdev.phone.extensions.ContextExt.currentWifiIP
 import org.mjdev.phone.extensions.ContextExt.intent
 import org.mjdev.phone.helpers.Previews
-import org.mjdev.phone.helpers.ToolsJson.asJson
-import org.mjdev.phone.helpers.ToolsJson.fromJson
+import org.mjdev.phone.helpers.json.ToolsJson.asJson
+import org.mjdev.phone.helpers.json.ToolsJson.fromJson
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.service.NsdService
 import org.mjdev.phone.stream.CallEndReason
@@ -37,6 +36,7 @@ import org.webrtc.SessionDescription
 open class VideoCallActivity : UnlockedActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        turnDisplayOn()
         val callee: NsdDevice? = intent.getStringExtra(CALLEE)?.fromJson()
         val caller: NsdDevice? = intent.getStringExtra(CALLER)?.fromJson()
         setContent {
@@ -49,6 +49,7 @@ open class VideoCallActivity : UnlockedActivity() {
     }
 
     private fun handleCallEnd(reason: CallEndReason) {
+        turnDisplayOff()
         finish()
     }
 
@@ -83,19 +84,11 @@ open class VideoCallActivity : UnlockedActivity() {
             callee: NsdDevice? = null,
             caller: NsdDevice? = null
         ) {
-            CoroutineScope(Dispatchers.Default).launch {
-                intent<VideoCallActivity> {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    putExtra(
-                        CALLEE,
-                        callee?.asJson()
-                    )
-                    putExtra(
-                        CALLER,
-                        caller?.asJson()
-                    )
-                    startActivity(this@intent)
-                }
+            intent<VideoCallActivity> {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                putExtra(CALLEE, callee?.asJson())
+                putExtra(CALLER, caller?.asJson())
+                startActivity(this@intent)
             }
         }
     }

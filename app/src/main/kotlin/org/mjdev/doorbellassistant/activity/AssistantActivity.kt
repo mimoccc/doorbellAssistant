@@ -20,11 +20,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import org.mjdev.doorbellassistant.helpers.MotionDetector.Companion.sendMotionIntent
 import org.mjdev.doorbellassistant.receiver.MotionBroadcastReceiver.Companion.rememberMotionDetector
-import org.mjdev.doorbellassistant.service.AIService
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
 import org.mjdev.doorbellassistant.service.MotionDetectionService
-import org.mjdev.doorbellassistant.service.STTService
-import org.mjdev.doorbellassistant.service.TTSService
 import org.mjdev.doorbellassistant.ui.screens.MainScreen
 import org.mjdev.phone.activity.VideoCallActivity
 import org.mjdev.phone.activity.base.UnlockedActivity
@@ -33,12 +30,11 @@ import org.mjdev.phone.extensions.ActivityExt.isRunning
 import org.mjdev.phone.extensions.ActivityExt.turnDisplayOff
 import org.mjdev.phone.extensions.ActivityExt.turnDisplayOn
 import org.mjdev.phone.extensions.ContextExt.startForeground
-import org.mjdev.phone.extensions.ContextExt.startService
 import org.mjdev.phone.extensions.KeyGuardExt.dismissKeyguard
 import org.mjdev.phone.extensions.WakeLockExt.acquireWakeLock
 import org.mjdev.phone.extensions.WakeLockExt.dismissWakeLock
 import org.mjdev.phone.helpers.DelayHandler
-import org.mjdev.phone.nsd.device.NsdTypes
+import org.mjdev.phone.nsd.device.NsdType
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.setNsdDeviceType
 
 class AssistantActivity : UnlockedActivity() {
@@ -55,10 +51,10 @@ class AssistantActivity : UnlockedActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setNsdDeviceType(NsdTypes.DOOR_BELL_ASSISTANT)
-        startService<STTService>()
-        startService<TTSService>()
-        startService<AIService>()
+        setNsdDeviceType(NsdType.DOOR_BELL_ASSISTANT)
+//        startService<STTService>()
+//        startService<TTSService>()
+//        startService<AIService>()
         setContent {
             rememberMotionDetector(
                 onNoMotionDetected = {

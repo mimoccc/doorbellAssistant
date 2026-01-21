@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.nsd.device
 
 import androidx.compose.material.icons.Icons
@@ -6,63 +16,92 @@ import androidx.compose.material.icons.filled.ConnectedTv
 import androidx.compose.material.icons.filled.DeviceUnknown
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.ui.graphics.vector.ImageVector
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
+import org.mjdev.phone.helpers.json.DontSerialize
+import org.mjdev.phone.helpers.json.Serializable
 
-@Suppress("unused")
 @Serializable
-enum class NsdTypes(
-    @Transient
+@Suppress("ClassName", "unused", "ANNOTATION_WILL_BE_APPLIED_ALSO_TO_PROPERTY_OR_FIELD")
+open class NsdType(
+    @DontSerialize
     val imageVector: ImageVector = Icons.Filled.DeviceUnknown,
-    private val uid: String,
+
+    val uid: String,
     val label: String,
     val isAutoAnswerCall: Boolean = false,
     val micMutedAtStart: Boolean = false,
     val speakerOnAtStart: Boolean = false,
     val userPhoto: ByteArray? = null,
 ) {
-    UNSPECIFIED(
+    @Serializable
+    object UNSPECIFIED : NsdType(
         imageVector = Icons.Filled.DeviceUnknown,
         uid = "unspecified",
         label = "Unknown device",
         isAutoAnswerCall = false,
         micMutedAtStart = false,
         speakerOnAtStart = true
-    ),
-    DOOR_BELL_ASSISTANT(
+    )
+
+    @Serializable
+    object DOOR_BELL_ASSISTANT : NsdType(
         imageVector = Icons.Filled.CameraRear,
         uid = "db-assistant",
         label = "Doorbell Assistant",
-        isAutoAnswerCall = true, // todo : when app is set as assistant change nsd state
+        isAutoAnswerCall = true,
         micMutedAtStart = false,
         speakerOnAtStart = true
-    ),
-    DOOR_BELL_CLIENT(
+    )
+
+    @Serializable
+    object DOOR_BELL_CLIENT : NsdType(
         imageVector = Icons.Filled.ConnectedTv,
         uid = "db-client",
         label = "Doorbell Assistant Client",
         isAutoAnswerCall = false,
         micMutedAtStart = false,
         speakerOnAtStart = false
-    ),
-    SAFE_DIALER(
+    )
+
+    @Serializable
+    object SAFE_DIALER : NsdType(
         imageVector = Icons.Filled.PhoneAndroid,
         uid = "phone",
         label = "Phone",
         isAutoAnswerCall = false,
         micMutedAtStart = false,
         speakerOnAtStart = true
-    );
+    )
 
     companion object {
-        val NsdTypes.serviceName
+        @DontSerialize
+        val entries by lazy {
+            mutableListOf(
+                UNSPECIFIED,
+                DOOR_BELL_ASSISTANT,
+                DOOR_BELL_CLIENT,
+                SAFE_DIALER
+            )
+        }
+
+        fun registerType(type: NsdType) {
+            entries.add(type)
+        }
+
+        fun unRegisterType(type: NsdType) {
+            entries.remove(type)
+        }
+
+        @DontSerialize
+        val NsdType.serviceName
             get() = "_${uid}._tcp"
 
-        val entriesMap = entries.associateBy { entry -> "." + entry.serviceName }
+        @DontSerialize
+        val entriesMap
+            get() = entries.associateBy { entry -> ".${entry.serviceName}" }
 
         operator fun invoke(
             uid: String?
-        ): NsdTypes {
+        ): NsdType {
             val deviceId = uid?.let { id ->
                 if (id.startsWith(".")) id else ".$id"
             } ?: ""

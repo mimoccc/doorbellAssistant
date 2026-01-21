@@ -1,5 +1,16 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.rpc.plugins
 
+import com.google.gson.JsonObject
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -12,7 +23,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.serialization.gson.gson
 import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.application.createApplicationPlugin
@@ -22,10 +33,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import org.mjdev.phone.helpers.json.ToolsJson.fromJson
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.util.UUID
@@ -75,11 +83,12 @@ class PeerSignalingRegistryPlugin {
                 try {
                     httpClient.post("$serviceAddress/peers") {
                         contentType(ContentType.Application.Json)
-                        setBody(buildJsonObject {
-//                            put("peerId", config.peerId)
-//                            put("endpoint", endpoint)
-//                            put("timestamp", System.currentTimeMillis())
-                        })
+                        val value : Map<String, Any> = mapOf(
+                            "peerId" to config.peerId,
+//                            "endpoint" to endpoint
+                            "timestamp" to System.currentTimeMillis()
+                        )
+                        setBody(value)
                     }
                 } catch (e: Exception) {
                     println("Registration failed: ${e.message}")
@@ -116,14 +125,14 @@ class PeerSignalingRegistryPlugin {
             val topic = "phone-signaling-peers"
             while (currentCoroutineContext().isActive) {
                 try {
-                    // Použij IPFS pubsub pro broadcast
                     httpClient.post("$serviceAddress/pubsub/pub") {
                         parameter("arg", topic)
-                        parameter("arg", buildJsonObject {
+                        val value : Map<String, Any> = mapOf<String, Any>(
 //                            put("peerId", config.peerId)
 //                            put("endpoint", endpoint)
 //                            put("timestamp", System.currentTimeMillis())
-                        }.toString())
+                        )
+                        parameter("arg", value)
                     }
                 } catch (e: Exception) {
                     println("P2P announce failed: ${e.message}")
@@ -141,10 +150,7 @@ class PeerSignalingRegistryPlugin {
     }
 
     class PeerSignalingRegistryConfig {
-        // todle mam ANDROID_ID
         var peerId: String = UUID.randomUUID().toString()
-
-        // to je ale generovano dynamicky pres 0, ale to vim osetrit
         var signalingPort: Int = 8889
         var announceInterval: Duration = 60.seconds
         var service: PeerSignalingService = P2PService()
@@ -153,8 +159,8 @@ class PeerSignalingRegistryPlugin {
     companion object {
         private suspend fun getPublicIp(httpClient: HttpClient): String = try {
             httpClient.get("https://api.ipify.org?format=json")
-                .body<JsonObject>()["ip"]?.jsonPrimitive?.content
-                ?: getLocalIp()
+                .body<JsonObject>()
+                .get("ip")?.asString ?: getLocalIp()
         } catch (e: Exception) {
             e.printStackTrace()
             getLocalIp()
@@ -170,7 +176,11 @@ class PeerSignalingRegistryPlugin {
             service: PeerSignalingService
         ): List<PeerInfo>? {
             val client = HttpClient(CIO) {
-                install(ContentNegotiation) { json() }
+                install(ContentNegotiation) {
+                    gson {
+                        enableComplexMapKeySerialization()
+                    }
+                }
             }
             return runCatching {
                 when (service) {
@@ -179,7 +189,6 @@ class PeerSignalingRegistryPlugin {
                     }
 
                     is P2PService -> {
-                        // Subscribe na IPFS pubsub topic
                         val topic = "phone-signaling-peers"
                         client.get("${service.address}/pubsub/sub") {
                             parameter("arg", topic)
@@ -188,7 +197,7 @@ class PeerSignalingRegistryPlugin {
                             .lines()
                             .mapNotNull { line ->
                                 try {
-                                    Json.decodeFromString<PeerInfo>(line)
+                                    line.fromJson<PeerInfo>()
                                 } catch (e: Exception) {
                                     null
                                 }
@@ -209,7 +218,9 @@ class PeerSignalingRegistryPlugin {
         ) {
             val httpClient = HttpClient(CIO) {
                 install(ContentNegotiation) {
-                    json(Json { ignoreUnknownKeys = true })
+                    gson {
+                        enableComplexMapKeySerialization()
+                    }
                 }
             }
             application.environment.monitor.subscribe(ApplicationStarted) {

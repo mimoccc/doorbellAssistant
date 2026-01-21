@@ -10,15 +10,19 @@
 
 package org.mjdev.phone.service
 
-import org.mjdev.phone.nsd.device.NsdTypes
+import org.mjdev.phone.helpers.json.Serializable
+import org.mjdev.phone.nsd.device.NsdType
 
-abstract class ServiceCommand {
-    companion object {
-        object GetNsdDevice : ServiceCommand()
-        object GetState : ServiceCommand()
+@Serializable
+open class ServiceCommand {
+    @Serializable
+    object GetNsdDevice : ServiceCommand()
 
-        data class GetNsdDevices(
-            val types: List<NsdTypes>?
-        ) : ServiceCommand()
-    }
+    @Serializable
+    object GetState : ServiceCommand()
+
+    @Serializable
+    data class GetNsdDevices(
+        val types: List<NsdType>?
+    ) : ServiceCommand()
 }

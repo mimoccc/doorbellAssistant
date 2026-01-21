@@ -11,6 +11,7 @@
 package org.mjdev.phone.extensions
 
 import android.os.Build
+import android.os.Handler
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
@@ -48,6 +49,7 @@ object CustomExt {
         return (device == "layoutlib") || (product == "layoutlib")
     }
 
+    @Suppress("RedundantSuspendModifier")
     suspend fun postDelayed(
         timeout: Long,
         scope: CoroutineScope = CoroutineScope(Dispatchers.Default),
@@ -56,6 +58,13 @@ object CustomExt {
     ) = scope.launch(scopeContext) {
         delay(timeout)
         block()
+    }
+
+    fun postDelayed(
+        timeout: Long,
+        block: () -> Unit,
+    ) {
+        Handler().postDelayed(block, timeout)
     }
 
     fun LifecycleOwner.launchOnLifecycle(

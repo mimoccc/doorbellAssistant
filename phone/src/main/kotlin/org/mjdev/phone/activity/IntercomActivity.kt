@@ -17,10 +17,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import org.mjdev.phone.activity.VideoCallActivity.Companion.startCall
-import org.mjdev.phone.activity.base.UnlockedActivity
+import org.mjdev.phone.activity.base.BaseActivity
 import org.mjdev.phone.application.CallApplication.Companion.getCallServiceClass
 import org.mjdev.phone.helpers.Previews
-import org.mjdev.phone.nsd.device.NsdTypes
+import org.mjdev.phone.nsd.device.NsdType
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.nsdDevice
 import org.mjdev.phone.nsd.service.NsdService
 import org.mjdev.phone.ui.components.NsdList
@@ -28,13 +28,23 @@ import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 
 @Suppress("UNCHECKED_CAST")
-open class IntercomActivity : UnlockedActivity() {
+open class IntercomActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-          setContent {
+        setContent {
             MainScreen()
         }
     }
+
+//    override fun onResume() {
+//        super.onResume()
+//        turnDisplayOn()
+//    }
+
+//    override fun onPause() {
+//        super.onPause()
+//        turnDisplayOff()
+//    }
 
     @Previews
     @Composable
@@ -46,7 +56,7 @@ open class IntercomActivity : UnlockedActivity() {
         ) {
             NsdList(
                 modifier = Modifier.fillMaxSize(),
-                types = NsdTypes.entries,
+                types = NsdType.entries,
                 onCallClick = { callee ->
                     val serviceClass = getCallServiceClass() as Class<NsdService>
                     nsdDevice { caller ->

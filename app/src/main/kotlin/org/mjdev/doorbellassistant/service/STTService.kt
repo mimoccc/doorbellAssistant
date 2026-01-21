@@ -19,10 +19,10 @@ import org.mjdev.doorbellassistant.agent.stt.transcribers.vosk.VoskModelType
 import org.mjdev.doorbellassistant.agent.stt.voice.VoiceKit
 import org.mjdev.doorbellassistant.agent.stt.voice.VoiceKitResult
 import org.mjdev.phone.helpers.DataBus.Companion.subscribe
-import org.mjdev.phone.service.BindableService
+import org.mjdev.phone.service.RemoteBindableService
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class STTService : BindableService() {
+class STTService : RemoteBindableService() {
     var modelType: ITKitModel = VoskModelType.CS_SMALL
     var voiceDetectionSensitivity: Float = 0.2f
     var stopListeningWhenNoVoiceAtLeast: Float = 2.0f

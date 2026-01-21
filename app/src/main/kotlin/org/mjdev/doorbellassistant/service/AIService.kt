@@ -13,9 +13,9 @@ package org.mjdev.doorbellassistant.service
 import org.mjdev.doorbellassistant.agent.ai.AIManager
 import org.mjdev.doorbellassistant.agent.ai.ollama.OllamaAgent
 import org.mjdev.phone.helpers.DataBus.Companion.subscribeWithEventBroadcast
-import org.mjdev.phone.service.BindableService
+import org.mjdev.phone.service.RemoteBindableService
 
-class AIService : BindableService() {
+class AIService : RemoteBindableService() {
     val agent by lazy { OllamaAgent() }
     val aiManager by lazy {
         AIManager(

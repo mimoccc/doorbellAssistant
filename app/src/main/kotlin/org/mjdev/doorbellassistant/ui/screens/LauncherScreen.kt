@@ -19,12 +19,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BackHand
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.mjdev.doorbellassistant.service.TTSService.Companion.rememberTTSService
 import org.mjdev.doorbellassistant.ui.theme.Black
 import org.mjdev.doorbellassistant.ui.theme.White
 import org.mjdev.phone.extensions.CustomExt.isPreview
@@ -40,9 +37,10 @@ fun LauncherScreen(
     modifier: Modifier = Modifier,
     onStartClicked: () -> Unit = {},
 ) = PhoneTheme {
-    val ttsService by rememberTTSService()
     Box(
-        modifier = modifier.background(phoneColors.colorBackground),
+        modifier = modifier.background(
+            phoneColors.colorBackground
+        ),
         contentAlignment = Alignment.Center
     ) {
         BackgroundLayout(
@@ -53,19 +51,11 @@ fun LauncherScreen(
             onClick = onStartClicked,
         ) {
             Icon(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 contentDescription = "",
-                tint = if (isPreview) {
-                    if (isSystemInDarkTheme()) White else Black
-                } else White,
+                tint = if (isPreview) { if (isSystemInDarkTheme()) White else Black } else White,
                 imageVector = Icons.Filled.BackHand
             )
-        }
-    }
-    LaunchedEffect(ttsService) {
-        if (ttsService != null) {
-            ttsService?.talk("Vítejte v aplikaci bytový asistent.")
         }
     }
 }
