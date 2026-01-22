@@ -32,9 +32,10 @@ class TTSService : RemoteBindableService() {
     }
     private val eventBus: DataBus<String> = DataBus {
         subscribe { text ->
-            if (lastText?.equals(text)?.not() ?: true) {
+            // todo no repeat?
+//            if (lastText?.equals(text)?.not() ?: true) {
                 talk(text)
-            }
+//            }
         }
     }
     private var lastText: String? = null

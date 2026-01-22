@@ -35,9 +35,9 @@ import java.io.File
 import java.nio.FloatBuffer
 import java.nio.LongBuffer
 
-// todo sound customization
+// todo sound customization, and improve code
 @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
-@Suppress("CanBeParameter")
+@Suppress("CanBeParameter", "unused")
 class PiperEngine(
     private val context: Context,
     private val language: String,
