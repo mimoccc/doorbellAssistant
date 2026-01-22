@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.stream
 
 import android.content.Context
@@ -244,7 +254,7 @@ class CallManager(
         onAcceptCall(sdp)
     }
 
-    override fun handleIceCandidate(sdpMid: String?, sdpMLineIndex: Int, sdp: String?) {
+    override fun handleIceCandidate(sdpMid: String, sdpMLineIndex: Int, sdp: String) {
         Log.d(TAG, "Received ICE candidate: sdpMid=$sdpMid, sdpMLineIndex=$sdpMLineIndex")
         val candidate = IceCandidate(sdpMid, sdpMLineIndex, sdp)
         peerConnection?.addIceCandidate(candidate)
@@ -256,10 +266,10 @@ class CallManager(
     }
 
     override fun handleCallStarted(
-        caller: NsdDevice?,
-        callee: NsdDevice?
+        caller: NsdDevice,
+        callee: NsdDevice
     ) {
-        Log.d(TAG, "handleCallStarted: isCaller=$isCaller, caller=${caller?.address}, callee=${callee?.address}")
+        Log.d(TAG, "handleCallStarted: isCaller=$isCaller, caller=${caller.address}, callee=${callee.address}")
         if (isCaller) {
             Log.d(TAG, "Caller: Creating offer")
             createOffer()

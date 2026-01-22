@@ -38,18 +38,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.mjdev.phone.extensions.ContextExt.currentWifiIP
-import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 
 @Suppress("ParamsComparedByRef")
-@Previews
+//@Previews
 @Composable
 fun CallScreen(
     modifier: Modifier = Modifier,
-    caller: NsdDevice? = NsdDevice.EMPTY,
-    callee: NsdDevice? = NsdDevice.EMPTY,
+    caller: NsdDevice,
+    callee: NsdDevice,
     buttonSize: Dp = 48.dp,
     callerSize: Dp = 120.dp,
     onAccept: () -> Unit = {},
@@ -78,7 +77,7 @@ fun CallScreen(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (caller?.address != context.currentWifiIP) {
+            if (caller.address != context.currentWifiIP) {
                 IconButton(
                     modifier = Modifier.size(buttonSize),
                     onClick = onAccept,

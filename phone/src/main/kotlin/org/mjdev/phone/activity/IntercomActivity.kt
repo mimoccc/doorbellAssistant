@@ -15,6 +15,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import org.mjdev.phone.activity.VideoCallActivity.Companion.startCall
 import org.mjdev.phone.activity.base.BaseActivity
@@ -36,16 +37,6 @@ open class IntercomActivity : BaseActivity() {
         }
     }
 
-//    override fun onResume() {
-//        super.onResume()
-//        turnDisplayOn()
-//    }
-
-//    override fun onPause() {
-//        super.onPause()
-//        turnDisplayOff()
-//    }
-
     @Previews
     @Composable
     fun MainScreen() = PhoneTheme {
@@ -57,14 +48,16 @@ open class IntercomActivity : BaseActivity() {
             NsdList(
                 modifier = Modifier.fillMaxSize(),
                 types = NsdType.entries,
-                onCallClick = { callee ->
-                    val serviceClass = getCallServiceClass() as Class<NsdService>
-                    nsdDevice { caller ->
-                        startCall(
-                            serviceClass = serviceClass,
-                            callee = callee,
-                            caller = caller
-                        )
+                onCallClick = remember {
+                    { callee ->
+                        val serviceClass = getCallServiceClass() as Class<NsdService>
+                        nsdDevice { caller ->
+                            startCall(
+                                serviceClass = serviceClass,
+                                callee = callee,
+                                caller = caller
+                            )
+                        }
                     }
                 }
             )

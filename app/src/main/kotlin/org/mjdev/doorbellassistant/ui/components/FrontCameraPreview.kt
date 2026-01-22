@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import org.mjdev.doorbellassistant.extensions.CustomAppExt.rememberDeviceCapture
 import org.mjdev.phone.extensions.CustomExt.EmptyBitmap
-import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.nsdDevice
 import org.mjdev.phone.ui.components.MovieCard
@@ -43,7 +42,7 @@ import org.mjdev.phone.ui.theme.base.phoneColors
 
 @Suppress("ParamsComparedByRef")
 @SuppressLint("ConfigurationScreenWidthHeight")
-@Previews
+//@Previews
 @Composable
 fun FrontCameraPreview(
     modifier: Modifier = Modifier,
@@ -53,7 +52,7 @@ fun FrontCameraPreview(
     landscapeHeightRatio: Float = 1f,
     onClick: () -> Unit = {},
     backgroundColor: Color = Color.Transparent,
-    device: NsdDevice = NsdDevice.EMPTY,
+    device: NsdDevice? = null,
 ) = PhoneTheme {
     val context = LocalContext.current
     var captureDevice by remember(device) {
@@ -98,7 +97,7 @@ fun FrontCameraPreview(
         )
     }
     LaunchedEffect(device) {
-        if (device == NsdDevice.EMPTY) {
+        if (device == null) {
             context.nsdDevice { device ->
                 captureDevice = device
             }

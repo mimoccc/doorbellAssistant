@@ -30,26 +30,24 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.mjdev.phone.activity.VideoCallActivity.Companion.startCall
 import org.mjdev.phone.application.CallApplication.Companion.getCallServiceClass
-import org.mjdev.phone.extensions.ContextExt.ANDROID_ID
 import org.mjdev.phone.extensions.ContextExt.currentWifiIP
 import org.mjdev.phone.helpers.DelayHandler
 import org.mjdev.phone.nsd.device.NsdDevice
-import org.mjdev.phone.nsd.device.NsdDevice.Companion.EMPTY
-import org.mjdev.phone.nsd.device.NsdDevice.Companion.fromData
+import org.mjdev.phone.nsd.device.NsdDevice.Companion.serviceType
 import org.mjdev.phone.nsd.device.NsdType
 import org.mjdev.phone.nsd.service.NsdService.Companion.NsdDeviceEvent
 import org.mjdev.phone.nsd.service.NsdService.Companion.NsdDevicesEvent
 import org.mjdev.phone.nsd.service.NsdService.Companion.NsdStateEvent
 import org.mjdev.phone.rpc.action.NsdAction
-import org.mjdev.phone.rpc.action.NsdActions
-import org.mjdev.phone.rpc.action.NsdActions.SDPAccept
-import org.mjdev.phone.rpc.action.NsdActions.SDPAnswer
-import org.mjdev.phone.rpc.action.NsdActions.SDPDismiss
-import org.mjdev.phone.rpc.action.NsdActions.SDPGetState
-import org.mjdev.phone.rpc.action.NsdActions.SDPIceCandidate
-import org.mjdev.phone.rpc.action.NsdActions.SDPOffer
-import org.mjdev.phone.rpc.action.NsdActions.SDPStartCall
-import org.mjdev.phone.rpc.action.NsdActions.SDPStartCallStarted
+import org.mjdev.phone.rpc.action.NsdAction.SDPAccept
+import org.mjdev.phone.rpc.action.NsdAction.SDPAnswer
+import org.mjdev.phone.rpc.action.NsdAction.SDPDismiss
+import org.mjdev.phone.rpc.action.NsdAction.SDPGetState
+import org.mjdev.phone.rpc.action.NsdAction.SDPIceCandidate
+import org.mjdev.phone.rpc.action.NsdAction.SDPOffer
+import org.mjdev.phone.rpc.action.NsdAction.SDPStartCall
+import org.mjdev.phone.rpc.action.NsdAction.SDPStartCallStarted
+import org.mjdev.phone.rpc.action.NsdAction.SDPState
 import org.mjdev.phone.rpc.server.INsdServerRPC
 import org.mjdev.phone.rpc.server.NsdServerRpc
 import org.mjdev.phone.rpc.server.NsdServerRpc.Companion.sendAction
@@ -122,14 +120,6 @@ abstract class CallNsdService(
 
             is GetNsdDevice -> {
                 lifecycleScope.launch(Dispatchers.IO) {
-                    val nsdDevice: NsdDevice = if (rpcServer.isRunning) {
-                        fromData(
-                            address = rpcServer.address,
-                            serviceName = ANDROID_ID,
-                            serviceType = serviceType,
-                            port = rpcServer.port
-                        )
-                    } else EMPTY
                     handler(NsdDeviceEvent(nsdDevice))
                 }
             }
@@ -137,7 +127,7 @@ abstract class CallNsdService(
             is GetNsdDevices -> {
                 lifecycleScope.launch(Dispatchers.IO) {
                     val types = command.types.let { tt ->
-                        if (tt == null || tt.isEmpty()) NsdType.entries else tt
+                        if (tt.isNullOrEmpty()) NsdType.entries else tt
                     }
                     val filteredDevices = devicesAround.first().filter { d ->
                         d.serviceType in types
@@ -222,7 +212,7 @@ abstract class CallNsdService(
     private fun handleStateRequest(message: SDPGetState) {
         checkDeviceType()
         nsdDevice { result ->
-            message.sender?.sendAction(NsdActions.SDPState(result))
+            message.sender.sendAction(SDPState(result))
         }
     }
 
@@ -288,9 +278,7 @@ abstract class CallNsdService(
 
         val isRunning = mutableStateOf(false)
 
-        fun Context.setNsdDeviceType(
-            type: NsdType
-        ) {
+        fun Context.setNsdDeviceType(type: NsdType) {
             val serviceClass: Class<NsdService> = getCallServiceClass()
             val connection = object : ServiceConnection {
                 override fun onServiceConnected(
@@ -304,6 +292,7 @@ abstract class CallNsdService(
                 }
 
                 override fun onServiceDisconnected(name: ComponentName) {
+                    unbindService(this)
                 }
             }
             bindService(
@@ -330,6 +319,7 @@ abstract class CallNsdService(
                 }
 
                 override fun onServiceDisconnected(name: ComponentName) {
+                    unbindService(this)
                 }
             }
             bindService(
@@ -359,6 +349,7 @@ abstract class CallNsdService(
                 }
 
                 override fun onServiceDisconnected(name: ComponentName) {
+                    unbindService(this)
                 }
             }
             bindService(
@@ -384,6 +375,7 @@ abstract class CallNsdService(
                         }
 
                         override fun onServiceDisconnected(name: ComponentName) {
+                            unbindService(this)
                         }
                     }
                     bindService(

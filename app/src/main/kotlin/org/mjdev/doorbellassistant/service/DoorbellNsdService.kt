@@ -52,7 +52,7 @@ class DoorbellNsdService : CallNsdService(
     }
 
     private fun showAlert(
-        device: NsdDevice?,
+        device: NsdDevice,
         context: Context = applicationContext,
         dismissDelay: Long = 10000
     ) = CoroutineScope(Dispatchers.Main).launch {
@@ -67,28 +67,28 @@ class DoorbellNsdService : CallNsdService(
         ) {
             setContent {
                 FrontCameraPreview(
-                    device = device ?: NsdDevice.EMPTY,
+                    device = device,
                     modifier = Modifier.fillMaxSize(),
                     onClick = { hide() }
                 )
             }
-            device?.serviceName?.let { name ->
+            device.serviceId.let { serviceId ->
                 lastAlerts
-                    .filter { w -> w.key == name }
+                    .filter { w -> w.key == serviceId }
                     .map { d -> d.value }
                     .forEach { w -> w.hide() }
-                lastAlerts[name] = this
+                lastAlerts[serviceId] = this
                 show()
             }
         }
     }
 
     fun hideAlert(
-        device: NsdDevice?
+        device: NsdDevice
     ) = CoroutineScope(Dispatchers.Main).launch {
-        device?.serviceName?.let { name ->
+        device.serviceId.let { serviceId ->
             lastAlerts.filter { w ->
-                w.key == name
+                w.key == serviceId
             }.forEach { d ->
                 lastAlerts.remove(d.key)
                 d.value.hide()

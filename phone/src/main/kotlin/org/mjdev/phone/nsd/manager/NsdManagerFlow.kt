@@ -17,6 +17,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.discovery.DiscoveryConfiguration
 import org.mjdev.phone.nsd.discovery.DiscoveryEvent
 import org.mjdev.phone.nsd.discovery.DiscoveryListenerFlow
@@ -82,20 +83,14 @@ class NsdManagerFlow(
     }
 
     fun registerService(
-        serviceName: String = "default",
-        serviceType: String = "_http._tcp.",
-        port: Int,
+        nsdDevice: NsdDevice,
         @ProtocolType
         protocolType: Int = NsdManager.PROTOCOL_DNS_SD
     ): Flow<RegistrationEvent> = callbackFlow {
         val listener = RegistrationListenerFlow(this)
         registrationListeners.add(listener)
         nsdManagerCompat.registerService(
-            serviceInfo = NsdServiceInfo().apply {
-                this.serviceName = serviceName
-                this.port = port
-                this.serviceType = serviceType
-            },
+            serviceInfo = nsdDevice.toNsdServiceInfo(),
             protocolType = protocolType,
             listener = listener
         )

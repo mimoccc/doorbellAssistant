@@ -10,30 +10,28 @@
 
 package org.mjdev.phone.helpers
 
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
-import org.mjdev.phone.vector.ImageVectorProvider.createVectorPainter
+import androidx.compose.ui.graphics.Color
 import kotlin.reflect.KProperty
 
-class ImageVectorDelegate(
-    private var vector: ImageVector
+class ColorDelegate(
+    private var color: Color
 ) {
     operator fun getValue(
         thisRef: Any?,
         property: KProperty<*>
-    ): Painter = createVectorPainter(vector)
+    ): Color = color
 
     operator fun setValue(
         thisRef: Any?,
-        property: KProperty<*>, value: ImageVector
+        property: KProperty<*>, value: Color
     ) {
-        vector = value
+        color = value
     }
 
     companion object {
-        operator fun ImageVector.provideDelegate(
+        operator fun Color.provideDelegate(
             thisRef: Any?,
             property: KProperty<*>
-        ): ImageVectorDelegate = ImageVectorDelegate(this)
+        ): ColorDelegate = ColorDelegate(this)
     }
 }

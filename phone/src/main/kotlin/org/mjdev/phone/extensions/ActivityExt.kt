@@ -137,6 +137,8 @@ object ActivityExt {
         runCatching {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }.onFailure { e ->
+            // todo : Only the original thread that created a view hierarchy can touch its views.
+            //  Expected: main Calling: DefaultDispatcher-worker-10
             e.printStackTrace()
         }
         runCatching {

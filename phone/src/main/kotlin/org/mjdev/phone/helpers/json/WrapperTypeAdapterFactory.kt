@@ -33,17 +33,21 @@ object WrapperTypeAdapterFactory : TypeAdapterFactory {
         if (!isSerializable) return delegate
         return object : TypeAdapter<T>() {
             override fun write(out: JsonWriter, value: T?) {
-                if (value == null) {
-                    elementAdapter.write(out, JsonNull.INSTANCE)
-                } else {
-                    val payload = delegate.toJsonTree(value).asJsonObject
-                    payload.addProperty(META_SERIALIZED_CLASS, value::class.java.name)
-                    elementAdapter.write(out, payload)
+                runCatching {
+                    if (value == null) {
+                        elementAdapter.write(out, JsonNull.INSTANCE)
+                    } else {
+                        val payload = delegate.toJsonTree(value).asJsonObject
+                        payload.addProperty(META_SERIALIZED_CLASS, value::class.java.name)
+                        elementAdapter.write(out, payload)
+                    }
+                }.onFailure { e ->
+                    e.printStackTrace()
                 }
             }
 
             @Suppress("UNCHECKED_CAST")
-            override fun read(reader: JsonReader): T? {
+            override fun read(reader: JsonReader): T? = runCatching {
                 val element = elementAdapter.read(reader) ?: return null
                 if (!element.isJsonObject) return delegate.fromJsonTree(element)
                 val obj = element.asJsonObject
@@ -54,7 +58,9 @@ object WrapperTypeAdapterFactory : TypeAdapterFactory {
                     gson.getDelegateAdapter(this@WrapperTypeAdapterFactory, specificToken)
                 val result = specificDelegate.fromJsonTree(obj) as? T
                 return result
-            }
+            }.onFailure { e ->
+                e.printStackTrace()
+            }.getOrNull()
         }
     }
 }

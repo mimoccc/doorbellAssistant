@@ -62,7 +62,7 @@ object CaptureRoute {
     suspend fun NsdDevice.getFrame(
         routeName: String = ROUTE_CAPTURE
     ): Bitmap? = runCatching {
-        if(this === NsdDevice.EMPTY) return null
+//        if(this === NsdDevice.EMPTY) return null
         val address = this@getFrame.address
         val port = this@getFrame.port
         if (address.isEmpty()) {

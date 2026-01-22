@@ -27,13 +27,13 @@ import kotlinx.coroutines.launch
 object StateExt {
     @Composable
     fun <T> produceStateInLifeCycleRepeated(
-        initialValue: T,
+        initialValue: T?,
         delayTime: Long = 1000L,
-        key: Any,
+        key: Any?,
         lifecycle: Lifecycle = LocalLifecycleOwner.current.lifecycle,
         state: Lifecycle.State = Lifecycle.State.STARTED,
         block: suspend () -> T,
-    ): State<T> = produceState(initialValue, key) {
+    ): State<T?> = produceState(initialValue, key) {
         coroutineScope {
             launch(Dispatchers.IO) {
                 lifecycle.repeatOnLifecycle(state) {

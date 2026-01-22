@@ -28,14 +28,19 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.mjdev.phone.R
+import org.mjdev.phone.data.DeviceDetails
+import org.mjdev.phone.data.UserDetails
 import org.mjdev.phone.enums.ChannelId
 import org.mjdev.phone.enums.NotificationId
 import org.mjdev.phone.extensions.ContextExt.ANDROID_ID
+import org.mjdev.phone.extensions.ContextExt.currentWifiIP
 import org.mjdev.phone.extensions.ContextExt.powerManager
 import org.mjdev.phone.helpers.json.Serializable
 import org.mjdev.phone.nsd.device.NsdDevice
+import org.mjdev.phone.nsd.device.NsdDevice.Companion.device
+import org.mjdev.phone.nsd.device.NsdDevice.Companion.serviceType
+import org.mjdev.phone.nsd.device.NsdDevice.Companion.user
 import org.mjdev.phone.nsd.device.NsdType
-import org.mjdev.phone.nsd.device.NsdType.Companion.serviceName
 import org.mjdev.phone.nsd.device.createNsdDeviceFlow
 import org.mjdev.phone.nsd.manager.NsdManagerFlow
 import org.mjdev.phone.nsd.registration.RegistrationEvent
@@ -44,31 +49,40 @@ import org.mjdev.phone.service.LocalBindableService
 import org.mjdev.phone.service.ServiceEvent
 import kotlin.uuid.ExperimentalUuidApi
 
-@Suppress("RedundantSuspendModifier")
 @SuppressLint("HardwareIds")
 @OptIn(ExperimentalUuidApi::class, ExperimentalCoroutinesApi::class)
 abstract class NsdService(
     serviceNsdType: NsdType,
 ) : LocalBindableService() {
-    // todo
+// todo implement custom notification
 //    private val notificationManager : AppNotificationManager by di.instance()
-
     protected val nsdManagerFlow by lazy {
         NsdManagerFlow(this)
     }
     protected val devicesAround by lazy {
         createNsdDeviceFlow(applicationContext)
     }
-    private var registrationJob: Job? = null
-    private var wakeLock: PowerManager.WakeLock? = null
+    protected var registrationJob: Job? = null
+    protected var wakeLock: PowerManager.WakeLock? = null
+    protected val nsdDevice : NsdDevice = NsdDevice().apply {
+        device = DeviceDetails.THIS
+        user = UserDetails()
+    }
 
-    var serviceType: NsdType = serviceNsdType
     abstract val rpcServer: INsdServerRPC
 
     val address: String
         get() = rpcServer.address
+
     val port: Int
         get() = rpcServer.port
+
+    val serviceType : NsdType
+        get() = nsdDevice.serviceType
+
+    init {
+        this.nsdDevice.serviceType = serviceNsdType
+    }
 
     override fun onCreate() {
         startAsForeground()
@@ -81,8 +95,13 @@ abstract class NsdService(
     protected fun startRpcServer() {
         lifecycleScope.launch {
             rpcServer.start(
-                onStarted = { a, p ->
-                    registerNsdService(a, p, serviceType)
+                onStarted = { _, p ->
+                    this@NsdService.nsdDevice.apply {
+                        this.serviceId = ANDROID_ID
+                        this.port = p
+                        this.address = currentWifiIP
+                    }
+                    registerNsdService(nsdDevice)
                 }
             )
         }
@@ -163,9 +182,7 @@ abstract class NsdService(
 
     @Suppress("unused")
     protected fun registerNsdService(
-        address: String,
-        port: Int,
-        serviceType: NsdType,
+        nsdDevice: NsdDevice,
         onRegistered: (RegistrationEvent) -> Unit = {}
     ) {
         if (port <= 0) {
@@ -174,11 +191,7 @@ abstract class NsdService(
         }
         Log.d(TAG, "Registering NSD service: $ANDROID_ID, $serviceType, $port")
         registrationJob?.cancel()
-        registrationJob = nsdManagerFlow.registerService(
-            serviceName = ANDROID_ID,
-            serviceType = serviceType.serviceName,
-            port = port
-        ).onEach { event ->
+        registrationJob = nsdManagerFlow.registerService(nsdDevice).onEach { event ->
             Log.d(TAG, "NSD Registration event: $event")
             if (event is RegistrationEvent.ServiceRegistered) {
                 if (event.nsdServiceInfo.serviceName != ANDROID_ID) {
@@ -203,17 +216,12 @@ abstract class NsdService(
         type: NsdType,
         onChanged: (NsdType, NsdType) -> Unit
     ) {
-        Log.d(TAG, "changeType called: current=$serviceType, new=$type")
         if (serviceType != type) {
-            Log.d(TAG, "Service types differ, proceeding with change")
             lifecycleScope.launch {
-                Log.d(TAG, "Before stopRpcServer")
                 stopRpcServer()
-                Log.d(TAG, "After stopRpcServer")
-                serviceType = type
-                Log.d(TAG, "Service type changed to: $serviceType")
+                Log.d(TAG, "Device type changed $serviceType -> $type")
+                nsdDevice.serviceType = type
                 startRpcServer()
-                Log.d(TAG, "After startRpcServer")
                 withContext(Dispatchers.Main) {
                     onChanged(serviceType, type)
                 }

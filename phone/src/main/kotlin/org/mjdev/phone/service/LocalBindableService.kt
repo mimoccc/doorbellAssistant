@@ -60,6 +60,7 @@ open class LocalBindableService : LifecycleService() {
 
                 override fun onServiceDisconnected(name: ComponentName) {
                     handler(ServiceDisconnected)
+                    unbindService(this)
                 }
             }
             bindService(

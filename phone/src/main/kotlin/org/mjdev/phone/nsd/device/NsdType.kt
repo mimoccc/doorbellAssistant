@@ -92,12 +92,12 @@ open class NsdType(
         }
 
         @DontSerialize
-        val NsdType.serviceName
+        val NsdType.serviceTypeName
             get() = "_${uid}._tcp"
 
         @DontSerialize
-        val entriesMap
-            get() = entries.associateBy { entry -> ".${entry.serviceName}" }
+        private val entriesMap
+            get() = entries.associateBy { entry -> ".${entry.serviceTypeName}" }
 
         operator fun invoke(
             uid: String?

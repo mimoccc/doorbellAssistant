@@ -10,7 +10,6 @@
 
 package org.mjdev.doorbellassistant.application
 
-import android.util.Log
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.conscrypt.Conscrypt
 import org.kodein.di.DIAware
@@ -32,7 +31,7 @@ class App : CallApplication<DoorbellNsdService>(), DIAware {
 
     override fun onCreate() {
         super.onCreate()
-        setupExceptionHandler()
+//        setupExceptionHandler()
         Security.insertProviderAt(Conscrypt.newProvider(), 1)
         Security.addProvider(BouncyCastleProvider())
         phoneCustomizer {
@@ -66,15 +65,15 @@ class App : CallApplication<DoorbellNsdService>(), DIAware {
 //        stopService<AIService>()
     }
 
-    private fun setupExceptionHandler() {
-        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
-        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            Log.e(TAG, "$TAG_CRASH: Uncaught exception in thread: ${thread.name}", throwable)
-            Log.e(TAG, "$TAG_CRASH: Exception: ${throwable.javaClass.name}: ${throwable.message}")
-            Log.e(TAG, "$TAG_CRASH: Stack trace:\n${throwable.stackTraceToString()}")
-            defaultHandler?.uncaughtException(thread, throwable)
-        }
-    }
+//    private fun setupExceptionHandler() {
+//        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+//        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+//            Log.e(TAG, "$TAG_CRASH: Uncaught exception in thread: ${thread.name}", throwable)
+//            Log.e(TAG, "$TAG_CRASH: Exception: ${throwable.javaClass.name}: ${throwable.message}")
+//            Log.e(TAG, "$TAG_CRASH: Stack trace:\n${throwable.stackTraceToString()}")
+//            defaultHandler?.uncaughtException(thread, throwable)
+//        }
+//    }
 
     companion object {
         private val TAG = App::class.simpleName

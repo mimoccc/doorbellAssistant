@@ -13,20 +13,13 @@ package org.mjdev.phone.extensions
 import java.net.InetAddress
 
 object StringExt {
-    fun String.toInetAddress(): InetAddress? = when {
-        isValidIpAddress() -> runCatching {
-            InetAddress.getByName(this)
-        }.onFailure { e ->
-            e.printStackTrace()
-        }.getOrNull()
 
-        else -> {
-            Exception("Invalid ip address: $this").printStackTrace()
-            null
-        }
+    fun String.toInetAddress(): InetAddress = split(".").map { p ->
+        p.toInt().toByte()
+    }.toByteArray().let { ba ->
+        InetAddress.getByAddress(ba)
     }
 
-    fun String.isValidIpAddress(): Boolean = split(".").let { parts ->
-        parts.size == 4 && parts.all { it.toIntOrNull() in 0..255 }
-    }
+    fun ByteArray.toInetAddress() =
+        InetAddress.getByAddress(this)
 }

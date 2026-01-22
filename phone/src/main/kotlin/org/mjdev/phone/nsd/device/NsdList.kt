@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.mjdev.phone.nsd.device.NsdType.Companion.serviceName
+import org.mjdev.phone.nsd.device.NsdType.Companion.serviceTypeName
 import org.mjdev.phone.nsd.discovery.DiscoveryConfiguration
 import org.mjdev.phone.nsd.discovery.DiscoveryEvent
 import org.mjdev.phone.nsd.manager.NsdManagerFlow
@@ -65,7 +65,7 @@ fun createNsdDeviceFlow(
     scope.launch {
         nsdFlow
             .discoverServices(types.map { type ->
-                DiscoveryConfiguration(type.serviceName)
+                DiscoveryConfiguration(type.serviceTypeName)
             })
             .catch { e ->
                 onError(e)
@@ -81,14 +81,14 @@ fun createNsdDeviceFlow(
                                     onError(e)
                                 }
                                 .collect { re ->
-                                    if (re is ResolveEvent.ServiceResolved &&
-                                        filter(re.nsdServiceInfo)
-                                    ) {
+                                    if (re is ResolveEvent.ServiceResolved && filter(re.nsdServiceInfo)) {
                                         val device = NsdDevice(re.nsdServiceInfo)
                                         devicesFlow.update { list ->
-                                            (list + device).distinctBy { d ->
-                                                d.address
-                                            }
+                                            list.filterNot { d ->
+                                                d.address == device.address
+                                            }.filterNot { d ->
+                                                d.serviceId == device.serviceId
+                                            } + device
                                         }
                                     }
                                 }
@@ -98,7 +98,7 @@ fun createNsdDeviceFlow(
                     is DiscoveryEvent.DiscoveryServiceLost -> {
                         devicesFlow.update { list ->
                             list.filterNot { d ->
-                                d.serviceName == event.service.serviceName
+                                d.serviceId == event.service.serviceName
                             }.distinctBy { d ->
                                 d.address
                             }

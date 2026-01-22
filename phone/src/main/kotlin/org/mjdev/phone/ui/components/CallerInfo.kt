@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -35,17 +33,19 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mjdev.phone.extensions.ContextExt.currentWifiIP
-import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
+import org.mjdev.phone.nsd.device.NsdDevice.Companion.imageVector
+import org.mjdev.phone.nsd.device.NsdDevice.Companion.serviceType
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 
-@Previews
+@Suppress("ParamsComparedByRef")
+//@Previews
 @Composable
 fun CallerInfo(
     modifier: Modifier = Modifier,
-    caller: NsdDevice? = null,
-    callee: NsdDevice? = null,
+    caller: NsdDevice,
+    callee: NsdDevice,
     imageSize: Dp = 128.dp,
     shape: Shape = CircleShape
 ) = PhoneTheme {
@@ -57,10 +57,10 @@ fun CallerInfo(
     ) {
         val who: State<NsdDevice> = remember(caller, callee) {
             derivedStateOf {
-                if (caller?.address == context.currentWifiIP) {
-                    callee ?: NsdDevice.EMPTY
+                if (caller.address == context.currentWifiIP) {
+                    callee
                 } else {
-                    caller ?: NsdDevice.EMPTY
+                    caller
                 }
             }
         }
@@ -74,7 +74,7 @@ fun CallerInfo(
                     shape
                 ),
             contentDescription = "",
-            imageVector = Icons.Filled.AccountCircle, // todo
+            imageVector = caller.photo ?: caller.imageVector,
             colorFilter = ColorFilter.tint(phoneColors.colorCallScreenText)
         )
         Text(

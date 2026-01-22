@@ -29,7 +29,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import org.mjdev.phone.extensions.CustomExt.isPreview
 import org.mjdev.phone.extensions.CustomExt.postDelayed
-import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdDevice.Companion.isAutoAnswerCall
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.rememberCallNsdService
@@ -45,12 +44,12 @@ import org.webrtc.SessionDescription
 import org.webrtc.VideoTrack
 
 @Suppress("ParamsComparedByRef")
-@Previews
+//@Previews
 @Composable
 fun VideoCall(
     modifier: Modifier = Modifier,
-    caller: NsdDevice = NsdDevice.EMPTY,
-    callee: NsdDevice = NsdDevice.EMPTY,
+    caller: NsdDevice,
+    callee: NsdDevice,
     isCaller: Boolean = false,
     calleeVisible: Boolean = true,
     callerVisible: Boolean = true,
@@ -62,7 +61,7 @@ fun VideoCall(
 ) = PhoneTheme {
     val isAutoAnswerCall by remember(caller) {
         derivedStateOf {
-            isPreview || (callee.isAutoAnswerCall && !isCaller)
+            isPreview || (callee.isAutoAnswerCall == true && !isCaller)
         }
     }
     Box(

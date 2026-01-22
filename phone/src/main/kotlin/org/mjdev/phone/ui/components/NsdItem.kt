@@ -29,22 +29,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mjdev.phone.extensions.CustomExt.isPreview
-import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
+import org.mjdev.phone.nsd.device.NsdDevice.Companion.details
 import org.mjdev.phone.nsd.device.NsdDevice.Companion.imageVector
 import org.mjdev.phone.nsd.device.NsdDevice.Companion.label
-import org.mjdev.phone.nsd.device.NsdType
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 import org.mjdev.phone.ui.theme.base.phoneIcons
 import org.mjdev.phone.ui.theme.base.phoneShapes
 
 @Suppress("DEPRECATION", "ParamsComparedByRef")
-@Previews
+//@Previews
 @Composable
 fun NsdItem(
     modifier: Modifier = Modifier,
-    device: NsdDevice? = null,
+    device: NsdDevice,
 //    pingDelay: Long = 30000,
     onCallClick: () -> Unit = {},
     onDeviceClick: () -> Unit = {},
@@ -67,17 +66,17 @@ fun NsdItem(
         ) {
             Text(
                 color = phoneColors.colorText,
-                text = device?.label ?: "-",
+                text = device.label,
                 fontSize = 13.sp
             )
             Text(
                 color = phoneColors.colorText,
-                text = device?.address ?: "-",
+                text = device.address,
                 fontSize = 11.sp
             )
             Text(
                 color = phoneColors.colorText,
-                text = device?.serviceName ?: "-",
+                text = device.details,
                 fontSize = 11.sp
             )
         }
@@ -98,7 +97,7 @@ fun NsdItem(
                 .padding(8.dp),
             contentDescription = "",
             tint = phoneColors.colorIconTint,
-            imageVector = device?.imageVector ?: NsdType.UNSPECIFIED.imageVector,
+            imageVector = device.photo ?: device.imageVector,
         )
         if (showCallButton) Icon(
             modifier = Modifier

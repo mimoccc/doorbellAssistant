@@ -10,7 +10,6 @@
 
 package org.mjdev.phone.ui.components
 
-import android.net.nsd.NsdServiceInfo
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,21 +36,20 @@ import org.mjdev.phone.nsd.device.rememberNsdDeviceList
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneStrings
 
-@Suppress("DEPRECATION")
+@Suppress("DEPRECATION", "ParamsComparedByRef")
 @OptIn(ExperimentalCoroutinesApi::class)
 @Previews
 @Composable
 fun NsdList(
     modifier: Modifier = Modifier,
-    onCallClick: (NsdDevice?) -> Unit = {},
+    onCallClick: (NsdDevice) -> Unit = {},
     types: List<NsdType> = NsdType.entries,
 ) = PhoneTheme {
     val context = LocalContext.current
     val currentIP = context.currentWifiIP
     val devices: State<List<NsdDevice>> = if (isPreview) {
         (1..32).map { i ->
-            NsdDevice(NsdServiceInfo().apply { serviceName = "sn-$i" }
-            )
+            NsdDevice().apply { address = "192.168.1.$i" }
         }.let { list ->
             mutableStateOf(list)
         }
@@ -89,7 +87,7 @@ fun NsdList(
         ) {
             items(
                 items = devices.value,
-                key = { device -> device.address }
+                key = { d-> d.address }
             ) { device ->
                 NsdItem(
                     device = device,

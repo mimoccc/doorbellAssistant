@@ -23,9 +23,13 @@ object ToolsJson {
         .setExclusionStrategies(ExcludeDontSerializeStrategy)
         .create()
 
-    inline fun <reified T> T.asJson(): String =
-        gson.toJson(this)
+    inline fun <reified T> T.asJson(): String {
+        val result = gson.toJson(this)
+        return result
+    }
 
-    inline fun <reified T> String.fromJson(): T =
-        gson.fromJson(this, T::class.java) as T
+    inline fun <reified T> String.fromJson(): T {
+        val result = gson.fromJson(this, T::class.java) as T
+        return result
+    }
 }

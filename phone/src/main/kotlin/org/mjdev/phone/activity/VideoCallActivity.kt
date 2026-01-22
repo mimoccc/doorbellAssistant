@@ -21,7 +21,6 @@ import org.mjdev.phone.extensions.ActivityExt.turnDisplayOff
 import org.mjdev.phone.extensions.ActivityExt.turnDisplayOn
 import org.mjdev.phone.extensions.ContextExt.currentWifiIP
 import org.mjdev.phone.extensions.ContextExt.intent
-import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.helpers.json.ToolsJson.asJson
 import org.mjdev.phone.helpers.json.ToolsJson.fromJson
 import org.mjdev.phone.nsd.device.NsdDevice
@@ -37,8 +36,8 @@ open class VideoCallActivity : UnlockedActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         turnDisplayOn()
-        val callee: NsdDevice? = intent.getStringExtra(CALLEE)?.fromJson()
-        val caller: NsdDevice? = intent.getStringExtra(CALLER)?.fromJson()
+        val callee: NsdDevice = intent.getStringExtra(CALLEE)?.fromJson()!!
+        val caller: NsdDevice = intent.getStringExtra(CALLER)?.fromJson()!!
         setContent {
             MainScreen(
                 caller = caller,
@@ -54,19 +53,19 @@ open class VideoCallActivity : UnlockedActivity() {
     }
 
     @Suppress("ParamsComparedByRef")
-    @Previews
+//    @Previews
     @Composable
     fun MainScreen(
         onStartCall: (SessionDescription) -> Unit = {},
         onEndCall: (CallEndReason) -> Unit = {},
-        caller: NsdDevice? = NsdDevice.EMPTY,
-        callee: NsdDevice? = NsdDevice.EMPTY,
+        caller: NsdDevice,
+        callee: NsdDevice,
     ) = PhoneTheme {
         VideoCall(
             modifier = Modifier.fillMaxSize(),
-            callee = callee ?: NsdDevice.EMPTY,
-            caller = caller ?: NsdDevice.EMPTY,
-            isCaller = caller?.address == currentWifiIP,
+            callee = callee,
+            caller = caller,
+            isCaller = caller.address == currentWifiIP,
             onEndCall = onEndCall,
             onStartCall = onStartCall
         )
@@ -81,13 +80,15 @@ open class VideoCallActivity : UnlockedActivity() {
 
         fun Context.startCall(
             serviceClass: Class<out NsdService>,
-            callee: NsdDevice? = null,
-            caller: NsdDevice? = null
+            callee: NsdDevice,
+            caller: NsdDevice
         ) {
             intent<VideoCallActivity> {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                putExtra(CALLEE, callee?.asJson())
-                putExtra(CALLER, caller?.asJson())
+                val callerJson = caller.asJson()
+                val calleeJson = callee.asJson()
+                putExtra(CALLEE, calleeJson)
+                putExtra(CALLER, callerJson)
                 startActivity(this@intent)
             }
         }

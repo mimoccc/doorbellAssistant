@@ -81,6 +81,7 @@ val phoneStrings: PhoneStrings
         return colorScheme.strings
     }
 
+@Suppress("ParamsComparedByRef")
 @Composable
 fun shouldBeDarkTheme(
     colorScheme: PhoneColorScheme = customTheme.value,
@@ -92,6 +93,7 @@ fun shouldBeDarkTheme(
     PhoneColorsStyle.AUTO -> isDarkTheme
 }
 
+@Suppress("ParamsComparedByRef")
 @Composable
 fun PhoneTheme(
     colorScheme: PhoneColorScheme = customTheme.value,
@@ -112,12 +114,14 @@ fun PhoneTheme(
     }
 }
 
+@Suppress("ParamsComparedByRef")
 @Composable
 fun PhoneThemeLight(
     colorScheme: PhoneColorScheme = customTheme.value,
     content: @Composable PhoneColorScheme.() -> Unit
 ) = PhoneTheme(colorScheme, PhoneColorsStyle.LIGHT, content = content)
 
+@Suppress("ParamsComparedByRef")
 @Composable
 fun PhoneThemeDark(
     colorScheme: PhoneColorScheme = customTheme.value,
