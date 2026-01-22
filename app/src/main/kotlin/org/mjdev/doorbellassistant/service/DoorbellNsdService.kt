@@ -13,12 +13,10 @@ package org.mjdev.doorbellassistant.service
 import android.content.Context
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.mjdev.doorbellassistant.activity.AssistantActivity.Companion.isDoorBellAssistantEnabled
-import org.mjdev.doorbellassistant.extensions.CustomAppExt.rememberDeviceCapture
 import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionDetected
 import org.mjdev.doorbellassistant.rpc.DoorBellActions.DoorBellActionMotionUnDetected
 import org.mjdev.doorbellassistant.rpc.DoorBellAssistantServerRpc
@@ -68,10 +66,9 @@ class DoorbellNsdService : CallNsdService(
             }
         ) {
             setContent {
-                val imageState = rememberDeviceCapture(device, lifecycleScope)
                 FrontCameraPreview(
+                    device = device ?: NsdDevice.EMPTY,
                     modifier = Modifier.fillMaxSize(),
-                    imageState = imageState,
                     onClick = { hide() }
                 )
             }

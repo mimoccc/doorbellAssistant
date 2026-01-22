@@ -152,7 +152,6 @@ fun MotionAlertScreen(
             modifier = Modifier
                 .padding(bottom = 48.dp)
                 .fillMaxSize(),
-            imageState = imageState,
         )
     }
     Box(

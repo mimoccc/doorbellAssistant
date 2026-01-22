@@ -22,6 +22,7 @@ import org.mjdev.doorbellassistant.helpers.MotionDetector.Companion.sendMotionIn
 import org.mjdev.doorbellassistant.receiver.MotionBroadcastReceiver.Companion.rememberMotionDetector
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
 import org.mjdev.doorbellassistant.service.MotionDetectionService
+import org.mjdev.doorbellassistant.service.TTSService
 import org.mjdev.doorbellassistant.ui.screens.MainScreen
 import org.mjdev.phone.activity.VideoCallActivity
 import org.mjdev.phone.activity.base.UnlockedActivity
@@ -30,6 +31,7 @@ import org.mjdev.phone.extensions.ActivityExt.isRunning
 import org.mjdev.phone.extensions.ActivityExt.turnDisplayOff
 import org.mjdev.phone.extensions.ActivityExt.turnDisplayOn
 import org.mjdev.phone.extensions.ContextExt.startForeground
+import org.mjdev.phone.extensions.ContextExt.startService
 import org.mjdev.phone.extensions.KeyGuardExt.dismissKeyguard
 import org.mjdev.phone.extensions.WakeLockExt.acquireWakeLock
 import org.mjdev.phone.extensions.WakeLockExt.dismissWakeLock
@@ -53,7 +55,7 @@ class AssistantActivity : UnlockedActivity() {
         super.onCreate(savedInstanceState)
         setNsdDeviceType(NsdType.DOOR_BELL_ASSISTANT)
 //        startService<STTService>()
-//        startService<TTSService>()
+        startService<TTSService>()
 //        startService<AIService>()
         setContent {
             rememberMotionDetector(

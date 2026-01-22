@@ -17,77 +17,23 @@ import android.net.Uri
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.State
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.mjdev.doorbellassistant.enums.IntentAction
 import org.mjdev.doorbellassistant.receiver.MotionBroadcastReceiver
 import org.mjdev.doorbellassistant.rpc.CaptureRoute.getFrame
 import org.mjdev.doorbellassistant.service.MotionDetectionService
+import org.mjdev.phone.extensions.CustomExt.EmptyBitmap
+import org.mjdev.phone.extensions.StateExt.produceStateInLifeCycleRepeated
 import org.mjdev.phone.nsd.device.NsdDevice
 
-@Suppress("MemberVisibilityCanBePrivate", "DEPRECATION")
+@Suppress("MemberVisibilityCanBePrivate", "DEPRECATION", "unused")
 object CustomAppExt {
-
-//    fun String.toByteArray(): ByteArray = split(".").map {
-//        it.toInt().toByte()
-//    }.toByteArray()
-
-//    fun ImageVector.toDrawable(
-//        context: Context,
-//        width: Int,
-//        height: Int
-//    ): BitmapDrawable {
-//        val computedWidth = if (width < 1) 1 else width
-//        val computedHeight = if (height < 1) 1 else height
-//        val bitmap = createBitmap(computedWidth, computedHeight)
-//        val canvas = Canvas(bitmap)
-//        val vectorDrawable = VectorDrawable()
-//        vectorDrawable.setBounds(0, 0, computedWidth, computedHeight)
-//        vectorDrawable.draw(canvas)
-//        return BitmapDrawable(context.resources, bitmap)
-//    }
-
-//    fun ImageVector.toDrawable(
-//        view: View,
-//        width: Int = view.width,
-//        height: Int = view.height
-//    ): BitmapDrawable {
-//        val computedWidth = if (width < 1) 1 else width
-//        val computedHeight = if (height < 1) 1 else height
-//        val bitmap = createBitmap(computedWidth, computedHeight)
-//        val canvas = Canvas(bitmap)
-//        val vectorDrawable = VectorDrawable()
-//        vectorDrawable.setBounds(0, 0, computedWidth, computedHeight)
-//        vectorDrawable.draw(canvas)
-//        return BitmapDrawable(view.context.resources, bitmap)
-//    }
-
-//    val Context.currentPublicIP: String
-//        get() = NetworkInterface.getNetworkInterfaces()
-//            .toList()
-//            .asSequence()
-//            .filter { n ->
-//                n.isUp && !n.isLoopback
-//            }
-//            .flatMap { n ->
-//                n.inetAddresses.asSequence()
-//            }
-//            .firstOrNull { n ->
-//                n is Inet4Address && !n.isLoopbackAddress
-//            }?.hostAddress ?: "..."
-
     fun Context.registerMotionDetector(
         motionReceiver: MotionBroadcastReceiver
     ) = runCatching {
@@ -170,22 +116,17 @@ object CustomAppExt {
     @Suppress("ParamsComparedByRef")
     @Composable
     fun rememberDeviceCapture(
-        device: NsdDevice?,
-        lifecycleScope: LifecycleCoroutineScope?
-    ): MutableState<Bitmap?> = remember(device) {
-        val image: MutableState<Bitmap?> = mutableStateOf(null)
-        lifecycleScope?.launch {
-            withContext(Dispatchers.IO) {
-                while (true) {
-                    image.value = device?.getFrame()
-                    delay(10)
-                }
-            }
-        }
-        image
-    }
-
-    fun logPosition() {
-        RuntimeException("POSITION").printStackTrace()
+        device: NsdDevice = NsdDevice.EMPTY,
+        delayTime: Long = 40L,
+    ): State<Bitmap?> = produceStateInLifeCycleRepeated(
+        EmptyBitmap,
+        delayTime,
+        device,
+    ) {
+        runCatching {
+            device.getFrame()
+        }.onFailure { e ->
+            Log.e("DeviceCapture", "Frame error", e)
+        }.getOrNull() ?: EmptyBitmap
     }
 }

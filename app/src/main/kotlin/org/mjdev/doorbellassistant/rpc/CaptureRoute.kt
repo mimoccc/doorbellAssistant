@@ -31,6 +31,7 @@ import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdType
 import org.mjdev.phone.rpc.server.NsdServerRpc.Companion.sendActionToAll
 import java.io.ByteArrayOutputStream
+import java.util.concurrent.TimeUnit
 
 @Suppress("RedundantSuspendModifier")
 object CaptureRoute {
@@ -61,6 +62,7 @@ object CaptureRoute {
     suspend fun NsdDevice.getFrame(
         routeName: String = ROUTE_CAPTURE
     ): Bitmap? = runCatching {
+        if(this === NsdDevice.EMPTY) return null
         val address = this@getFrame.address
         val port = this@getFrame.port
         if (address.isEmpty()) {
@@ -68,8 +70,11 @@ object CaptureRoute {
         } else {
             val url = "http://$address:$port/$routeName"
             OkHttpClient.Builder()
+                .connectTimeout(3, TimeUnit.SECONDS)
+                .readTimeout(5, TimeUnit.SECONDS)
+                .writeTimeout(3, TimeUnit.SECONDS)
                 .addInterceptor(HttpLoggingInterceptor().apply {
-                    level = Level.BODY
+                    level = Level.BASIC  // Reduce logging verbosity
                 })
                 .build()
                 .newCall(
@@ -80,7 +85,7 @@ object CaptureRoute {
                     return if (!response.isSuccessful) {
                         Log.e(
                             NsdDevice.TAG,
-                            "Failed to get frame from ($address): ${response.code}"
+                            "Failed to get frame from ($address:$port): ${response.code}"
                         )
                         null
                     } else {
@@ -91,11 +96,11 @@ object CaptureRoute {
                 }
         }
     }.onFailure { e->
-        e.printStackTrace()
+        Log.e(NsdDevice.TAG, "Error getting frame from ${this@getFrame.address}:${this@getFrame.port}", e)
     }.getOrNull()
 
     suspend fun Context.sendMotionDetected(
-        sender: NsdDevice?,
+        sender: NsdDevice,
         types: List<NsdType> = listOf(NsdType.DOOR_BELL_CLIENT),
     ) = sendActionToAll(
         types,
@@ -103,7 +108,7 @@ object CaptureRoute {
     )
 
     suspend fun Context.sendMotionUnDetected(
-        sender: NsdDevice?,
+        sender: NsdDevice,
         types: List<NsdType> = listOf(NsdType.DOOR_BELL_CLIENT),
     ) = sendActionToAll(
         types,

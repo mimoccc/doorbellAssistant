@@ -232,7 +232,7 @@ abstract class NsdService(
 
         @Serializable
         data class NsdDeviceEvent(
-            val device: NsdDevice?
+            val device: NsdDevice
         ) : ServiceEvent()
 
         @Serializable

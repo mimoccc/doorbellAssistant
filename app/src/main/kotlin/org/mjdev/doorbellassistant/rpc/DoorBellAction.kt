@@ -19,12 +19,12 @@ open class DoorBellActions {
 
     @Serializable
     data class DoorBellActionMotionDetected(
-        val device: NsdDevice?
+        val device: NsdDevice
     ) : NsdAction()
 
     @Serializable
     data class DoorBellActionMotionUnDetected(
-        val device: NsdDevice?
+        val device: NsdDevice
     ) : NsdAction()
 
 }

@@ -26,7 +26,7 @@ import android.provider.Settings
 import java.net.Inet4Address
 import java.net.NetworkInterface
 
-@Suppress("ConstPropertyName")
+@Suppress("ConstPropertyName", "unused", "UnusedReceiverParameter")
 object ContextExt {
     const val Unknown = "unknown"
     const val Wlan = "wlan"
@@ -60,6 +60,20 @@ object ContextExt {
         get() = connectivityManager?.allNetworks?.associate { n ->
             n to connectivityManager?.getNetworkCapabilities(n)
         } ?: emptyMap()
+
+    val Context.currentPublicIP: String
+        get() = NetworkInterface.getNetworkInterfaces()
+            .toList()
+            .asSequence()
+            .filter { n ->
+                n.isUp && !n.isLoopback
+            }
+            .flatMap { n ->
+                n.inetAddresses.asSequence()
+            }
+            .firstOrNull { n ->
+                n is Inet4Address && !n.isLoopbackAddress
+            }?.hostAddress ?: "..."
 
     // todo deprecation
     @Suppress("DEPRECATION")
@@ -112,7 +126,11 @@ object ContextExt {
             this,
             T::class.java
         ).also { intent ->
-            startForegroundService(intent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
         }
     }.onFailure { e ->
         e.printStackTrace()

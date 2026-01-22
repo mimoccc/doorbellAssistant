@@ -51,7 +51,7 @@ class NsdDevice {
         val NsdDevice.isAutoAnswerCall: Boolean
             get() = serviceType.isAutoAnswerCall
 
-        val EMPTY get() = fromData("192.168.1.1","Test")
+        val EMPTY by lazy { fromData("192.168.1.1","EMPTY") }
 
         @Suppress("DEPRECATION")
         fun fromData(

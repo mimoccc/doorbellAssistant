@@ -11,6 +11,7 @@
 package org.mjdev.phone.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -58,9 +59,11 @@ fun MovieCard(
     title: String? = if (isPreview) "title" else null,
     subtitle: String? = if (isPreview) "subtitle" else null,
     contentScale: ContentScale = ContentScale.Inside,
-    roundCorners: Boolean = true,
-    roundCornersSize: Dp? = null,
     useBackgroundFromPic: Boolean = true,
+    roundCorners: Boolean = true,
+    clearImageBackground: Boolean = true,
+    useShadows: Boolean = true,
+    roundCornersSize: Dp? = null,
     backgroundColor: Color? = null,
     borderSize: Dp? = null,
     imageScale: Float = 1f,
@@ -112,7 +115,7 @@ fun MovieCard(
                     .background(background),
                 contentAlignment = Alignment.Center
             ) {
-                OvalShadow(
+                if (useShadows) OvalShadow(
                     modifier = Modifier.fillMaxSize(),
                     colorEnd = Color.Black,
                     colorStart = light,
@@ -120,25 +123,36 @@ fun MovieCard(
                     inverse = true
                 )
                 if (bitmap != null) {
-                    TransparentBackgroundImage(
-                        bitmap = bitmap,
-                        contentDescription = title,
-                        contentScale = contentScale,
-                        backgroundColor = background,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .scale(imageScale)
-                    )
+                    if (clearImageBackground) {
+                        TransparentBackgroundImage(
+                            bitmap = bitmap,
+                            contentDescription = title,
+                            contentScale = contentScale,
+                            backgroundColor = background,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .scale(imageScale)
+                        )
+                    } else {
+                        Image(
+                            bitmap = bitmap,
+                            contentDescription = title,
+                            contentScale = contentScale,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .scale(imageScale)
+                        )
+                    }
                 }
                 content()
-                OvalShadow(
+                if (useShadows) OvalShadow(
                     modifier = Modifier.fillMaxSize(),
                     colorEnd = Color.Transparent,
                     colorStart = shadow,
                     ratio = shadowRatio,
                     inverse = true
                 )
-                Spacer(
+                if (useShadows) Spacer(
                     modifier = Modifier
                         .fillMaxSize()
                         .drawWithCache {

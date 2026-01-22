@@ -66,7 +66,7 @@ import org.mjdev.phone.stream.CallEndReason
 abstract class CallNsdService(
     val serviceNsdType: NsdType,
     val deviceTypeCheckDelay: Long = 1000L
-) : NsdService(serviceNsdType,) {
+) : NsdService(serviceNsdType) {
     private val delayedHandler by lazy {
         DelayHandler(
             timeout = deviceTypeCheckDelay,
@@ -314,7 +314,7 @@ abstract class CallNsdService(
         }
 
         fun Context.nsdDevice(
-            handler: (NsdDevice?) -> Unit
+            handler: (NsdDevice) -> Unit
         ) {
             val serviceClass: Class<NsdService> = getCallServiceClass()
             val connection = object : ServiceConnection {
@@ -324,7 +324,7 @@ abstract class CallNsdService(
                 ) {
                     val service = (binder as LocalBinder).service
                     service.executeCommand(GetNsdDevice) { event ->
-                        handler((event as? NsdDeviceEvent)?.device)
+                        handler((event as NsdDeviceEvent).device)
                         unbindService(this)
                     }
                 }
@@ -369,7 +369,7 @@ abstract class CallNsdService(
         }
 
         @Composable
-        fun rememberCallNsdService(): Flow<CallNsdService?> = with(
+        fun rememberCallNsdService(): Flow<CallNsdService> = with(
             LocalContext.current
         ) {
             remember {
@@ -380,7 +380,7 @@ abstract class CallNsdService(
                             name: ComponentName,
                             binder: IBinder
                         ) {
-                            trySend((binder as LocalBinder).service as CallNsdService?)
+                            trySend((binder as LocalBinder).service as CallNsdService)
                         }
 
                         override fun onServiceDisconnected(name: ComponentName) {
