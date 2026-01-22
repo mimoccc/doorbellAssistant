@@ -102,7 +102,7 @@ class DoorbellNsdService : CallNsdService(
         super.onRpcAction(action)
         when (action) {
             is DoorBellActionMotionDetected -> {
-                if (action.device?.address != currentWifiIP) {
+                if (action.device.address != currentWifiIP) {
                     showAlert(action.device)
                 }
             }
