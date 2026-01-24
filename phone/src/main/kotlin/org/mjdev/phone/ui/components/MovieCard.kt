@@ -75,6 +75,7 @@ fun MovieCard(
     shadowingColor: Color? = null,
     shadowRatio: Float = 0.6f,
     shadowColorRatio: Float = 0.2f,
+    showImage: Boolean = true,
     content: @Composable () -> Unit = {},
 ) = PhoneTheme {
     BoxWithConstraints(
@@ -122,7 +123,7 @@ fun MovieCard(
                     ratio = lightRatio,
                     inverse = true
                 )
-                if (bitmap != null) {
+                if (showImage && bitmap != null) {
                     if (clearImageBackground) {
                         TransparentBackgroundImage(
                             bitmap = bitmap,

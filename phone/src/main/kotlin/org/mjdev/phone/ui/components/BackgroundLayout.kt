@@ -27,15 +27,19 @@ fun BackgroundLayout(
     assetImageFile: String = "avatar/avatar_transparent.png",
     imagePainter: Painter = rememberAssetImagePainter(assetImageFile = assetImageFile),
     contentDescription: String = "",
+    showImage: Boolean = true,
+    content: @Composable () -> Unit = {},
 ) = PhoneTheme {
     MovieCard(
         modifier = modifier,
         borderSize = 0.dp,
         glowRadius = 0f,
+        showImage = showImage,
         title = null,
         subtitle = null,
         lightColor = Color.White,
         lightColorRatio = 1f,
         lightRatio = 1f,
+        content = content,
     )
 }

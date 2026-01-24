@@ -37,14 +37,14 @@ import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.components.BackgroundLayout
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 
-@Suppress("unused")
+@Suppress("unused", "ParamsComparedByRef")
 @Previews
 @OptIn(UnstableApi::class)
 @Composable
 fun CartoonPlayer(
     modifier: Modifier = Modifier,
     state: CartoonPlayerState = rememberCartoonState(),
-    keepAspect: Boolean = false,
+    keepAspect: Boolean = true,
     onVideoSizeChange: (VideoSize, Float) -> Unit = { s, f -> },
     onMetadataReceived: (Metadata) -> Unit = {},
     onFirstFrameRendered: () -> Unit = {},
@@ -54,11 +54,10 @@ fun CartoonPlayer(
     onResumed: () -> Boolean = { true },
     backgroundColor: Color = MaterialTheme.colorScheme.background,
 ) = PhoneTheme {
-    if (isPreview) {
-        BackgroundLayout(
-            assetImageFile = "avatar/avatar_transparent.png",
-        )
-    } else {
+    BackgroundLayout(
+        assetImageFile = "avatar/avatar_transparent.png",
+        showImage = isPreview
+    ) {
         VideoPlayer(
             modifier = modifier,
             keepAspect = keepAspect,
@@ -155,7 +154,7 @@ class CartoonPlayerState(
     }
 
     fun pause() {
-        if(exoPlayer?.isPlaying == true) {
+        if (exoPlayer?.isPlaying == true) {
             exoPlayer?.pause()
         }
     }
@@ -189,6 +188,7 @@ class CartoonPlayerState(
     }
 
     companion object {
+        @Suppress("unused", "ParamsComparedByRef")
         @Composable
         fun rememberCartoonState(
             initialSource: VideoSources = VideoSources.Welcome,
