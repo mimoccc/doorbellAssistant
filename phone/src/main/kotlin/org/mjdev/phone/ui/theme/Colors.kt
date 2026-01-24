@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.ui.theme
 
 import androidx.compose.ui.graphics.Color
@@ -22,6 +32,8 @@ val DefaultLightColors = PhoneColors(
     colorControlsButtonCallIcon = Color.White,
     colorGlow = Color.Black,
     colorCallScreenText = Color.DarkGray,
+    colorButtonColor = Color.DarkGray,
+    colorScrim = Color.White.copy(alpha = 0.3f)
 )
 
 val DefaultDarkColors = PhoneColors(
@@ -43,4 +55,6 @@ val DefaultDarkColors = PhoneColors(
     colorControlsButtonCallIcon = Color.White,
     colorGlow = Color.White,
     colorCallScreenText = Color.LightGray,
+    colorButtonColor = Color.LightGray,
+    colorScrim = Color.Black.copy(alpha = 0.3f)
 )

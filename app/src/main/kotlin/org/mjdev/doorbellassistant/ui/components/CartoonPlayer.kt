@@ -13,13 +13,11 @@ package org.mjdev.doorbellassistant.ui.components
 import android.content.Context
 import android.net.Uri
 import androidx.annotation.OptIn
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.media3.common.Metadata
@@ -52,7 +50,6 @@ fun CartoonPlayer(
     onVideoFinish: (ExoPlayer) -> Unit = { p -> p.pause() },
     onPaused: () -> Boolean = { true },
     onResumed: () -> Boolean = { true },
-    backgroundColor: Color = MaterialTheme.colorScheme.background,
 ) = PhoneTheme {
     BackgroundLayout(
         assetImageFile = "avatar/avatar_transparent.png",

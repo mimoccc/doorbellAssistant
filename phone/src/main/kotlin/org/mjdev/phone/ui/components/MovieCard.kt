@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -125,8 +126,8 @@ fun MovieCard(
                 )
                 if (showImage && bitmap != null) {
                     if (clearImageBackground) {
-                        TransparentBackgroundImage(
-                            bitmap = bitmap,
+                        ChromedImage(
+                            painter = BitmapPainter(bitmap),
                             contentDescription = title,
                             contentScale = contentScale,
                             backgroundColor = background,

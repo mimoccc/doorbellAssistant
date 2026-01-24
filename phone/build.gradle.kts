@@ -96,6 +96,8 @@ dependencies {
     implementation(libs.conscrypt.android)
     implementation(libs.bcprov.jdk18on)
     implementation(libs.bctls.jdk18on)
+//     images
+//    implementation("io.coil-kt:coil-compose:2.7.0")
     // palette
     implementation(libs.androidx.palette.ktx)
     // testing

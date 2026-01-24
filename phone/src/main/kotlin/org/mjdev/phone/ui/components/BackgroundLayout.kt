@@ -24,7 +24,7 @@ import org.mjdev.phone.ui.theme.base.PhoneTheme
 @Composable
 fun BackgroundLayout(
     modifier: Modifier = Modifier,
-    assetImageFile: String = "avatar/avatar_transparent.png",
+    assetImageFile: String = "avatar/avatar_yellow.png",
     imagePainter: Painter = rememberAssetImagePainter(assetImageFile = assetImageFile),
     contentDescription: String = "",
     showImage: Boolean = true,

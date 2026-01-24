@@ -43,6 +43,11 @@ google-services.json
 .output.txt
 stream-api-secrets.txt!/config.prop
 /*-key.txt
+# vosk if compiled
 /app/vosk-api/
 /app/vosk-api/*
 /app/vosk-api
+# test ai
+/PROXYAI.md
+PROXYAI.md
+/.proxyai/

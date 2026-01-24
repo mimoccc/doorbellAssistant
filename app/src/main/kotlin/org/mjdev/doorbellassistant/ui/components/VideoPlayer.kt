@@ -12,7 +12,6 @@ package org.mjdev.doorbellassistant.ui.components
 
 import android.net.Uri
 import androidx.annotation.OptIn
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -21,6 +20,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
@@ -34,6 +35,7 @@ import org.mjdev.doorbellassistant.helpers.video.ChromaTextureView
 import org.mjdev.phone.extensions.ComposeExt.rememberAssetImagePainter
 import org.mjdev.phone.extensions.CustomExt.isPreview
 import org.mjdev.phone.helpers.Previews
+import org.mjdev.phone.ui.components.ChromedImage
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 
 @Suppress("unused")
@@ -45,6 +47,7 @@ fun VideoPlayer(
     videoUri: Uri = Uri.EMPTY,
     autoPlay: Boolean = true,
     keepAspect: Boolean = true,
+    clearColor :Color = Color(0xFFFF9500),
     onVideoSizeChange: (VideoSize, Float) -> Unit = { s, f -> },
     onMetadataReceived: (Metadata) -> Unit = {},
     onFirstFrameRendered: () -> Unit = {},
@@ -57,7 +60,7 @@ fun VideoPlayer(
 ) = PhoneTheme {
     val context = LocalContext.current
     val exoPlayer = remember {
-        createExoPlayer(
+        if (isPreview) null else createExoPlayer(
             context = context,
             videoUri = Uri.EMPTY,
             startOnReady = autoPlay,
@@ -74,17 +77,22 @@ fun VideoPlayer(
         contentAlignment = Alignment.Center
     ) {
         if (isPreview) {
-            Image(
+            ChromedImage(
                 modifier = Modifier.fillMaxSize(),
-                painter = rememberAssetImagePainter("avatar/avatar_transparent.png"),
-                contentDescription = ""
+                contentScale = ContentScale.Inside,
+                painter = rememberAssetImagePainter("avatar/avatar_yellow.png"),
             )
         } else {
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = {
                     ChromaTextureView(context) {
-                        setKeyColorRgb(1f, 0.584f, 0f)
+                        // todo
+                        setKeyColorRgb(
+                            clearColor.red,
+                            clearColor.green,
+                            clearColor.blue
+                        )
                         setThreshold(0.15f)
                         setSoftness(0.06f)
                         setPlayer(exoPlayer)
@@ -98,18 +106,18 @@ fun VideoPlayer(
             )
             LaunchedEffect(videoUri) {
                 if (videoUri == Uri.EMPTY) {
-                    if (exoPlayer.isPlaying) {
+                    if (exoPlayer?.isPlaying==true) {
                         exoPlayer.pause()
                     }
                 } else {
-                    if (exoPlayer.isPlaying) {
+                    if (exoPlayer?.isPlaying==true) {
                         exoPlayer.pause()
                     }
-                    exoPlayer.setMediaItem(MediaItem.fromUri(videoUri))
-                    exoPlayer.prepare()
-                    exoPlayer.playWhenReady = autoPlay
+                    exoPlayer?.setMediaItem(MediaItem.fromUri(videoUri))
+                    exoPlayer?.prepare()
+                    exoPlayer?.playWhenReady = autoPlay
                     if (autoPlay) {
-                        exoPlayer.play()
+                        exoPlayer?.play()
                     }
                 }
             }
@@ -117,8 +125,8 @@ fun VideoPlayer(
                 Unit
             ) {
                 onDispose {
-                    exoPlayer.pause()
-                    exoPlayer.release()
+                    exoPlayer?.pause()
+                    exoPlayer?.release()
                 }
             }
         }

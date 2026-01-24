@@ -10,6 +10,7 @@
 
 package org.mjdev.phone.service
 
+import android.app.Service
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -19,13 +20,13 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.Message
 import android.os.Messenger
+import androidx.annotation.CallSuper
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.os.bundleOf
-import androidx.lifecycle.LifecycleService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -39,7 +40,7 @@ import org.mjdev.phone.service.ServiceEvent.NotYetImplemented
 import kotlin.reflect.KClass
 
 @Suppress("unused")
-open class RemoteBindableService : LifecycleService() {
+open class RemoteBindableService : Service() {
     private val messenger by lazy {
         Messenger(Handler(Looper.getMainLooper()) { msg ->
             onGotCommand(msg)
@@ -67,8 +68,8 @@ open class RemoteBindableService : LifecycleService() {
         handler: (ServiceEvent) -> Unit
     ) = handler(NotYetImplemented)
 
+    @CallSuper
     override fun onBind(intent: Intent): IBinder {
-        super.onBind(intent)
         return messenger.binder
     }
 

@@ -14,9 +14,11 @@ import android.content.Context
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.content.res.Configuration.ORIENTATION_PORTRAIT
 import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.graphics.ImageBitmap
@@ -28,7 +30,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
+import org.mjdev.phone.data.User
+import org.mjdev.phone.extensions.ContextExt.currentSystemUserName
+import org.mjdev.phone.extensions.ContextExt.currentWifiIP
+import org.mjdev.phone.extensions.ContextExt.currentWifiSSID
+import org.mjdev.phone.extensions.ContextExt.getDeviceUser
 import org.mjdev.phone.extensions.CustomExt.isPreview
+import java.io.File
 
 object ComposeExt {
     val isLandscape: Boolean
@@ -52,6 +63,71 @@ object ComposeExt {
     ) {
         if (visible) {
             content()
+        }
+    }
+
+    @Composable
+    fun rememberImageBitmapFromUri(
+        uri: Uri,
+        key : Any? = uri
+    ): State<Painter?> {
+        val context = LocalContext.current
+        return produceState(initialValue = null, key) {
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    value = when {
+                        uri == Uri.EMPTY -> {
+                            null
+                        }
+
+                        uri.scheme == "content" -> {
+                            context.contentResolver.openInputStream(uri)?.use { input ->
+                                BitmapFactory.decodeStream(input)?.let {
+                                    BitmapPainter(it.asImageBitmap())
+                                }
+                            }
+                        }
+
+                        uri.scheme == "file" -> {
+                            uri.path?.let { path ->
+                                val exists = File(path).let { f -> f.exists() && f.isFile && f.length() > 0 }
+                                if (exists) {
+                                    BitmapFactory.decodeFile(path)?.let {
+                                        BitmapPainter(it.asImageBitmap())
+                                    }
+                                } else null
+                            }
+                        }
+
+                        else -> {
+                            throw (RuntimeException("Can not load image : $uri"))
+                        }
+                    }
+                }.onFailure { e ->
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun currentWifiIP(): String = LocalContext.current.currentWifiIP
+
+    @Composable
+    fun currentWifiSSID(): String = LocalContext.current.currentWifiSSID
+
+    @Composable
+    fun currentSystemUserName(): String = LocalContext.current.currentSystemUserName
+
+    @Suppress("ParamsComparedByRef")
+    @Composable
+    fun currentUser(
+        key: Any? = null
+    ): State<User?> = LocalContext.current.let { context ->
+        produceState(initialValue = null, key) {
+            value = context.getDeviceUser().first()?.copy(
+                lastUpdated = System.currentTimeMillis()
+            )
         }
     }
 

@@ -18,11 +18,22 @@ import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.Uri
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.PowerManager
+import android.provider.ContactsContract
 import android.provider.Settings
+import android.util.Log
+import androidx.core.content.edit
+import androidx.core.net.toUri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import org.mjdev.phone.data.User
+import java.io.File
 import java.net.Inet4Address
 import java.net.NetworkInterface
 
@@ -35,7 +46,7 @@ object ContextExt {
     const val EmptyIP = "0.0.0.0"
     const val EmptyAndroidID = "No Id"
     const val UnknownSSID = "<unknown ssid>"
-    const val EmptyUser = "-"
+    const val EmptyUser = "Unknown"
 
     val Context.ANDROID_ID: String
         @SuppressLint("HardwareIds")
@@ -87,7 +98,8 @@ object ContextExt {
                     ) as? ConnectivityManager
                     val network = connectivityManager?.activeNetwork
                     val capabilities = connectivityManager?.getNetworkCapabilities(network)
-                    val isWifi = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+                    val isWifi =
+                        capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
                     if (isWifi) {
                         val wifiInfo = capabilities.transportInfo as? WifiInfo
                         ssid = wifiInfo?.ssid?.replace("\"", "")
@@ -114,12 +126,97 @@ object ContextExt {
             e.printStackTrace()
         }.getOrNull() ?: EmptyIP
 
-    val Context.currentSystemUser: String
+    val Context.currentSystemUserName: String
         get() = runCatching {
-            Settings.Secure.getString(contentResolver, UserName) ?: EmptyUser
+            Settings.Secure.getString(applicationContext.contentResolver, UserName) ?: EmptyUser
         }.onFailure { e ->
             e.printStackTrace()
         }.getOrNull() ?: EmptyUser
+
+    const val USER_PREFS = "user_prefs"
+    const val USER_PREFS_NAME = "user_prefs_name"
+    const val USER_PREFS_PIC = "user_prefs_pic"
+
+    fun Context.persistPickedImage(uri: Uri): Uri = try {
+        if (uri != Uri.EMPTY && uri.scheme == "content") {
+            val input = contentResolver.openInputStream(uri)
+            val file = File(filesDir, "profile_pic.jpg")
+            if (input != null) {
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                    output.flush()
+                }
+                Uri.fromFile(file)
+            } else {
+                Uri.EMPTY
+            }
+        } else {
+            Uri.EMPTY
+        }
+    } catch (e: Exception) {
+        Log.e("persistPickedImage", "Failed to copy image", e)
+        Uri.EMPTY
+    }
+
+    fun Context.getDeviceUser(): Flow<User?> = flow {
+        val uri = ContactsContract.Profile.CONTENT_URI
+        val projection = arrayOf(
+            ContactsContract.Contacts.DISPLAY_NAME,
+            ContactsContract.Contacts.PHOTO_URI
+        )
+        val cursor = applicationContext.contentResolver.query(
+            uri,
+            projection,
+            null,
+            null,
+            null
+        )
+        var user: User? = null
+        cursor?.use { c ->
+            if (c.moveToFirst()) {
+                val nameCol = c.getColumnIndexOrThrow(ContactsContract.Contacts.DISPLAY_NAME)
+                val picCol = c.getColumnIndexOrThrow(ContactsContract.Contacts.PHOTO_URI)
+                val name = c.getString(nameCol)
+                val photoUri = c.getString(picCol)
+                user = User(name, photoUri ?: "")
+            }
+        }
+        if (user == null) {
+            val prefs = getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE)
+            val name = prefs.getString(USER_PREFS_NAME, null)
+            val pic = prefs.getString(USER_PREFS_PIC, null)
+            user = if (name != null && pic != null) {
+                User(name, pic)
+            } else if (name != null) {
+                User(name)
+            } else {
+                User()
+            }
+        }
+        emit(user)
+    }.flowOn(Dispatchers.IO)
+
+    fun Context.saveSystemProfile(
+        userName: String?,
+        userPic: Uri?,
+        onSave: () -> Unit = {}
+    ) {
+        val prefs = getSharedPreferences(USER_PREFS, Context.MODE_PRIVATE)
+        val oldPic = prefs.getString(USER_PREFS_PIC, null)?.toUri()
+        val localUri = userPic?.let { uri ->
+            val pickedUri = persistPickedImage(uri)
+            if (pickedUri == Uri.EMPTY) oldPic else pickedUri
+        } ?: oldPic ?: Uri.EMPTY
+        prefs.edit {
+            if (userName?.isNotEmpty() == true) {
+                putString(USER_PREFS_NAME, userName)
+            }
+            if (localUri != null && localUri != Uri.EMPTY) {
+                putString(USER_PREFS_PIC, localUri.toString())
+            }
+        }
+        onSave()
+    }
 
     inline fun <reified T : Service> Context.startForeground() = runCatching {
         Intent(

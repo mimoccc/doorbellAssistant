@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -119,13 +118,13 @@ abstract class CallNsdService(
             }
 
             is GetNsdDevice -> {
-                lifecycleScope.launch(Dispatchers.IO) {
+                scope.launch(Dispatchers.IO) {
                     handler(NsdDeviceEvent(nsdDevice))
                 }
             }
 
             is GetNsdDevices -> {
-                lifecycleScope.launch(Dispatchers.IO) {
+                scope.launch(Dispatchers.IO) {
                     val types = command.types.let { tt ->
                         if (tt.isNullOrEmpty()) NsdType.entries else tt
                     }

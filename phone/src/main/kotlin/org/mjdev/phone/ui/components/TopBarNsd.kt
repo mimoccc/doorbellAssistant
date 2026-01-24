@@ -10,7 +10,7 @@
 
 package org.mjdev.phone.ui.components
 
-import android.content.Context
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,18 +20,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.mjdev.phone.extensions.ContextExt.currentSystemUser
-import org.mjdev.phone.extensions.ContextExt.currentWifiIP
-import org.mjdev.phone.extensions.ContextExt.currentWifiSSID
+import androidx.core.net.toUri
+import org.mjdev.phone.data.User
+import org.mjdev.phone.extensions.ComposeExt.currentWifiIP
+import org.mjdev.phone.extensions.ComposeExt.currentWifiSSID
+import org.mjdev.phone.extensions.ComposeExt.rememberImageBitmapFromUri
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
@@ -42,13 +48,32 @@ import org.mjdev.phone.ui.theme.base.phoneShapes
 @Composable
 fun TopBarNsd(
     modifier: Modifier = Modifier,
-    applicationContext: Context = LocalContext.current.applicationContext,
-    onClick: () -> Unit = {},
+    user: User? = null,
+    onUserPicClick: () -> Unit = {},
     onClickSettings: () -> Unit = {},
 ) = PhoneTheme {
-    val userName: String = applicationContext.currentSystemUser
-    val currentWifiSsid = LocalContext.current.currentWifiSSID
-    val currentWifiIp = LocalContext.current.currentWifiIP
+    val defaultPicPainter = phoneIcons.userAccountIcon
+    val userName: String by remember(user?.lastUpdated) {
+        derivedStateOf {
+            user?.name ?: ""
+        }
+    }
+    val userPicUri: Uri by remember(user?.lastUpdated) {
+        derivedStateOf {
+            user?.photoUri?.toUri() ?: Uri.EMPTY
+        }
+    }
+    val userBitmap by rememberImageBitmapFromUri(
+        userPicUri,
+        user?.lastUpdated
+    )
+    val userPicPainter: Painter by remember(user?.lastUpdated) {
+        derivedStateOf {
+            userBitmap ?: defaultPicPainter
+        }
+    }
+    val currentWifiSsid = currentWifiSSID()
+    val currentWifiIp = currentWifiIP()
     Box(
         modifier = modifier.wrapContentHeight()
     ) {
@@ -79,7 +104,7 @@ fun TopBarNsd(
                 fontSize = 11.sp
             )
         }
-        Icon(
+        ChromedImage(
             modifier = Modifier
                 .size(80.dp)
                 .background(
@@ -92,20 +117,25 @@ fun TopBarNsd(
                     phoneShapes.headerLogoShape
                 )
                 .clip(phoneShapes.headerLogoShape)
-                .clickable(onClick = onClick),
+                .clickable(onClick = onUserPicClick),
             contentDescription = "",
-            painter = phoneIcons.userAccountIcon,
-            tint = phoneColors.colorIconTint,
+            contentScale = ContentScale.Crop,
+            painter = userPicPainter,
+            backgroundColor = phoneColors.colorBackground,
+            colorFilter = if (userBitmap == null) ColorFilter.tint(phoneColors.colorIconTint)
+            else null
         )
         SettingsIcon(
-            modifier = Modifier.padding(end = 8.dp)
+            modifier = Modifier
+                .padding(end = 8.dp)
                 .size(32.dp)
                 .background(
                     color = phoneColors.colorIconsBackground,
                     shape = phoneShapes.settingsControlButtonShape
                 )
                 .align(Alignment.CenterEnd),
-            shape = phoneShapes.settingsControlButtonShape
+            shape = phoneShapes.settingsControlButtonShape,
+            onClickSettings = onClickSettings
         )
     }
 }

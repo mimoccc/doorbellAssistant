@@ -53,6 +53,10 @@ class App : CallApplication<DoorbellNsdService>(), DIAware {
             colorsDark.colorCallerIconBorder = Item
             colorsLight.colorLabelText = Label
             colorsDark.colorLabelText = Label
+            colorsLight.colorButtonColor = Controls
+            colorsDark.colorButtonColor = Controls
+            colorsLight.colorScrim = Controls.copy(alpha = 0.6f)
+            colorsDark.colorScrim = Controls.copy(alpha = 0.6f)
         }
         // startForeground<DoorbellNsdService>() - moved to MainActivity.onStart()
 //        startLockScreenService()

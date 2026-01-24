@@ -10,6 +10,7 @@
 
 package org.mjdev.phone.service
 
+import android.app.Service
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -17,14 +18,13 @@ import android.content.ServiceConnection
 import android.os.Binder
 import android.os.IBinder
 import androidx.annotation.CallSuper
-import androidx.lifecycle.LifecycleService
 import org.mjdev.phone.nsd.service.NsdService
 import org.mjdev.phone.service.ServiceEvent.NotYetImplemented
 import org.mjdev.phone.service.ServiceEvent.ServiceConnected
 import org.mjdev.phone.service.ServiceEvent.ServiceDisconnected
 
 @Suppress("unused")
-open class LocalBindableService : LifecycleService() {
+open class LocalBindableService : Service() {
     private val binder = LocalBinder()
 
     inner class LocalBinder : Binder() {
@@ -39,8 +39,8 @@ open class LocalBindableService : LifecycleService() {
         handler(NotYetImplemented)
     }
 
+    @CallSuper
     override fun onBind(intent: Intent): IBinder {
-        super.onBind(intent)
         return binder
     }
 

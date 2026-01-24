@@ -23,29 +23,25 @@ import androidx.media3.common.VideoSize
 import androidx.media3.exoplayer.ExoPlayer
 import java.util.concurrent.atomic.AtomicBoolean
 
+@Suppress("unused")
 class ChromaTextureView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     config: ChromaTextureView.() -> Unit = {},
 ) : TextureView(context, attrs), TextureView.SurfaceTextureListener {
-
     private var player: ExoPlayer? = null
     private var renderThread: ChromaRenderThread? = null
     private val started = AtomicBoolean(false)
     private val listeners = mutableListOf<ChromaTextureViewListener>()
-
     private val playerListener = object : Player.Listener {
         override fun onVideoSizeChanged(size: VideoSize) {
             renderThread?.setVideoSize(
                 w = size.width,
                 h = size.height
             )
-
-            val aspect =
-                if (size.width > 0 && size.height > 0) {
-                    size.width.toFloat() / size.height.toFloat()
-                } else 1f
-
+            val aspect = if (size.width > 0 && size.height > 0) {
+                size.width.toFloat() / size.height.toFloat()
+            } else 1f
             onVideoSizeChange(size, aspect)
         }
     }
@@ -66,14 +62,10 @@ class ChromaTextureView @JvmOverloads constructor(
             }
             return
         }
-
         player?.removeListener(playerListener)
         player?.setVideoSurface(null)
-
         player = p
-
         player?.addListener(playerListener)
-
         renderThread?.inputSurface?.let { s ->
             player?.setVideoSurface(s)
         }
@@ -106,9 +98,7 @@ class ChromaTextureView @JvmOverloads constructor(
         h: Int
     ) {
         if (started.getAndSet(true)) return
-
         val outSurface = Surface(st)
-
         val t = ChromaRenderThread(
             outputSurface = outSurface,
             outputWidth = w,
@@ -119,7 +109,6 @@ class ChromaTextureView @JvmOverloads constructor(
                 }
             }
         )
-
         renderThread = t
         t.start()
     }
@@ -136,13 +125,10 @@ class ChromaTextureView @JvmOverloads constructor(
         st: SurfaceTexture
     ): Boolean {
         started.set(false)
-
         player?.setVideoSurface(null)
         player?.removeListener(playerListener)
-
         renderThread?.shutdown()
         renderThread = null
-
         return true
     }
 

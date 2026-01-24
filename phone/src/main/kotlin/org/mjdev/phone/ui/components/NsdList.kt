@@ -19,16 +19,24 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import org.mjdev.phone.extensions.ContextExt.currentWifiIP
+import org.mjdev.phone.data.User
+import org.mjdev.phone.extensions.ComposeExt.currentUser
+import org.mjdev.phone.extensions.ComposeExt.currentWifiIP
+import org.mjdev.phone.extensions.ContextExt.saveSystemProfile
 import org.mjdev.phone.extensions.CustomExt.isPreview
+import org.mjdev.phone.extensions.ModifierExt.applyIf
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdType
@@ -45,22 +53,19 @@ fun NsdList(
     onCallClick: (NsdDevice) -> Unit = {},
     types: List<NsdType> = NsdType.entries,
 ) = PhoneTheme {
-    val context = LocalContext.current
-    val currentIP = context.currentWifiIP
-    val devices: State<List<NsdDevice>> = if (isPreview) {
-        (1..32).map { i ->
-            NsdDevice().apply { address = "192.168.1.$i" }
-        }.let { list ->
-            mutableStateOf(list)
+    val currentIP = currentWifiIP()
+    var lastUpdated by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val user: User? by currentUser(lastUpdated)
+    val devices: State<List<NsdDevice>> = if (isPreview) previewDevices()
+    else rememberNsdDeviceList(
+        types = types,
+        filter = { s ->
+            val serviceIP = s.host?.hostAddress ?: ""
+            currentIP.contentEquals(serviceIP).not()
         }
-    } else {
-        rememberNsdDeviceList(
-            types = types,
-            filter = { s ->
-                val serviceIP = s.host?.hostAddress ?: ""
-                currentIP.contentEquals(serviceIP).not()
-            }
-        )
+    )
+    var isUserDetailsEditorNeeded by remember {
+        mutableStateOf(false)
     }
     Column(
         modifier = modifier.padding(top = 12.dp, start = 8.dp, end = 8.dp)
@@ -69,6 +74,10 @@ fun NsdList(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
+            user = user,
+            onUserPicClick = {
+                isUserDetailsEditorNeeded = true
+            }
         )
         TextLabel(
             modifier = Modifier
@@ -87,7 +96,7 @@ fun NsdList(
         ) {
             items(
                 items = devices.value,
-                key = { d-> d.address }
+                key = { d -> d.address }
             ) { device ->
                 NsdItem(
                     device = device,
@@ -97,4 +106,24 @@ fun NsdList(
             }
         }
     }
+    UserEditDataSheet(
+        modifier = Modifier.applyIf(isPreview) {
+            alpha(0.5f)
+        },
+        isNeeded = isUserDetailsEditorNeeded,
+        user = user,
+        onSave = { userName, userPic ->
+            saveSystemProfile(userName, userPic)
+            lastUpdated = System.currentTimeMillis()
+        },
+        onDismiss = {
+            isUserDetailsEditorNeeded = false
+        }
+    )
+}
+
+private fun previewDevices() = (1..32).map { i ->
+    NsdDevice().apply { address = "192.168.1.$i" }
+}.let { list ->
+    mutableStateOf(list)
 }

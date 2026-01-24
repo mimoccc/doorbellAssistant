@@ -18,7 +18,7 @@ import android.os.Build
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -68,7 +68,7 @@ abstract class NsdService(
         device = DeviceDetails.THIS
         user = UserDetails()
     }
-
+    protected val scope = CoroutineScope(Dispatchers.Default)
     abstract val rpcServer: INsdServerRPC
 
     val address: String
@@ -93,7 +93,7 @@ abstract class NsdService(
     }
 
     protected fun startRpcServer() {
-        lifecycleScope.launch {
+        scope.launch {
             rpcServer.start(
                 onStarted = { _, p ->
                     this@NsdService.nsdDevice.apply {
@@ -108,7 +108,7 @@ abstract class NsdService(
     }
 
     protected fun stopRpcServer() {
-        lifecycleScope.launch {
+        scope.launch {
             unregisterNsdService {
                 rpcServer.stop()
             }
@@ -169,7 +169,7 @@ abstract class NsdService(
     protected fun unregisterNsdService(
         onUnregistered: suspend () -> Unit = {}
     ) {
-        lifecycleScope.launch {
+        scope.launch {
             nsdManagerFlow.unregisterService().onEach { event ->
                 Log.d(TAG, "NSD Registration event: $event")
             }.onEach { ev ->
@@ -202,7 +202,7 @@ abstract class NsdService(
                 }
             }
             onRegistered(event)
-        }.launchIn(lifecycleScope)
+        }.launchIn(scope)
     }
 
     override fun onDestroy() {
@@ -217,7 +217,7 @@ abstract class NsdService(
         onChanged: (NsdType, NsdType) -> Unit
     ) {
         if (serviceType != type) {
-            lifecycleScope.launch {
+            scope.launch {
                 stopRpcServer()
                 Log.d(TAG, "Device type changed $serviceType -> $type")
                 nsdDevice.serviceType = type

@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) Milan Jurkulák 2026.
+  ~ Contact:
+  ~ e: mimoccc@gmail.com
+  ~ e: mj@mjdev.org
+  ~ w: https://mjdev.org
+  ~ w: https://github.com/mimoccc
+  ~ w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+  -->
+
 <manifest xmlns:tools="http://schemas.android.com/tools"
         xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -37,6 +47,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.READ_PROFILE" />
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
 
     <uses-permission
             android:name="android.permission.USE_FULL_SCREEN_INTENT"
