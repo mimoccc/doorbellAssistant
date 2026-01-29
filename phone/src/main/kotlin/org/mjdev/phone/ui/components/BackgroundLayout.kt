@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import org.mjdev.phone.extensions.ComposeExt.rememberAssetImagePainter
 import org.mjdev.phone.helpers.Previews
@@ -25,9 +26,10 @@ import org.mjdev.phone.ui.theme.base.PhoneTheme
 fun BackgroundLayout(
     modifier: Modifier = Modifier,
     assetImageFile: String = "avatar/avatar_yellow.png",
-    imagePainter: Painter = rememberAssetImagePainter(assetImageFile = assetImageFile),
+    imagePainter: Painter = rememberAssetImagePainter(assetImageFile),
     contentDescription: String = "",
     showImage: Boolean = true,
+    imageScale: ContentScale = ContentScale.Inside,
     content: @Composable () -> Unit = {},
 ) = PhoneTheme {
     MovieCard(
@@ -39,7 +41,10 @@ fun BackgroundLayout(
         subtitle = null,
         lightColor = Color.White,
         lightColorRatio = 1f,
+        image = imagePainter,
+        useBackgroundFromPic = true,
         lightRatio = 1f,
+        contentScale = imageScale,
         content = content,
     )
 }

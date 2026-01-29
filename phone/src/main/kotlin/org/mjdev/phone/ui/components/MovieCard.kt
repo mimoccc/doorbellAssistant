@@ -25,27 +25,34 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.palette.graphics.Palette
 import org.mjdev.phone.extensions.ColorExt.darker
 import org.mjdev.phone.extensions.ColorExt.lighter
-import org.mjdev.phone.extensions.ComposeExt.rememberAssetImage
+import org.mjdev.phone.extensions.ComposeExt.EmptyPainter
+import org.mjdev.phone.extensions.ComposeExt.rememberAssetImagePainter
 import org.mjdev.phone.extensions.CustomExt.isPreview
+import org.mjdev.phone.extensions.CustomExt.toImageBitmap
 import org.mjdev.phone.extensions.ModifierExt.neonStroke
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
@@ -56,7 +63,7 @@ import kotlin.math.min
 @Composable
 fun MovieCard(
     modifier: Modifier = Modifier,
-    bitmap: ImageBitmap? = rememberAssetImage("avatar/avatar_yellow.png"),
+    image: Painter? = rememberAssetImagePainter("avatar/avatar_yellow.png"),
     title: String? = if (isPreview) "title" else null,
     subtitle: String? = if (isPreview) "subtitle" else null,
     contentScale: ContentScale = ContentScale.Inside,
@@ -77,31 +84,63 @@ fun MovieCard(
     shadowRatio: Float = 0.6f,
     shadowColorRatio: Float = 0.2f,
     showImage: Boolean = true,
-    content: @Composable () -> Unit = {},
+    content: @Composable (() -> Unit)? = null,
 ) = PhoneTheme {
     BoxWithConstraints(
-        modifier
-//            .applyIf(isPreview) {
-//                background(Color.Black)
-//                padding(24.dp)
-//            }
+        modifier = modifier
     ) {
         val size = min(constraints.maxWidth, constraints.maxHeight)
-        val shape = if (roundCorners) {
-            if (roundCornersSize == null) RoundedCornerShape((size / 20).dp)
-            else RoundedCornerShape(roundCornersSize)
-        } else RectangleShape
-        val background = if (useBackgroundFromPic) rememberMajorColor(bitmap)
-        else backgroundColor ?: Color.Transparent
-        val shadow =
-            if (useBackgroundFromPic) background.darker(shadowColorRatio) else shadowingColor
-                ?: Color.Black
-        val light = if (useBackgroundFromPic) background.lighter(lightColorRatio) else lightColor
-            ?: Color.White
-        val border = BorderStroke(
-            ((borderSize?.value ?: (size / 60f))).dp,
-            background
-        )
+        val density = LocalDensity.current
+        val shape by remember(size, roundCorners, roundCornersSize) {
+            derivedStateOf {
+                if (roundCorners) {
+                    if (roundCornersSize == null) RoundedCornerShape((size / 20).dp)
+                    else RoundedCornerShape(roundCornersSize)
+                } else RectangleShape
+            }
+        }
+        val bitmap: ImageBitmap? by remember(image) {
+            derivedStateOf {
+                image?.let { painter ->
+                    val intrinsicSize = painter.intrinsicSize
+                    if (intrinsicSize.isSpecified) {
+                        painter.toImageBitmap(
+                            size = Size(
+                                intrinsicSize.width,
+                                intrinsicSize.height
+                            ),
+                            density = density
+                        )
+                    } else null
+                }
+            }
+        }
+        val background: Color by remember(bitmap) {
+            derivedStateOf {
+                if (useBackgroundFromPic) majorColor(bitmap)
+                else backgroundColor ?: Color.Transparent
+            }
+        }
+        val shadow: Color by remember(background) {
+            derivedStateOf {
+                if (useBackgroundFromPic) background.darker(shadowColorRatio)
+                else shadowingColor ?: Color.Black
+            }
+        }
+        val light: Color by remember(background) {
+            derivedStateOf {
+                if (useBackgroundFromPic) background.lighter(lightColorRatio)
+                else lightColor ?: Color.White
+            }
+        }
+        val border: BorderStroke by remember(background) {
+            derivedStateOf {
+                BorderStroke(
+                    ((borderSize?.value ?: (size / 60f))).dp,
+                    background
+                )
+            }
+        }
         Card(
             modifier = modifier.neonStroke(
                 glowColor = glowColor,
@@ -124,10 +163,10 @@ fun MovieCard(
                     ratio = lightRatio,
                     inverse = true
                 )
-                if (showImage && bitmap != null) {
+                if (showImage) {
                     if (clearImageBackground) {
                         ChromedImage(
-                            painter = BitmapPainter(bitmap),
+                            painter = image ?: EmptyPainter,
                             contentDescription = title,
                             contentScale = contentScale,
                             backgroundColor = background,
@@ -137,7 +176,7 @@ fun MovieCard(
                         )
                     } else {
                         Image(
-                            bitmap = bitmap,
+                            painter = image ?: EmptyPainter,
                             contentDescription = title,
                             contentScale = contentScale,
                             modifier = Modifier
@@ -146,7 +185,7 @@ fun MovieCard(
                         )
                     }
                 }
-                content()
+                content?.invoke()
                 if (useShadows) OvalShadow(
                     modifier = Modifier.fillMaxSize(),
                     colorEnd = Color.Transparent,
@@ -193,19 +232,17 @@ fun MovieCard(
     }
 }
 
-@Composable
-fun rememberMajorColor(
+fun majorColor(
     bitmap: ImageBitmap? = null,
     defaultColor: Color? = null
-): Color = remember(bitmap) {
+): Color {
     val default = defaultColor ?: Color.Transparent
-    runCatching {
-        if (bitmap == null) default else Palette
-            .from(bitmap.asAndroidBitmap())
-            .generate()
-            .getDominantColor(default.toArgb())
-            .let { dominantInt ->
-                Color(dominantInt)
-            }
-    }.getOrNull() ?: default
+    if (bitmap == null) {
+        return default
+    } else {
+        val androidBitmap = bitmap.asAndroidBitmap()
+        val palette = Palette.from(androidBitmap).generate()
+        val dominantInt = palette.getDominantColor(default.toArgb())
+        return Color(dominantInt)
+    }
 }

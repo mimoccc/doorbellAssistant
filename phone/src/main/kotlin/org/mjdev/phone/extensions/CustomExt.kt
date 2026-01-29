@@ -77,7 +77,7 @@ object CustomExt {
 
     fun Painter.toImageBitmap(
         size: Size,
-        density: Density,
+        density: Density = Density(1f), // todo compose density
         layoutDirection: LayoutDirection = LayoutDirection.Ltr,
     ): ImageBitmap {
         val bitmap = ImageBitmap(size.width.toInt(), size.height.toInt())

@@ -44,7 +44,7 @@ fun LauncherScreen(
         contentAlignment = Alignment.Center
     ) {
         BackgroundLayout(
-            Modifier.fillMaxSize()
+            Modifier.fillMaxSize(),
         )
         GlowButton(
             modifier = Modifier.size(120.dp),

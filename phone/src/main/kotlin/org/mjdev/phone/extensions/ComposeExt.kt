@@ -119,6 +119,8 @@ object ComposeExt {
     @Composable
     fun currentSystemUserName(): String = LocalContext.current.currentSystemUserName
 
+    val EmptyPainter : BitmapPainter = BitmapPainter(ImageBitmap(1, 1))
+
     @Suppress("ParamsComparedByRef")
     @Composable
     fun currentUser(
@@ -133,7 +135,7 @@ object ComposeExt {
 
     @Composable
     fun rememberAssetImage(
-        assetImageFile: String = "avatar/avatar_transparent.png",
+        assetImageFile: String = "avatar/avatar_yellow.png",
         onError: (Throwable) -> ImageBitmap = { ImageBitmap(1, 1) },
     ): ImageBitmap {
         val context: Context = LocalContext.current
@@ -143,6 +145,7 @@ object ComposeExt {
                     BitmapFactory.decodeStream(inputStream).asImageBitmap()
                 }
             }.onFailure { e ->
+                e.printStackTrace()
                 onError(e)
             }.getOrNull()
                 ?: onError(RuntimeException("Error loading: $assetImageFile from assets."))
@@ -151,10 +154,8 @@ object ComposeExt {
 
     @Composable
     fun rememberAssetImagePainter(
-        assetImageFile: String = "avatar/avatar_transparent.png",
-        assetImage: ImageBitmap = rememberAssetImage(
-            assetImageFile = assetImageFile
-        ),
+        assetImageFile: String = "avatar/avatar_yellow.png",
+        assetImage: ImageBitmap = rememberAssetImage(assetImageFile),
     ): Painter = remember(assetImageFile, assetImage) {
         BitmapPainter(assetImage)
     }

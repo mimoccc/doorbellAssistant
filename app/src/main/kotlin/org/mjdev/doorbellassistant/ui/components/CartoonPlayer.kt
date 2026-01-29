@@ -52,7 +52,7 @@ fun CartoonPlayer(
     onResumed: () -> Boolean = { true },
 ) = PhoneTheme {
     BackgroundLayout(
-        assetImageFile = "avatar/avatar_transparent.png",
+        assetImageFile = "avatar/avatar_yellow.png",
         showImage = isPreview
     ) {
         VideoPlayer(

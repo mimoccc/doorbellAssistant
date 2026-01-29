@@ -86,27 +86,40 @@ object ContextExt {
                 n is Inet4Address && !n.isLoopbackAddress
             }?.hostAddress ?: "..."
 
-    // todo deprecation
     @Suppress("DEPRECATION")
     val Context.currentWifiSSID: String
         get() = run {
-            var ssid = wifiManager?.connectionInfo?.ssid?.replace("\"", "")
-            if (ssid == null || ssid == UnknownSSID || ssid == Unknown) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    val connectivityManager = getSystemService(
-                        Context.CONNECTIVITY_SERVICE
-                    ) as? ConnectivityManager
-                    val network = connectivityManager?.activeNetwork
-                    val capabilities = connectivityManager?.getNetworkCapabilities(network)
-                    val isWifi =
-                        capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
-                    if (isWifi) {
+            var ssid: String? = null
+            try {
+                val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+                ssid = wifiManager.connectionInfo?.ssid
+                Log.d("WiFi", "Old method result: $ssid")
+            } catch (e: Exception) {
+                Log.e("WiFi", "Old method failed: ${e.message}")
+            }
+            if (ssid != null && ssid != "\"<unknown ssid>\"" && ssid != "<unknown ssid>") {
+                return@run ssid.replace("\"", "")
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                try {
+                    val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                    val network = connectivityManager.activeNetwork
+                    val capabilities = connectivityManager.getNetworkCapabilities(network)
+                    if (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true) {
                         val wifiInfo = capabilities.transportInfo as? WifiInfo
-                        ssid = wifiInfo?.ssid?.replace("\"", "")
+                        ssid = wifiInfo?.ssid
+                        Log.d("WiFi", "New method result: $ssid")
                     }
+                } catch (e: Exception) {
+                    Log.e("WiFi", "New method failed: ${e.message}")
                 }
             }
-            if (ssid == null || ssid == "<unknown ssid>") EmptySSID else ssid
+            ssid = ssid?.replace("\"", "")
+            when {
+                ssid.isNullOrBlank() -> EmptySSID
+                ssid == "<unknown ssid>" -> EmptySSID
+                else -> ssid
+            }
         }
 
     val Context.currentWifiIP: String

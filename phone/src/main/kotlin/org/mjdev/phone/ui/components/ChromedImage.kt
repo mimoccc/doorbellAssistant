@@ -22,14 +22,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.ShaderBrush
-import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -45,14 +43,14 @@ import org.mjdev.phone.helpers.Previews
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun ChromedImage(
-    painter: Painter= rememberAssetImagePainter("avatar/avatar_yellow.png"),
-    contentDescription: String?="",
+    painter: Painter = rememberAssetImagePainter("avatar/avatar_yellow.png"),
+    contentDescription: String? = "",
     modifier: Modifier = Modifier,
-    contentScale: ContentScale = ContentScale.Crop,
-    backgroundColor: Color= Color.Transparent,
-    clearColor :Color = Color(0xFFFF9500),
+    contentScale: ContentScale = ContentScale.Inside,
+    backgroundColor: Color = Color.Transparent,
+    clearColor: Color = Color(0xFFFF9500),
     threshold: Float = 0.15f,
-    colorFilter: ColorFilter? = null, // todo
+    colorFilter: ColorFilter? = null,
 ) = BoxWithConstraints(
     modifier = modifier.background(backgroundColor)
 ) {
@@ -61,20 +59,32 @@ fun ChromedImage(
         derivedStateOf {
             painter.toImageBitmap(
                 size = Size(
-                    constraints.maxWidth.toFloat(),
-                    constraints.maxHeight.toFloat()),
+                    painter.intrinsicSize.width,
+                    painter.intrinsicSize.height
+                ),
                 density = density,
             )
         }
     }
-    val shader = remember(bitmap) {
+    val shader = remember {
         RuntimeShader(
             """
             uniform shader inputShader;
             uniform vec4 targetColor;
             uniform float threshold;
+            uniform float2 imageSize;
+            uniform float2 canvasSize;
+            uniform float scaleX;
+            uniform float scaleY;
+            uniform float offsetX;
+            uniform float offsetY;
             half4 main(float2 fragCoord) {
-                half4 color = inputShader.eval(fragCoord);
+                float2 bitmapCoord = (fragCoord - vec2(offsetX, offsetY)) / vec2(scaleX, scaleY);
+                if (bitmapCoord.x < 0.0 || bitmapCoord.x >= imageSize.x ||
+                    bitmapCoord.y < 0.0 || bitmapCoord.y >= imageSize.y) {
+                    return vec4(0.0, 0.0, 0.0, 0.0);
+                }
+                half4 color = inputShader.eval(bitmapCoord);
                 float dist = distance(color.rgb, targetColor.rgb);
                 float alpha = smoothstep(threshold, threshold + 0.05, dist);
                 return vec4(color.rgb, color.a * alpha);
@@ -83,7 +93,8 @@ fun ChromedImage(
         )
     }
     Canvas(
-        modifier = modifier
+        modifier = Modifier
+            .matchParentSize()
             .clipToBounds()
             .semantics {
                 if (contentDescription != null) {
@@ -92,32 +103,31 @@ fun ChromedImage(
                 }
             }
     ) {
-        val srcSize = Size(
-            bitmap?.width?.toFloat()?:1f,
-            bitmap?.height?.toFloat() ?: 1f
-        )
-        val scaleFactor = contentScale.computeScaleFactor(srcSize, size)
-        val scaledWidth = srcSize.width * scaleFactor.scaleX
-        val scaledHeight = srcSize.height * scaleFactor.scaleY
-        val dx = (size.width - scaledWidth) / 2f
-        val dy = (size.height - scaledHeight) / 2f
-        val bitmapShader = ImageShader(bitmap ?: ImageBitmap(1,1))
-        shader.setInputShader("inputShader", bitmapShader)
-        shader.setFloatUniform(
-            "targetColor",
-            clearColor.red,
-            clearColor.green,
-            clearColor.blue,
-            clearColor.alpha
-        )
-        shader.setFloatUniform("threshold", threshold)
-        withTransform({
-            translate(dx, dy)
-            scale(scaleFactor.scaleX, scaleFactor.scaleY, pivot = Offset.Zero)
-        }) {
+        bitmap?.let { bmp ->
+            val srcSize = Size(bmp.width.toFloat(), bmp.height.toFloat())
+            val scaleFactor = contentScale.computeScaleFactor(srcSize, size)
+            val scaledWidth = srcSize.width * scaleFactor.scaleX
+            val scaledHeight = srcSize.height * scaleFactor.scaleY
+            val dx = (size.width - scaledWidth) / 2f
+            val dy = (size.height - scaledHeight) / 2f
+            val bitmapShader = ImageShader(bmp)
+            shader.setInputShader("inputShader", bitmapShader)
+            shader.setFloatUniform("targetColor",
+                clearColor.red,
+                clearColor.green,
+                clearColor.blue,
+                clearColor.alpha
+            )
+            shader.setFloatUniform("threshold", threshold)
+            shader.setFloatUniform("imageSize", srcSize.width, srcSize.height)
+            shader.setFloatUniform("canvasSize", size.width, size.height)
+            shader.setFloatUniform("scaleX", scaleFactor.scaleX)
+            shader.setFloatUniform("scaleY", scaleFactor.scaleY)
+            shader.setFloatUniform("offsetX", dx)
+            shader.setFloatUniform("offsetY", dy)
             drawRect(
                 brush = ShaderBrush(shader),
-                size = srcSize,
+                size = size,
                 colorFilter = colorFilter
             )
         }

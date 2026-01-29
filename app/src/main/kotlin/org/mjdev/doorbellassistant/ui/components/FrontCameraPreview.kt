@@ -27,13 +27,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import org.mjdev.doorbellassistant.extensions.CustomAppExt.rememberDeviceCapture
-import org.mjdev.phone.extensions.CustomExt.EmptyBitmap
+import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.nsdDevice
 import org.mjdev.phone.ui.components.MovieCard
@@ -42,7 +43,7 @@ import org.mjdev.phone.ui.theme.base.phoneColors
 
 @Suppress("ParamsComparedByRef")
 @SuppressLint("ConfigurationScreenWidthHeight")
-//@Previews
+@Previews
 @Composable
 fun FrontCameraPreview(
     modifier: Modifier = Modifier,
@@ -93,7 +94,7 @@ fun FrontCameraPreview(
             backgroundColor = Color.DarkGray,
             title = "", // todo
             subtitle = "", // todo
-            bitmap = (imageState.value ?: EmptyBitmap).asImageBitmap()
+            image = imageState.value?.let { bmp -> BitmapPainter(bmp.asImageBitmap()) }
         )
     }
     LaunchedEffect(device) {
