@@ -16,8 +16,9 @@ import android.media.AudioTrack
 import kotlinx.coroutines.delay
 import kotlin.math.roundToLong
 
+// todo output to media stream
 class AudioPlayer(
-    private val sampleRate: Int
+    private val sampleRate: Int,
 ) {
     private fun getAudioAttributes() = AudioAttributes.Builder()
         .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)

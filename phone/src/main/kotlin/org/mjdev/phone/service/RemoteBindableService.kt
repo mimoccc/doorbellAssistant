@@ -114,6 +114,12 @@ open class RemoteBindableService : Service() {
             }
         }
 
+        fun subscribe(
+            handler: (ServiceEvent) -> Unit
+        ) {
+            _events.forEach(handler)
+        }
+
         inline fun <reified C : ServiceCommand> send(
             command: C
         ) = CoroutineScope(Dispatchers.Default).launch {

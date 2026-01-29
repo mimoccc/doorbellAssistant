@@ -38,7 +38,7 @@ class TTSService : RemoteBindableService() {
 //            }
         }
     }
-    private var lastText: String? = null
+//    private var lastText: String? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -63,7 +63,7 @@ class TTSService : RemoteBindableService() {
 
     fun talk(text: String) {
         if (text.trim().isNotEmpty()) {
-            lastText = text
+//            lastText = text
             tts.talk(text)
         }
     }

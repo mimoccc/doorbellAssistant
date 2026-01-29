@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.mjdev.doorbellassistant.agent.ai.AIManager.Companion.TAG
 import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKit
-import org.mjdev.doorbellassistant.agent.stt.transcribers.vosk.VoskKit
+import org.mjdev.doorbellassistant.agent.stt.transcribers.whisper.WhisperKit
 import org.mjdev.doorbellassistant.ui.theme.Red
 import org.mjdev.doorbellassistant.ui.theme.White
 import org.mjdev.phone.extensions.ComposeExt.VisibleState
@@ -68,7 +68,7 @@ fun AISpeechRecognizer(
     onPrompt: (String) -> Unit = {},
     onError: (Throwable) -> Unit = { e -> Log.e(TAG, "Error in ai.", e) },
     onThinking: () -> Unit = {},
-    createKit: (Context) -> ITKit = { context -> VoskKit(context) },
+    createKit: (Context) -> ITKit = { context -> WhisperKit(context) },
 ) = PhoneTheme {
     val bckColor = phoneColors.colorLabelsBackground
     var isFirstText by remember { mutableStateOf(true) }

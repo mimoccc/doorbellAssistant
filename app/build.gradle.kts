@@ -63,6 +63,7 @@ android {
     compileSdk {
         version = release(36)
     }
+    ndkVersion = "29.0.14206865"
     packaging {
         resources {
             excludes += "META-INF/mailcap"
@@ -128,6 +129,8 @@ android {
 dependencies {
     // stupid gson reflection dependency
     implementation(kotlin("reflect"))
+    // stt
+    implementation(project(":whisper"))
     // tts
     implementation(project(":piper"))
     // phone
