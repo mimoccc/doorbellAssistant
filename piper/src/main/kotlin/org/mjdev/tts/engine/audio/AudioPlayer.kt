@@ -19,9 +19,10 @@ import kotlin.math.roundToLong
 // todo output to media stream
 class AudioPlayer(
     private val sampleRate: Int,
+    private val outputStream: AudioOutputStream = AudioOutputStream.MEDIA
 ) {
     private fun getAudioAttributes() = AudioAttributes.Builder()
-        .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+        .setUsage(outputStream.toUsage())
         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
         .build()
 
