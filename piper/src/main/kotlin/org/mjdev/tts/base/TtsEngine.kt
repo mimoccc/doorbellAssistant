@@ -8,7 +8,7 @@
  * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
  */
 
-package org.mjdev.tts.engine.base
+package org.mjdev.tts.base
 
 interface TtsEngine {
     fun initialize()

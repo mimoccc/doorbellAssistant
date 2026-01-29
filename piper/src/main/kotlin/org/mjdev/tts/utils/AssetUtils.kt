@@ -1,4 +1,14 @@
-package org.mjdev.tts.engine.utils
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
+package org.mjdev.tts.utils
 
 import android.content.Context
 import android.util.Log

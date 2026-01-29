@@ -19,6 +19,8 @@ import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.core.content.ContextCompat
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -65,6 +67,11 @@ object CustomAppExt {
         onFrame: (ExoPlayer) -> Unit = {},
         onVideoStart: (ExoPlayer) -> Unit = {},
     ): ExoPlayer = ExoPlayer.Builder(context).build().apply {
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(C.USAGE_MEDIA)
+            .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+            .build()
+        setAudioAttributes(audioAttributes, true)
         setVideoFrameMetadataListener { _, _, _, _ ->
             onFrame(this@apply)
         }

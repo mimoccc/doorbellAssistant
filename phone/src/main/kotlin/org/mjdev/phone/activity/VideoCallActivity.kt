@@ -65,6 +65,7 @@ open class VideoCallActivity : UnlockedActivity() {
             modifier = Modifier.fillMaxSize(),
             callee = callee,
             caller = caller,
+            ringtone = "ringtone/ringtone.ogg",
             isCaller = caller.address == currentWifiIP,
             onEndCall = onEndCall,
             onStartCall = onStartCall

@@ -28,6 +28,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -37,24 +44,39 @@ import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.mjdev.phone.extensions.ContextExt.currentWifiIP
+import org.mjdev.phone.helpers.AudioPlayer
+import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 
 @Suppress("ParamsComparedByRef")
-//@Previews
+@Previews
 @Composable
 fun CallScreen(
     modifier: Modifier = Modifier,
-    caller: NsdDevice,
-    callee: NsdDevice,
+    caller: NsdDevice = NsdDevice.EMPTY,
+    callee: NsdDevice = NsdDevice.EMPTY,
+    ringtone: String = "ringtone/ringtone.ogg",
     buttonSize: Dp = 48.dp,
     callerSize: Dp = 120.dp,
     onAccept: () -> Unit = {},
-    onDeny: () -> Unit = {}
+    onDeny: () -> Unit = {},
 ) = PhoneTheme {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var ringtoneJob by remember { mutableStateOf<Job?>(null) }
+    val audioPlayer = remember {
+        AudioPlayer(
+            sampleRate = 48000,
+            outputStream = AudioPlayer.AudioOutputStream.MEDIA
+        )
+    }
+    val isCaller = caller.address != context.currentWifiIP
     Box(
         modifier.background(phoneColors.colorBackground)
     ) {
@@ -77,7 +99,7 @@ fun CallScreen(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (caller.address != context.currentWifiIP) {
+            if (isCaller) {
                 IconButton(
                     modifier = Modifier.size(buttonSize),
                     onClick = onAccept,
@@ -108,6 +130,33 @@ fun CallScreen(
                     tint = White // todo
                 )
             }
+        }
+    }
+    LaunchedEffect(isCaller) {
+        if (isCaller) {
+            ringtoneJob = scope.launch {
+                while (isActive) {
+                    try {
+                        audioPlayer.playOggFromAssets(
+                            context = context,
+                            assetPath = ringtone,
+                            onPlayFinish = {
+                            },
+                            onPlayError = { e ->
+                                e.printStackTrace()
+                            }
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        break
+                    }
+                }
+            }
+        }
+    }
+    DisposableEffect(isCaller) {
+        onDispose {
+            ringtoneJob?.cancel()
         }
     }
 }

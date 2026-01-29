@@ -1,8 +1,18 @@
-package org.mjdev.tts.engine.misaki
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
+package org.mjdev.tts.misaki
 
 import android.util.Log
-import org.mjdev.tts.engine.data.MToken
-import org.mjdev.tts.engine.data.TokenContext
+import org.mjdev.tts.data.MToken
+import org.mjdev.tts.data.TokenContext
 import java.util.regex.Pattern
 
 @Suppress("PrivatePropertyName", "RegExpRedundantEscape", "LocalVariableName")

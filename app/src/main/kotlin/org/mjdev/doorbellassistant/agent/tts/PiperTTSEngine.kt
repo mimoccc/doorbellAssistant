@@ -22,8 +22,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.mjdev.phone.helpers.json.Serializable
-import org.mjdev.tts.engine.audio.AudioPlayer
-import org.mjdev.tts.engine.piper.PiperEngine
+import org.mjdev.tts.audio.AudioPlayer
+import org.mjdev.tts.piper.PiperEngine
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

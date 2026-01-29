@@ -1,13 +1,23 @@
-package org.mjdev.tts.engine.helpers
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
+package org.mjdev.tts.helpers
 
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.mjdev.tts.engine.espeak.EspeakWrapper
-import org.mjdev.tts.engine.misaki.G2P
-import org.mjdev.tts.engine.misaki.Lexicon
-import org.mjdev.tts.engine.utils.AssetUtils
+import org.mjdev.tts.espeak.EspeakWrapper
+import org.mjdev.tts.misaki.G2P
+import org.mjdev.tts.misaki.Lexicon
+import org.mjdev.tts.utils.AssetUtils
 import java.io.File
 
 class Phonemizer(private val context: Context) {

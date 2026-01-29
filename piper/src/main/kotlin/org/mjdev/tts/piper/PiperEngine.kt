@@ -8,7 +8,7 @@
  * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
  */
 
-package org.mjdev.tts.engine.piper
+package org.mjdev.tts.piper
 
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
@@ -25,12 +25,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.mjdev.tts.engine.base.TtsEngine
-import org.mjdev.tts.engine.espeak.EspeakWrapper
-import org.mjdev.tts.engine.helpers.MisakiToPiperIPA
-import org.mjdev.tts.engine.misaki.G2P
-import org.mjdev.tts.engine.misaki.Lexicon
-import org.mjdev.tts.engine.utils.AssetUtils
+import org.mjdev.tts.base.TtsEngine
+import org.mjdev.tts.espeak.EspeakWrapper
+import org.mjdev.tts.helpers.MisakiToPiperIPA
+import org.mjdev.tts.misaki.G2P
+import org.mjdev.tts.misaki.Lexicon
+import org.mjdev.tts.utils.AssetUtils
 import java.io.File
 import java.nio.FloatBuffer
 import java.nio.LongBuffer

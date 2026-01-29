@@ -1,6 +1,14 @@
-package org.mjdev.tts.engine.helpers
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
 
-import kotlin.collections.iterator
+package org.mjdev.tts.helpers
 
 object MisakiToPiperIPA {
     private val DIPHTHONG_MAP = mapOf(

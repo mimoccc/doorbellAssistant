@@ -7,7 +7,7 @@
 #define TAG "EspeakJNI"
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
-JNIEXPORT jint JNICALL Java_org_mjdev_tts_engine_espeak_EspeakWrapper_initialize(
+JNIEXPORT jint JNICALL Java_org_mjdev_tts_espeak_EspeakWrapper_initialize(
     JNIEnv *env, jobject thiz, jstring dataPath) {
   const char *path = (*env)->GetStringUTFChars(env, dataPath, 0);
   int result = espeak_Initialize(AUDIO_OUTPUT_SYNCHRONOUS, 0, path, 0);
@@ -16,7 +16,7 @@ JNIEXPORT jint JNICALL Java_org_mjdev_tts_engine_espeak_EspeakWrapper_initialize
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_mjdev_tts_engine_espeak_EspeakWrapper_textToPhonemes(
+Java_org_mjdev_tts_espeak_EspeakWrapper_textToPhonemes(
     JNIEnv *env,
     jobject thiz,
     jstring text,
