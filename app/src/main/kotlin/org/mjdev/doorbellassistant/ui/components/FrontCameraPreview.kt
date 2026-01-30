@@ -94,11 +94,13 @@ fun FrontCameraPreview(
             backgroundColor = Color.DarkGray,
             title = "", // todo
             subtitle = "", // todo
-            image = imageState.value?.let { bmp -> BitmapPainter(bmp.asImageBitmap()) }
+            image = imageState.value?.let { bmp ->
+                BitmapPainter(bmp.asImageBitmap())
+            }
         )
     }
     LaunchedEffect(device) {
-        if (device == null && device != NsdDevice.EMPTY) {
+        if (device == null) {
             context.nsdDevice { device ->
                 captureDevice = device
             }

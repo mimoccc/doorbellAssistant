@@ -25,11 +25,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,10 +36,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.mjdev.doorbellassistant.agent.ai.AIManager.Companion.TAG
+import org.mjdev.doorbellassistant.service.STTService
+import org.mjdev.doorbellassistant.service.STTService.Companion.rememberSttService
 import org.mjdev.doorbellassistant.ui.theme.Red
 import org.mjdev.doorbellassistant.ui.theme.White
 import org.mjdev.phone.extensions.ComposeExt.VisibleState
+import org.mjdev.phone.extensions.CustomExt.isPreview
 import org.mjdev.phone.helpers.Previews
+import org.mjdev.phone.service.ServiceEvent
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 
@@ -52,76 +55,49 @@ import org.mjdev.phone.ui.theme.base.phoneColors
 fun AISpeechRecognizer(
     modifier: Modifier = Modifier,
     autoStart: Boolean = false,
-    voiceDetectionSensitivity: Float = 0.2f,
-    stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
-    maxRecordingDurationMs: Long = 20000L,
-    minRecordingDurationMs: Long = 2000L,
+    shouldListen: Boolean = isPreview,
+    // todo service params
+//    voiceDetectionSensitivity: Float = 0.2f,
+//    stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
+//    maxRecordingDurationMs: Long = 20000L,
+//    minRecordingDurationMs: Long = 2000L,
+    onConversationStarts: () -> Unit = {},
     onConversationEnds: (String) -> Unit = {},
     onDownloading: (Float) -> Unit = {},
     onVoiceDetected: () -> Unit = {},
-    onVoiceUnDetected: () -> Unit = {},
-    onConversationResponded: () -> Unit = {},
-    onInterruptions: () -> Unit = {},
+    onVoiceLost: () -> Unit = {},
     onPrompt: (String) -> Unit = {},
     onError: (Throwable) -> Unit = { e -> Log.e(TAG, "Error in ai.", e) },
     onThinking: () -> Unit = {},
-//    createKit: (Context) -> ITKit = { context -> WhisperKit(context) },
+    onInterruptions: () -> Unit = {},
 ) = PhoneTheme {
     val bckColor = phoneColors.colorLabelsBackground
-    var isFirstText by remember { mutableStateOf(true) }
-    var textState by remember { mutableStateOf("Welcome...") }
-
-//    val recognizerState = rememberWhisperVoiceRecognizerState(
-//        stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,
-//        voiceDetectionSensitivity = voiceDetectionSensitivity,
-//        maxRecordingDurationMs = maxRecordingDurationMs,
-//        minRecordingDurationMs = minRecordingDurationMs,
-//        onInitialized = {
-//            textState = "Welcome..."
-//            onVoiceRecognizerInitialized(this)
-//        },
-//        onVoiceDetected = {
-//            onVoiceDetected()
-//        },
-//        onVoiceStarts = {
-//            onVoiceDetected()
-//        },
-//        onVoiceEnds = {
-//            stopListening()
-//            onVoiceUnDetected()
-//            // todo, unfinisher, and remove stupid listeners
-//            onPrompt(textState)
-//            textState = "Thinking..."
-//        },
-//        onDownloading = { percent ->
-//            textState = "Downloading model ${(percent * 100).toInt()} %."
-//            onDownloading(percent)
-//        },
-//        onThinking = {
-//            onThinking()
-//        },
-//        onVoiceTranscribed = { text, segments ->
-//            if (isFirstText) {
-//                isFirstText = false
-//                textState = text
-//            } else {
-//                textState += " $text"
-//            }
-//        },
-//        onFailure = { e ->
-//            Log.e(TAG, "Voice recognizer failed.", e)
-//            textState = "${e.message}"
-//            onFailure(e)
-//        },
-//    )
-    val thinkingState by remember() {
+    val sttService: STTService.STTServiceConnector? by rememberSttService(autoStart)
+    val sttServiceEvents: List<ServiceEvent> = remember(sttService?.events?.size) {
+        sttService?.events ?: emptyList()
+    }
+    val lastSttState : ServiceEvent? by remember (sttServiceEvents.size) {
         derivedStateOf {
-            false
+            sttServiceEvents.lastOrNull()
         }
     }
-    val listenState by remember() {
+    val transcribingState by remember(sttServiceEvents.size) {
         derivedStateOf {
-            false
+            lastSttState is STTService.OnTranscribing
+        }
+    }
+    val thinkingState by remember(sttServiceEvents.size) {
+        derivedStateOf {
+            false // todo ai state
+        }
+    }
+    val listenState by remember(sttServiceEvents.size) {
+        derivedStateOf {
+            val isListening = lastSttState is STTService.OnStartListen
+            val isVoiceDetected = lastSttState is STTService.OnVoiceDetected
+            val isVoiceLost = lastSttState is STTService.OnVoiceLost
+            val isTranscribing = lastSttState is STTService.OnTranscribing
+            thinkingState || isListening || isVoiceDetected || isVoiceLost || isTranscribing
         }
     }
     val colorStateThinking by remember(thinkingState) {
@@ -132,6 +108,32 @@ fun AISpeechRecognizer(
     val colorStateListening by remember(listenState) {
         derivedStateOf {
             if (listenState) Red else bckColor
+        }
+    }
+    val textState by remember(sttServiceEvents.size) {
+        derivedStateOf {
+            when (lastSttState) {
+                null -> {
+                    "Initialising..."
+                }
+
+                is STTService.OnStartListen -> {
+                    "Listening..."
+                }
+
+                is STTService.OnDownloading -> {
+                    val percent = (lastSttState as STTService.OnDownloading).percent * 100
+                    "Downloading ${(percent * 100).toInt()} % ..."
+                }
+
+                is STTService.OnGotTextFromVoice -> {
+                    (lastSttState as STTService.OnGotTextFromVoice).text
+                }
+
+                else -> {
+                    "Ready..."
+                }
+            }
         }
     }
     Box(
@@ -191,11 +193,59 @@ fun AISpeechRecognizer(
                 .border(2.dp, Color.White, CircleShape)
                 .padding(2.dp)
                 .align(Alignment.CenterStart),
-            autoStart = autoStart,
-            voiceDetectionSensitivity = 0.2f,
-            stopListeningWhenNoVoiceAtLeast = 2.0f,
-            maxRecordingDurationMs = 20000L,
-            minRecordingDurationMs = 2000L,
+            isListening = listenState,
+            isThinking = transcribingState
         )
+    }
+    LaunchedEffect(sttService, shouldListen) {
+        if (shouldListen) {
+            sttService?.startListen()
+        } else {
+            sttService?.stopListen()
+        }
+    }
+    LaunchedEffect(sttServiceEvents.size) {
+        val lastState = sttServiceEvents.lastOrNull()
+        when (lastState) {
+            null -> {
+                // no op
+            }
+
+            is STTService.OnVoiceDetected -> {
+                onVoiceDetected()
+            }
+
+            is STTService.OnVoiceLost -> {
+                onVoiceLost()
+            }
+
+            is STTService.OnGotTextFromVoice -> {
+                onPrompt(lastState.text)
+            }
+
+            is STTService.OnDownloading -> {
+                onDownloading(lastState.percent)
+            }
+
+            is STTService.OnError -> {
+                onError((sttServiceEvents.last() as STTService.OnError).error)
+            }
+
+            is STTService.OnStopListen -> {
+                onConversationEnds(textState)
+            }
+
+            is STTService.OnStartListen -> {
+                onConversationStarts()
+            }
+
+            is STTService.OnVoiceContinue -> {
+                onInterruptions()
+            }
+
+            else -> {
+                // no op
+            }
+        }
     }
 }

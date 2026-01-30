@@ -10,28 +10,21 @@
 
 package org.mjdev.doorbellassistant.ui.components
 
-import android.content.Context
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKitModel
-import org.mjdev.doorbellassistant.agent.stt.transcribers.vosk.VoskModelType
+import org.mjdev.phone.extensions.CustomExt.isPreview
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
+import org.mjdev.phone.ui.theme.base.phoneColors
+import org.mjdev.phone.ui.theme.base.phoneIcons
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("ParamsComparedByRef")
@@ -39,25 +32,26 @@ import org.mjdev.phone.ui.theme.base.PhoneTheme
 @Composable
 fun VoiceRecognizer(
     modifier: Modifier = Modifier,
-    context: Context = LocalContext.current,
-    modelType: ITKitModel = VoskModelType.CS_SMALL,
-    voiceDetectionSensitivity: Float = 0.2f,
-    stopListeningWhenNoVoiceAtLeast: Float = 2.0f,
-    maxRecordingDurationMs: Long = 20000L,
-    minRecordingDurationMs: Long = 2000L,
-    autoStart: Boolean = false,
-    iconTint: Color = Color.White,
+    isListening: Boolean = isPreview,
+    isThinking: Boolean = isPreview
 ) = PhoneTheme {
-    var isListening by remember { mutableStateOf(false)}
     Box(
         modifier = modifier.size(48.dp),
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector = if (isListening) Icons.Default.Mic else Icons.Default.MicOff,
+            imageVector = if (isListening) phoneIcons.buttonMicOn
+            else phoneIcons.buttonMicOff,
             contentDescription = "",
-            tint = iconTint,
+            tint = phoneColors.colorIconTint,
             modifier = Modifier.size(32.dp)
         )
+        if (isThinking) {
+            CircularProgressIndicator(
+                modifier = Modifier.fillMaxSize(),
+                color = phoneColors.colorIconTint,
+                trackColor = phoneColors.colorIconsBackground,
+            )
+        }
     }
 }

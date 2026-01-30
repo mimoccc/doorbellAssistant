@@ -113,7 +113,10 @@ object PermissionsExt {
     @SuppressLint("UseKtx")
     @Composable
     fun LaunchPermissions(
-        specialHandlers: List<SpecialPermissionHandler> = listOf(OverlayPermissionHandler),
+        specialHandlers: List<SpecialPermissionHandler> = listOf(
+            OverlayPermissionHandler,
+            ManageExternalStorageHandler
+        ),
         onPermissionsResult: ((Map<String, Boolean>) -> Unit)? = null,
         onAllPermissionsGranted: (suspend () -> Unit)? = null,
     ) {

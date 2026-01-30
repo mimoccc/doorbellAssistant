@@ -37,18 +37,17 @@ import org.mjdev.phone.extensions.ContextExt.startService
 import org.mjdev.phone.extensions.KeyGuardExt.dismissKeyguard
 import org.mjdev.phone.extensions.WakeLockExt.acquireWakeLock
 import org.mjdev.phone.extensions.WakeLockExt.dismissWakeLock
-import org.mjdev.phone.helpers.DelayHandler
 import org.mjdev.phone.nsd.device.NsdType
 import org.mjdev.phone.nsd.service.CallNsdService.Companion.setNsdDeviceType
 
 class AssistantActivity : UnlockedActivity() {
     private val isMotionDetected = mutableStateOf(false)
 
-    private val delayHandler by lazy {
-        DelayHandler(DEFAULT_DELAY_MOTION_DETECTION) {
-            handleMotionLost(false)
-        }
-    }
+//    private val delayHandler by lazy {
+//        DelayHandler(DEFAULT_DELAY_MOTION_DETECTION) {
+//            handleMotionLost(false)
+//        }
+//    }
 
     private val isInCall: Boolean
         get() = isRunning<VideoCallActivity>()
@@ -76,16 +75,16 @@ class AssistantActivity : UnlockedActivity() {
                 },
                 onDismiss = {
                     handleMotionLost(false)
-                    delayHandler.stop()
+//                    delayHandler.stop()
                 },
                 onWelcomeVideoFinished = {
-                    delayHandler.start()
+//                    delayHandler.start()
                 },
                 onConversationContinued = {
-                    delayHandler.restart()
+//                    delayHandler.restart()
                 },
                 onThinking = {
-                    delayHandler.stop()
+//                    delayHandler.stop()
                 }
             )
         }
@@ -106,7 +105,7 @@ class AssistantActivity : UnlockedActivity() {
 
     override fun onPause() {
         super.onPause()
-        delayHandler.stop()
+//        delayHandler.stop()
         dismissWakeLock()
     }
 

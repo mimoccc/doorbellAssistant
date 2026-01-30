@@ -14,8 +14,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.CoroutineScope
@@ -48,48 +48,42 @@ class STTService(
     var maxRecordingDurationMs: Long = 20000L,
     var minRecordingDurationMs: Long = 2000L,
 ) : RemoteBindableService() {
-    val scope = CoroutineScope(Dispatchers.IO)
-    val voiceInitialised = mutableStateOf(false)
-    val transcriptInitialised = mutableStateOf(false)
-    val transcribing = mutableStateOf(false)
-    val transcribedText = mutableStateOf("")
-    val voiceDetected = mutableStateOf(false)
-    val lastError = mutableStateOf<Throwable?>(null)
+    private val scope = CoroutineScope(Dispatchers.IO)
+    private val transcribeKit by lazy {
+        createKit(baseContext).apply {
+            setModel(modelType)
+            subscribe { event ->
+                Log.d(TAG, "$event")
+                when (event) {
+                    is ITKitResult.Initialized -> {
+                        // todo event
+                    }
 
-    private val transcribeKit by lazy { createKit(baseContext).apply {
-        setModel(modelType)
-        subscribe { event ->
-            Log.d(TAG, "$event")
-            when (event) {
-                is ITKitResult.Initialized -> {
-                    transcriptInitialised.value = true
-                }
+                    is ITKitResult.Text -> {
+                        if (event.text.isNotEmpty()) {
+                            sendServiceEvent(OnGotTextFromVoice(event.text))
+                        }
+                    }
 
-                is ITKitResult.Text -> {
-                    transcriptInitialised.value = true
-                    transcribedText.value = event.text
-                    transcribing.value = false
-                }
+                    is ITKitResult.Error -> {
+                        sendServiceEvent(OnError(event.error))
+                    }
 
-                is ITKitResult.Error -> {
-                    lastError.value = event.error
-                }
+                    is ITKitResult.Transcribing -> {
+                        sendServiceEvent(OnTranscribing)
+                    }
 
-                is ITKitResult.Transcribing -> {
-                    transcriptInitialised.value = true
-                    transcribing.value = true
-                }
+                    is ITKitResult.Download -> {
+                        sendServiceEvent(OnDownloading(event.percent))
+                    }
 
-                is ITKitResult.Download -> {
-                    transcriptInitialised.value = false
-                }
-
-                is ITKitResult.Released -> {
-                    transcriptInitialised.value = false
+                    is ITKitResult.Released -> {
+                        sendServiceEvent(OnStopListen)
+                    }
                 }
             }
         }
-    }}
+    }
     private val voiceKit by lazy {
         VoiceKit(
             context = applicationContext,
@@ -99,34 +93,35 @@ class STTService(
             minRecordingDurationMs = minRecordingDurationMs,
         ) {
             subscribe { event ->
-                Log.d(TAG, "$event")
+                Log.d(TAG, "VKEvent : $event")
                 when (event) {
                     is VoiceKitResult.Error -> {
-                        lastError.value = event.error
+                        sendServiceEvent(OnError(event.error))
                     }
 
                     is VoiceKitResult.Initialized -> {
-                        voiceInitialised.value = true
+                        sendServiceEvent(OnStartListen)
                     }
 
                     is VoiceKitResult.Released -> {
-                        voiceInitialised.value = false
+                        sendServiceEvent(OnStopListen)
                     }
 
                     is VoiceKitResult.StartRecording -> {
-                        voiceDetected.value = true
+                        sendServiceEvent(OnStartListen)
                     }
 
                     is VoiceKitResult.VoiceDetected -> {
-                        voiceDetected.value = true
+                        sendServiceEvent(OnVoiceDetected)
                     }
 
                     is VoiceKitResult.VoiceLost -> {
-                        voiceDetected.value = false
+                        sendServiceEvent(OnVoiceLost)
                     }
 
                     is VoiceKitResult.OnVoiceRecordChunk -> {
                         transcribeKit.transcribe(event.data)
+                        sendServiceEvent(OnVoiceContinue)
                     }
                 }
             }
@@ -149,14 +144,15 @@ class STTService(
         command: ServiceCommand,
         handler: (ServiceEvent) -> Unit
     ) {
-        super.executeCommand(command, handler)
         when (command) {
             is StartListen -> {
                 startListen()
+                handler(OnStartListen)
             }
 
             is StopListen -> {
                 stopListen()
+                handler(OnStopListen)
             }
         }
     }
@@ -164,13 +160,18 @@ class STTService(
     @SuppressLint("MissingPermission")
     private fun startListen() {
         scope.launch {
-            voiceKit.start()
+            if(!voiceKit.isListeningActive) {
+                voiceKit.start()
+            }
         }
     }
 
     private fun stopListen() {
         scope.launch {
-            voiceKit.stop()
+            if(voiceKit.isListeningActive) {
+                voiceKit.stop()
+            }
+            clearEvents()
         }
     }
 
@@ -179,13 +180,6 @@ class STTService(
     ) : ServiceConnector<STTService>(context, STTService::class) {
         fun startListen() = send(StartListen)
         fun stopListen() = send(StopListen)
-        fun onGotTextFromVoice(
-            handler: (String) -> Unit
-        ) = subscribe { event ->
-            if (event is OnGotTextFromVoice) {
-                handler(event.text)
-            }
-        }
     }
 
     @Serializable
@@ -199,16 +193,49 @@ class STTService(
         val text: String
     ) : ServiceEvent()
 
+    @Serializable
+    data class OnDownloading(
+        val percent: Float
+    ) : ServiceEvent()
+
+    @Serializable
+    data class OnError(
+        val error: Throwable
+    ) : ServiceEvent()
+
+    @Serializable
+    object OnTranscribing : ServiceEvent()
+
+    @Serializable
+    object OnVoiceDetected : ServiceEvent()
+
+    @Serializable
+    object OnVoiceLost : ServiceEvent()
+
+    @Serializable
+    object OnVoiceContinue : ServiceEvent()
+
+    @Serializable
+    object OnStartListen : ServiceEvent()
+
+    @Serializable
+    object OnStopListen : ServiceEvent()
+
     companion object {
         private val TAG = STTService::class.simpleName
 
         @Composable
-        fun rememberSttService() = LocalContext.current.let { context ->
+        fun rememberSttService(
+            autoStart: Boolean = false,
+        ): State<STTServiceConnector?> = LocalContext.current.let { context ->
             remember(context) {
                 callbackFlow {
                     val connector = STTServiceConnector(context)
                     connector.connect()
                     send(connector)
+                    if (autoStart) {
+                        connector.startListen()
+                    }
                     awaitClose {
                         connector.disconnect()
                     }

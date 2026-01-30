@@ -12,15 +12,12 @@ package org.mjdev.doorbellassistant.ui.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.mjdev.doorbellassistant.enums.VideoSources
 import org.mjdev.doorbellassistant.helpers.MotionDetector
-import org.mjdev.doorbellassistant.service.TTSService.Companion.rememberTTSService
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayerState.Companion.rememberCartoonState
 import org.mjdev.phone.extensions.ComposeExt.VisibleState
 import org.mjdev.phone.extensions.CustomExt.isPreview
@@ -40,7 +37,7 @@ fun MainScreen(
     onThinking: () -> Unit = {},
 ) = PhoneTheme {
 //    val activityState = rememberActivityState()
-    val ttsService by rememberTTSService()
+//    val ttsService by rememberTTSService()
     Box(
         modifier = modifier
     ) {
@@ -74,11 +71,11 @@ fun MainScreen(
             )
         }
     }
-    LaunchedEffect(ttsService) {
-        if (ttsService != null) {
-            ttsService?.talk("Vítejte v aplikaci bytový asistent.")
-        }
-    }
+//    LaunchedEffect(ttsService) {
+//        if (ttsService != null) {
+//            ttsService?.talk("Vítejte v aplikaci bytový asistent.")
+//        }
+//    }
 }
 
 

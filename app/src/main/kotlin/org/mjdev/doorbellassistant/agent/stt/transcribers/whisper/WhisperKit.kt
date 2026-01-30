@@ -59,9 +59,10 @@ class WhisperKit(
     private suspend fun checkAndDownloadModel(
         onDownloading: (percent: Float) -> Unit = {}
     ) = withContext(Dispatchers.IO) {
-        Log.d(TAG, "Checking model existence.")
-        Log.d(TAG, "Path: ${modelFile.absolutePath}")
         runCatching {
+            Log.d(TAG, "Checking model existence.")
+            Log.d(TAG, "Path: ${modelFile.absolutePath}")
+            isDownloading = true
             if (!modelFile.exists()) {
                 modelFile.parentFile?.mkdirs()
                 val assetExists = runCatching {
@@ -85,17 +86,17 @@ class WhisperKit(
                                 onDownloading(progress)
                                 bytes = input.read(buffer)
                             }
+                            isDownloading = false
                         }
                     }
                 } else if (modelType.url.isNotBlank()) {
                     Log.d(TAG, "Not in assets, downloading...")
-                    isDownloading = true
                     downloadToFile(
                         url = modelType.url,
                         file = modelFile,
                         onProgress = { _, p ->
                             onDownloading(p)
-                            Log.d(TAG, "Download progress: ${p * 100}")
+                            Log.d(TAG, "Download progress: ${p * 100} %")
                         },
                         onComplete = { success, f ->
                             Log.d(TAG, "File downloaded: ${f?.absolutePath}")
@@ -105,7 +106,9 @@ class WhisperKit(
                 } else {
                     throw IllegalStateException("Model ${modelType.modelName} not found in assets and no download URL provided")
                 }
-                onDownloading(1f)
+            } else {
+                Log.d(TAG, "Model ready.")
+                isDownloading = false
             }
         }.onFailure { e ->
             send(ITKitResult.Error(e))
@@ -147,11 +150,14 @@ class WhisperKit(
     override fun transcribe(data: ByteArray) {
         whisperScope.launch {
             runCatching {
-                whisperLibContext?.transcribeData(data.toFloatArray(), false)
                 send(ITKitResult.Transcribing)
-                send(ITKitResult.Text("", listOf()))
+                val text = whisperLibContext?.transcribeData(data.toFloatArray(), false)
+                if (!text.isNullOrEmpty()) {
+                    send(ITKitResult.Text(text, listOf()))
+                }
             }.onFailure { e ->
                 send(ITKitResult.Error(e))
+                e.printStackTrace()
             }
         }
     }

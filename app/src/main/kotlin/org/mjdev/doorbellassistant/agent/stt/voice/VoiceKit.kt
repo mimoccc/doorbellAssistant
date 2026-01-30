@@ -49,7 +49,7 @@ class VoiceKit(
     private val mutex = Mutex()
     private var isRecording = false
     private var isVoiceDetected = false
-    private var isListeningActive = false
+    var isListeningActive = false
     private val silenceDurationMs = (stopListeningWhenNoVoiceAtLeast * 1000).toLong()
     private val channelConfig = if (channelCount == 1) AudioFormat.CHANNEL_IN_MONO
     else AudioFormat.CHANNEL_IN_STEREO

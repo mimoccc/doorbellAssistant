@@ -135,7 +135,6 @@ dependencies {
     implementation(project(":piper"))
     // phone
     implementation(project(":phone"))
-//    implementation("org.mjdev:phone:1.0.0")
     // logs
     implementation(libs.slf4j.api)
     implementation(libs.logback.android)
@@ -143,8 +142,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.service)
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
     // permissions
     implementation(libs.accompanist.permissions)
     // compose
@@ -156,6 +153,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.compose.lifecycle.runtime)
     // video player
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
@@ -211,12 +209,3 @@ configurations.all {
         force("net.java.dev.jna:jna:5.18.1")
     }
 }
-
-//tasks.register<Exec>("buildVosk") {
-//    commandLine = listOf("./build-vosk.sh")
-//    environment = mapOf("ANDROID_NDK_HOME" to android.ndkPath.toString())
-//}
-
-//tasks.named("preBuild") {
-//    dependsOn("buildVosk")
-//}

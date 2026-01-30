@@ -334,7 +334,7 @@ class FileDownloader(
                 val status = getDownloadStatus(downloadId)
                 val percent = status.progress / 100f
                 onProgress?.invoke(file, percent)
-                Log.d(TAG, "Download progress: ${percent * 100}")
+                Log.d(TAG, "Download progress: ${percent * 100} %")
                 if (status.isRunning || status.isPending) {
                     handler.postDelayed(this, 500)
                 }

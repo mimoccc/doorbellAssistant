@@ -13,10 +13,12 @@ package org.mjdev.doorbellassistant.agent.stt.transcribers.base
 import android.content.Context
 import kotlinx.coroutines.CloseableCoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.mjdev.doorbellassistant.helpers.FileDownloader
 import org.mjdev.phone.helpers.DataBus
 import java.io.File
 
+@OptIn(ExperimentalCoroutinesApi::class)
 abstract class ITKit(
     context: Context,
     scopeContext: CloseableCoroutineDispatcher,

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.vector
 
 import android.graphics.Bitmap
@@ -13,6 +23,7 @@ import androidx.compose.ui.graphics.vector.RootGroupName
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.core.graphics.createBitmap
 import org.mjdev.phone.vector.GroupComponent.Companion.createGroupComponent
 
 object ImageVectorProvider {
@@ -89,21 +100,21 @@ object ImageVectorProvider {
     }
 
     fun ImageVector.toBitmap(
-        density: Density,
-        sizePx: Int,
+        density: Density = Density(1f),
+        width: Int? = null,
+        height:Int? = width,
         tintColor: Color = Color.Unspecified
     ): Bitmap {
-        val bitmap = Bitmap.createBitmap(
-            sizePx,
-            sizePx,
-            Bitmap.Config.ARGB_8888
-        )
-        val canvas = Canvas(bitmap)
-        val size = Size(sizePx.toFloat(), sizePx.toFloat())
         val painter = createVectorPainter(
-            image = this@toBitmap,
+            image = this,
             density = density
         )
+        val bitmap = createBitmap(
+            width ?: painter.intrinsicSize.width.toInt(),
+            height ?: painter.intrinsicSize.height.toInt(),
+        )
+        val canvas = Canvas(bitmap)
+        val size = Size(bitmap.width.toFloat(), bitmap.height.toFloat())
         CanvasDrawScope().draw(
             density = Density(1f),
             layoutDirection = LayoutDirection.Ltr,

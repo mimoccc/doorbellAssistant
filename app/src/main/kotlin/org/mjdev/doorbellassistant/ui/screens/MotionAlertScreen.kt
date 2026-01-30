@@ -22,7 +22,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -56,6 +59,9 @@ fun MotionAlertScreen(
     onCommand: (String) -> Boolean = { false },
     onThinking: () -> Unit = {},
 ) = PhoneTheme {
+    var isWelcomeVideoFinished by remember {
+        mutableStateOf(false)
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -74,6 +80,9 @@ fun MotionAlertScreen(
             onResumed = {
                 true
             },
+            onVideoStart = {
+                isWelcomeVideoFinished = false
+            },
             onVideoFinish = {
                 when (videoState.videoState.value) {
                     VideoSources.Unavailable -> {
@@ -87,6 +96,7 @@ fun MotionAlertScreen(
                     VideoSources.Welcome -> {
                         videoState.idle()
                         onWelcomeVideoFinished()
+                        isWelcomeVideoFinished = true
                     }
 
                     else -> {
@@ -99,9 +109,11 @@ fun MotionAlertScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-            voiceDetectionSensitivity = voiceDetectionSensitivity,
-            stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,
-            onConversationResponded = onConversationContinued,
+            // todo params in service
+//            voiceDetectionSensitivity = voiceDetectionSensitivity,
+//            stopListeningWhenNoVoiceAtLeast = stopListeningWhenNoVoiceAtLeast,
+//            onConversationResponded = onConversationContinued,
+            shouldListen = isWelcomeVideoFinished,
             onPrompt = { prompt ->
             },
             onDownloading = { percent ->
@@ -120,7 +132,7 @@ fun MotionAlertScreen(
                 videoState.mute()
                 onConversationContinued()
             },
-            onVoiceUnDetected = {
+            onVoiceLost = {
 //                videoState.unmute()
             },
             onConversationEnds = { text ->

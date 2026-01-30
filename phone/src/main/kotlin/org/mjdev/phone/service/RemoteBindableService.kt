@@ -20,6 +20,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.Message
 import android.os.Messenger
+import android.util.Log
 import androidx.annotation.CallSuper
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -41,6 +42,8 @@ import kotlin.reflect.KClass
 
 @Suppress("unused")
 open class RemoteBindableService : Service() {
+    private val messengers = mutableListOf<Messenger>()
+
     private val messenger by lazy {
         Messenger(Handler(Looper.getMainLooper()) { msg ->
             onGotCommand(msg)
@@ -52,15 +55,34 @@ open class RemoteBindableService : Service() {
         val commandJson = msg?.data?.getSerializable(SERVICE_COMMAND) as? String
             ?: return true
         val command: ServiceCommand = commandJson.fromJson()
+        messengers.add(msg.replyTo)
         executeCommand(command) { ev ->
             val result = ev.asJson()
-            msg.replyTo?.send(
+            msg.replyTo?.let { messenger ->
+                messenger.send(
+                    Message.obtain(null, 0).apply {
+                        data = bundleOf(SERVICE_RESPONSE to result)
+                    }
+                )
+            }
+        }
+        return true
+    }
+
+    fun sendServiceEvent(event: ServiceEvent) {
+        val result = event.asJson()
+        messengers.forEach { messenger ->
+            messenger.send(
                 Message.obtain(null, 0).apply {
                     data = bundleOf(SERVICE_RESPONSE to result)
                 }
             )
         }
-        return true
+        Log.d(this::class.simpleName, "Event send $event")
+    }
+
+    fun clearEvents() {
+        // todo
     }
 
     open fun executeCommand(
@@ -79,7 +101,7 @@ open class RemoteBindableService : Service() {
     ) {
         private val replyHandler by lazy { ReplyHandler(this) }
         var serviceMessenger: Messenger? = null
-        private val _events = mutableStateListOf<ServiceEvent>()
+        val events = mutableStateListOf<ServiceEvent>()
         private val connection = object : ServiceConnection {
             override fun onServiceConnected(
                 name: ComponentName?,
@@ -94,7 +116,6 @@ open class RemoteBindableService : Service() {
                 serviceMessenger = null
             }
         }
-        val events: List<ServiceEvent> get() = _events
 
         fun connect() {
             runCatching {
@@ -117,7 +138,7 @@ open class RemoteBindableService : Service() {
         fun subscribe(
             handler: (ServiceEvent) -> Unit
         ) {
-            _events.forEach(handler)
+            events.forEach(handler)
         }
 
         inline fun <reified C : ServiceCommand> send(
@@ -140,7 +161,10 @@ open class RemoteBindableService : Service() {
             override fun handleMessage(msg: Message) {
                 val evJson = msg.data.getSerializable(SERVICE_RESPONSE) as? String
                 val ev = evJson?.fromJson<ServiceEvent>()
-                if (ev != null) serviceConnector._events.add(ev)
+                if (ev != null) {
+                    // todo clear events
+                    serviceConnector.events.add(ev)
+                }
             }
         }
     }

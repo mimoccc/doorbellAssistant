@@ -16,8 +16,12 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
 import androidx.annotation.OptIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.core.content.ContextCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -33,6 +37,7 @@ import org.mjdev.doorbellassistant.service.MotionDetectionService
 import org.mjdev.phone.extensions.CustomExt.EmptyBitmap
 import org.mjdev.phone.extensions.StateExt.produceStateInLifeCycleRepeated
 import org.mjdev.phone.nsd.device.NsdDevice
+import org.mjdev.phone.vector.ImageVectorProvider.toBitmap
 
 @Suppress("MemberVisibilityCanBePrivate", "DEPRECATION", "unused")
 object CustomAppExt {
@@ -125,6 +130,7 @@ object CustomAppExt {
     fun rememberDeviceCapture(
         device: NsdDevice? = null,
         delayTime: Long = 40L,
+        density: Density = LocalDensity.current,
     ): State<Bitmap?> = produceStateInLifeCycleRepeated(
         EmptyBitmap,
         delayTime,
@@ -134,6 +140,6 @@ object CustomAppExt {
             device?.getFrame()
         }.onFailure { e ->
             Log.e("DeviceCapture", "Frame error", e)
-        }.getOrNull() ?: EmptyBitmap
+        }.getOrNull() ?: Icons.Filled.AccountCircle.toBitmap(density)
     }
 }
