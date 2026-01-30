@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.mjdev.doorbellassistant.agent.ai.AIManager.Companion.TAG
-import org.mjdev.doorbellassistant.agent.stt.transcribers.whisper.WhisperKit
 import org.mjdev.doorbellassistant.enums.VideoSources
 import org.mjdev.doorbellassistant.ui.components.AISpeechRecognizer
 import org.mjdev.doorbellassistant.ui.components.CartoonPlayer
@@ -146,7 +145,6 @@ fun MotionAlertScreen(
                     }
                 }
             },
-            createKit = { context -> WhisperKit(context) },
         )
         FrontCameraPreview(
             modifier = Modifier

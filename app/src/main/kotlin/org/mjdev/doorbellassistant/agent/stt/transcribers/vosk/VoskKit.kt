@@ -14,14 +14,12 @@ import android.content.Context
 import kotlinx.coroutines.CloseableCoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKit
 import org.mjdev.doorbellassistant.agent.stt.transcribers.base.ITKitModel
@@ -31,8 +29,6 @@ import org.vosk.Model
 import org.vosk.Recognizer
 import java.io.File
 import java.io.FileOutputStream
-import java.net.HttpURLConnection
-import java.net.URL
 import java.util.zip.ZipInputStream
 
 class VoskKit @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class) constructor(
@@ -40,10 +36,11 @@ class VoskKit @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::cl
     private val filesDir: File? = context.filesDir,
     private val voskContext: CloseableCoroutineDispatcher = newSingleThreadContext(VoskKit::class.simpleName!!),
     private val voskScope: CoroutineScope = CoroutineScope(voskContext),
-) : DataBus<ITKitResult>(
-    scopeContext = voskContext,
-    scope = voskScope
-), ITKit {
+) : ITKit(
+    context,
+    voskContext,
+    voskScope,
+) {
     private val mutex = Mutex()
     private var modelType: VoskModelType = VoskModelType.CS_SMALL
     private var model: Model? = null
@@ -84,8 +81,8 @@ class VoskKit @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::cl
                 } else {
                     downloadToFile(
                         url = modelType.url,
-                        dest = zipFile,
-                        onProgress = { percent ->
+                        file = zipFile,
+                        onProgress = { _, percent ->
                             send(ITKitResult.Download(percent))
                         }
                     )
@@ -173,39 +170,39 @@ class VoskKit @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::cl
         }
     }
 
-    @Suppress("unused")
-    private suspend fun downloadToFile(
-        url: String,
-        dest: File,
-        onProgress: suspend (Float) -> Unit,
-    ) = withContext(Dispatchers.IO) {
-        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 30_000
-            readTimeout = 60_000
-            instanceFollowRedirects = true
-        }
-        conn.connect()
-        val total = conn.contentLengthLong.takeIf { it > 0L } ?: -1L
-        conn.inputStream.use { input ->
-            FileOutputStream(dest).use { output ->
-                val buffer = ByteArray(64 * 1024)
-                var copied = 0L
-                while (true) {
-                    val read = input.read(buffer)
-                    if (read < 0) break
-                    output.write(buffer, 0, read)
-                    copied += read
-                    if (total > 0L) onProgress(
-                        (copied.toFloat() / total.toFloat()).coerceIn(
-                            0f,
-                            1f
-                        )
-                    )
-                }
-            }
-        }
-        conn.disconnect()
-    }
+//    @Suppress("unused")
+//    private suspend fun downloadToFile(
+//        url: String,
+//        dest: File,
+//        onProgress: suspend (Float) -> Unit,
+//    ) = withContext(Dispatchers.IO) {
+//        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+//            connectTimeout = 30_000
+//            readTimeout = 60_000
+//            instanceFollowRedirects = true
+//        }
+//        conn.connect()
+//        val total = conn.contentLengthLong.takeIf { it > 0L } ?: -1L
+//        conn.inputStream.use { input ->
+//            FileOutputStream(dest).use { output ->
+//                val buffer = ByteArray(64 * 1024)
+//                var copied = 0L
+//                while (true) {
+//                    val read = input.read(buffer)
+//                    if (read < 0) break
+//                    output.write(buffer, 0, read)
+//                    copied += read
+//                    if (total > 0L) onProgress(
+//                        (copied.toFloat() / total.toFloat()).coerceIn(
+//                            0f,
+//                            1f
+//                        )
+//                    )
+//                }
+//            }
+//        }
+//        conn.disconnect()
+//    }
 
     private fun unzip(
         zipFile: File,

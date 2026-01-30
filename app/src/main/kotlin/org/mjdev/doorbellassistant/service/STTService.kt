@@ -39,7 +39,7 @@ import org.mjdev.phone.service.ServiceEvent
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class STTService(
-    var modelType: ITKitModel = WhisperModelType.MEDIUM,
+    var modelType: ITKitModel = WhisperModelType.SMALL,
     val createKit: Context.() -> ITKit = {
         WhisperKit(applicationContext)
     },
@@ -56,42 +56,40 @@ class STTService(
     val voiceDetected = mutableStateOf(false)
     val lastError = mutableStateOf<Throwable?>(null)
 
-    private val transcribeKit by lazy {
-        createKit().apply {
-            setModel(modelType)
-            subscribe { event ->
-                Log.d(TAG, "$event")
-                when (event) {
-                    is ITKitResult.Initialized -> {
-                        transcriptInitialised.value = true
-                    }
+    private val transcribeKit by lazy { createKit(baseContext).apply {
+        setModel(modelType)
+        subscribe { event ->
+            Log.d(TAG, "$event")
+            when (event) {
+                is ITKitResult.Initialized -> {
+                    transcriptInitialised.value = true
+                }
 
-                    is ITKitResult.Text -> {
-                        transcriptInitialised.value = true
-                        transcribedText.value = event.text
-                        transcribing.value = false
-                    }
+                is ITKitResult.Text -> {
+                    transcriptInitialised.value = true
+                    transcribedText.value = event.text
+                    transcribing.value = false
+                }
 
-                    is ITKitResult.Error -> {
-                        lastError.value = event.error
-                    }
+                is ITKitResult.Error -> {
+                    lastError.value = event.error
+                }
 
-                    is ITKitResult.Transcribing -> {
-                        transcriptInitialised.value = true
-                        transcribing.value = true
-                    }
+                is ITKitResult.Transcribing -> {
+                    transcriptInitialised.value = true
+                    transcribing.value = true
+                }
 
-                    is ITKitResult.Download -> {
-                        transcriptInitialised.value = false
-                    }
+                is ITKitResult.Download -> {
+                    transcriptInitialised.value = false
+                }
 
-                    is ITKitResult.Released -> {
-                        transcriptInitialised.value = false
-                    }
+                is ITKitResult.Released -> {
+                    transcriptInitialised.value = false
                 }
             }
         }
-    }
+    }}
     private val voiceKit by lazy {
         VoiceKit(
             context = applicationContext,

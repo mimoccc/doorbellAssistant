@@ -25,20 +25,16 @@ import org.mjdev.phone.service.RemoteBindableService
 import org.mjdev.phone.service.ServiceCommand
 import org.mjdev.phone.service.ServiceEvent
 
-// todo queue
+// todo queue, and priorities
 class TTSService : RemoteBindableService() {
     private val tts by lazy {
         PiperTTSEngine(applicationContext)
     }
     private val eventBus: DataBus<String> = DataBus {
         subscribe { text ->
-            // todo no repeat?
-//            if (lastText?.equals(text)?.not() ?: true) {
-                talk(text)
-//            }
+            talk(text)
         }
     }
-//    private var lastText: String? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -63,7 +59,6 @@ class TTSService : RemoteBindableService() {
 
     fun talk(text: String) {
         if (text.trim().isNotEmpty()) {
-//            lastText = text
             tts.talk(text)
         }
     }

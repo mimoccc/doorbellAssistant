@@ -53,7 +53,7 @@ fun FrontCameraPreview(
     landscapeHeightRatio: Float = 1f,
     onClick: () -> Unit = {},
     backgroundColor: Color = Color.Transparent,
-    device: NsdDevice = NsdDevice.EMPTY,
+    device: NsdDevice? = null,
 ) = PhoneTheme {
     val context = LocalContext.current
     var captureDevice by remember(device) {

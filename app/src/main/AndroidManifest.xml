@@ -54,6 +54,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.ACCESS_DOWNLOAD_MANAGER" />
 
     <uses-permission
             android:name="android.permission.INTERNAL_SYSTEM_WINDOW"
@@ -76,6 +77,13 @@
     <uses-permission
             android:name="android.permission.SYSTEM_CAMERA"
             tools:ignore="ProtectedPermissions" />
+    <uses-permission
+            android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+            tools:ignore="ScopedStorage" />
+    <uses-permission
+            android:name="android.permission.READ_EXTERNAL_STORAGE"
+            tools:ignore="ScopedStorage" />
+
 
     <application
             android:usesCleartextTraffic="true"
@@ -175,7 +183,6 @@
 
         <service
                 android:name=".service.STTService"
-                android:process=":STTService"
                 android:enabled="true"
                 android:exported="true" />
 
@@ -189,7 +196,6 @@
 
         <service
                 android:name=".service.AIService"
-                android:process=":AIService"
                 android:enabled="true"
                 android:exported="true" />
 
