@@ -39,7 +39,7 @@ object CaptureRoute {
     const val ROUTE_CAPTURE = "/capture"
 
     fun Route.captureRoute(
-        routeName : String = ROUTE_CAPTURE
+        routeName: String = ROUTE_CAPTURE
     ) = get(routeName) {
         runCatching {
             val image = MotionDetector.latestBitmap.value
@@ -62,10 +62,10 @@ object CaptureRoute {
     suspend fun NsdDevice.getFrame(
         routeName: String = ROUTE_CAPTURE
     ): Bitmap? = runCatching {
-//        if(this === NsdDevice.EMPTY) return null
+        if (this === NsdDevice.EMPTY) return null
         val address = this@getFrame.address
         val port = this@getFrame.port
-        if (address.isEmpty()) {
+        if (address.isNullOrEmpty()) {
             return null
         } else {
             val url = "http://$address:$port/$routeName"
@@ -95,8 +95,12 @@ object CaptureRoute {
                     }
                 }
         }
-    }.onFailure { e->
-        Log.e(NsdDevice.TAG, "Error getting frame from ${this@getFrame.address}:${this@getFrame.port}", e)
+    }.onFailure { e ->
+        Log.e(
+            NsdDevice.TAG,
+            "Error getting frame from ${this@getFrame.address}:${this@getFrame.port}",
+            e
+        )
     }.getOrNull()
 
     suspend fun Context.sendMotionDetected(

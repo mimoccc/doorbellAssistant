@@ -21,6 +21,7 @@ import org.mjdev.phone.extensions.ActivityExt.turnDisplayOff
 import org.mjdev.phone.extensions.ActivityExt.turnDisplayOn
 import org.mjdev.phone.extensions.ContextExt.currentWifiIP
 import org.mjdev.phone.extensions.ContextExt.intent
+import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.helpers.json.ToolsJson.asJson
 import org.mjdev.phone.helpers.json.ToolsJson.fromJson
 import org.mjdev.phone.nsd.device.NsdDevice
@@ -36,8 +37,8 @@ open class VideoCallActivity : UnlockedActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         turnDisplayOn()
-        val callee: NsdDevice = intent.getStringExtra(CALLEE)?.fromJson()!!
-        val caller: NsdDevice = intent.getStringExtra(CALLER)?.fromJson()!!
+        val callee: NsdDevice = intent.getStringExtra(CALLEE)!!.fromJson()!!
+        val caller: NsdDevice = intent.getStringExtra(CALLER)!!.fromJson()!!
         setContent {
             MainScreen(
                 caller = caller,
@@ -53,19 +54,18 @@ open class VideoCallActivity : UnlockedActivity() {
     }
 
     @Suppress("ParamsComparedByRef")
-//    @Previews
+    @Previews
     @Composable
     fun MainScreen(
         onStartCall: (SessionDescription) -> Unit = {},
         onEndCall: (CallEndReason) -> Unit = {},
-        caller: NsdDevice,
-        callee: NsdDevice,
+        caller: NsdDevice= NsdDevice.EMPTY,
+        callee: NsdDevice= NsdDevice.EMPTY,
     ) = PhoneTheme {
         VideoCall(
             modifier = Modifier.fillMaxSize(),
             callee = callee,
             caller = caller,
-            ringtone = "ringtone/ringtone.ogg",
             isCaller = caller.address == currentWifiIP,
             onEndCall = onEndCall,
             onStartCall = onStartCall

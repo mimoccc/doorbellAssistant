@@ -21,8 +21,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.mjdev.phone.extensions.PermissionsExt.LaunchPermissions
+import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 
+@Previews
 @Composable
 fun PermissionsScreen(
     permissionsInfoContent: @Composable () -> Unit = {},

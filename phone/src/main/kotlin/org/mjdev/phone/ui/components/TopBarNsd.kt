@@ -43,7 +43,9 @@ import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 import org.mjdev.phone.ui.theme.base.phoneIcons
 import org.mjdev.phone.ui.theme.base.phoneShapes
+import org.mjdev.phone.vector.ImageVectorProvider.createVectorPainter
 
+@Suppress("ParamsComparedByRef")
 @Previews
 @Composable
 fun TopBarNsd(
@@ -52,7 +54,7 @@ fun TopBarNsd(
     onUserPicClick: () -> Unit = {},
     onClickSettings: () -> Unit = {},
 ) = PhoneTheme {
-    val defaultPicPainter = phoneIcons.userAccountIcon
+    val defaultPicPainter = createVectorPainter(phoneIcons.userAccountIcon)
     val userName: String by remember(user?.lastUpdated) {
         derivedStateOf {
             user?.name ?: ""

@@ -91,7 +91,7 @@ fun VideoRenderer(
         if (isDesignOrEmpty) {
             Image(
                 modifier = Modifier.fillMaxSize(),
-                painter = phoneIcons.videoCallRendererUser,
+                imageVector = phoneIcons.videoCallRendererUser,
                 colorFilter = ColorFilter.tint(phoneColors.colorVideoCallRendererUser),
                 contentDescription = ""
             )

@@ -17,17 +17,24 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.Dispatchers
@@ -130,6 +137,32 @@ object ComposeExt {
             value = context.getDeviceUser().first()?.copy(
                 lastUpdated = System.currentTimeMillis()
             )
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    @Composable
+    fun SetBarsOnSheetDialogWindow(
+        navigationBarColor: Color,
+        lightNavIcons: Boolean,
+    ) {
+        val view = LocalView.current
+        DisposableEffect(navigationBarColor, lightNavIcons) {
+            val dialogWindow = (view.parent as? DialogWindowProvider)?.window
+            if (dialogWindow != null) {
+                dialogWindow.decorView.setBackgroundDrawable(0.toDrawable())
+                val oldColor = dialogWindow.navigationBarColor
+                val controller = WindowCompat.getInsetsController(dialogWindow, view)
+                val oldIcons = controller.isAppearanceLightNavigationBars
+                dialogWindow.navigationBarColor = navigationBarColor.toArgb()
+                controller.isAppearanceLightNavigationBars = lightNavIcons
+                onDispose {
+                    dialogWindow.navigationBarColor = oldColor
+                    controller.isAppearanceLightNavigationBars = oldIcons
+                }
+            } else {
+                onDispose { }
+            }
         }
     }
 

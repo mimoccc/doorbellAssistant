@@ -21,6 +21,8 @@ abstract class INsdDetail(
     operator fun get(key: String) :String = map[key] ?: ""
     operator fun set(key: String, value: String) = map.set(key, value)
 
+    fun isEmpty(): Boolean = map.isEmpty()
+
     inline fun  forEach(
         action: (Map.Entry<String, String>) -> Unit
     ) = map.forEach { element -> action(element) }

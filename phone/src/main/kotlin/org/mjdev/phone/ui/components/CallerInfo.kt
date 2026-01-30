@@ -33,19 +33,21 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mjdev.phone.extensions.ContextExt.currentWifiIP
+import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdDevice.Companion.imageVector
 import org.mjdev.phone.nsd.device.NsdDevice.Companion.serviceType
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
+import org.mjdev.phone.ui.theme.base.phoneStrings
 
 @Suppress("ParamsComparedByRef")
-//@Previews
+@Previews
 @Composable
 fun CallerInfo(
     modifier: Modifier = Modifier,
-    caller: NsdDevice,
-    callee: NsdDevice,
+    caller: NsdDevice= NsdDevice.EMPTY,
+    callee: NsdDevice= NsdDevice.EMPTY,
     imageSize: Dp = 128.dp,
     shape: Shape = CircleShape
 ) = PhoneTheme {
@@ -79,14 +81,14 @@ fun CallerInfo(
         )
         Text(
             modifier = Modifier.padding(top = 4.dp),
-            text = who.value.serviceType.label,
+            text = who.value.serviceType.label ?: phoneStrings.labelUnknownDevice,
             color = phoneColors.colorCallScreenText,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
         Text(
             modifier = Modifier.padding(top = 4.dp),
-            text = who.value.address,
+            text = who.value.address ?: phoneStrings.labelUnknownDeviceAddress,
             color = phoneColors.colorCallScreenText,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold

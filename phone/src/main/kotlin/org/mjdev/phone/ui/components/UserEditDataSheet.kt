@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -50,6 +51,7 @@ import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 import org.mjdev.phone.ui.theme.base.phoneIcons
 import org.mjdev.phone.ui.theme.base.phoneShapes
+import org.mjdev.phone.ui.theme.base.phoneStrings
 
 @Suppress("ParamsComparedByRef")
 @Previews
@@ -82,6 +84,15 @@ fun UserEditDataSheet(
             onDismissRequest = onDismiss,
             containerColor = phoneColors.colorBackground,
             tonalElevation = 5.dp,
+            dragHandle = {
+                Spacer(
+                    modifier = Modifier
+                        .padding(top = 8.dp, bottom = 8.dp)
+                        .width(48.dp)
+                        .height(4.dp)
+                        .background(phoneColors.modalHandleColor)
+                )
+            },
             scrimColor = phoneColors.colorScrim,
         ) {
             Column(
@@ -122,11 +133,13 @@ fun UserEditDataSheet(
                             )
                             .clip(phoneShapes.headerLogoShape),
                         contentDescription = "",
-                        painter = phoneIcons.userAccountIcon,
+                        imageVector = phoneIcons.userAccountIcon,
                         tint = phoneColors.colorIconTint,
                     )
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
                 Button(
                     colors = ButtonDefaults.buttonColors(
                         contentColor = phoneColors.colorControlsButtonEnabledIcon,
@@ -140,9 +153,13 @@ fun UserEditDataSheet(
                         )
                     }
                 ) {
-                    Text("Select picture")
+                    Text(
+                        text = phoneStrings.buttonSelectPicture
+                    )
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
                 OutlinedTextField(
                     value = userName,
                     colors = TextFieldDefaults.colors(
@@ -163,24 +180,29 @@ fun UserEditDataSheet(
                     },
                     singleLine = true,
                     label = {
-                        Text("Name")
+                        Text(
+                            text = phoneStrings.labelName
+                        )
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(16.dp))
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
                 Button(
                     colors = ButtonDefaults.buttonColors(
                         contentColor = phoneColors.colorControlsButtonEnabledIcon,
                         containerColor = phoneColors.colorButtonColor
                     ),
-//                    enabled = userName.isNotBlank(),
                     onClick = {
                         onSave(context, userName.trim(), photoUri)
                         onDismiss()
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Close")
+                    Text(
+                        text = phoneStrings.buttonClose
+                    )
                 }
                 Spacer(Modifier.height(16.dp))
             }

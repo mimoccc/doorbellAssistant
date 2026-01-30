@@ -12,7 +12,7 @@ package org.mjdev.phone.ui.theme.base
 
 import androidx.compose.ui.graphics.Color
 
-class PhoneColors(
+data class PhoneColors(
     var colorPreviewBackground: Color = Color.Transparent,
 
     var colorBackground: Color = Color.Transparent,
@@ -33,5 +33,6 @@ class PhoneColors(
     var colorGlow: Color = Color.Transparent,
     var colorCallScreenText: Color = Color.Transparent,
     var colorButtonColor: Color = Color.Transparent,
-    var colorScrim : Color = Color.Transparent
+    var colorScrim: Color = Color.Transparent,
+    var modalHandleColor: Color = Color.Transparent,
 )

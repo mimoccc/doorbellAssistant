@@ -20,8 +20,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import org.mjdev.doorbellassistant.helpers.MotionDetector.Companion.sendMotionIntent
 import org.mjdev.doorbellassistant.receiver.MotionBroadcastReceiver.Companion.rememberMotionDetector
+import org.mjdev.doorbellassistant.service.AIService
 import org.mjdev.doorbellassistant.service.DoorbellNsdService
 import org.mjdev.doorbellassistant.service.MotionDetectionService
+import org.mjdev.doorbellassistant.service.STTService
 import org.mjdev.doorbellassistant.service.TTSService
 import org.mjdev.doorbellassistant.ui.screens.MainScreen
 import org.mjdev.phone.activity.VideoCallActivity
@@ -54,9 +56,9 @@ class AssistantActivity : UnlockedActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setNsdDeviceType(NsdType.DOOR_BELL_ASSISTANT)
-//        startService<STTService>()
+        startService<STTService>()
         startService<TTSService>()
-//        startService<AIService>()
+        startService<AIService>()
         setContent {
             rememberMotionDetector(
                 onNoMotionDetected = {

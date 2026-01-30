@@ -96,7 +96,7 @@ fun NsdList(
         ) {
             items(
                 items = devices.value,
-                key = { d -> d.address }
+                key = { d -> d.address ?: "-" }
             ) { device ->
                 NsdItem(
                     device = device,

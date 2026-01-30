@@ -25,10 +25,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mjdev.phone.extensions.CustomExt.isPreview
+import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.nsd.device.NsdDevice.Companion.details
 import org.mjdev.phone.nsd.device.NsdDevice.Companion.imageVector
@@ -37,19 +37,18 @@ import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 import org.mjdev.phone.ui.theme.base.phoneIcons
 import org.mjdev.phone.ui.theme.base.phoneShapes
+import org.mjdev.phone.ui.theme.base.phoneStrings
 
 @Suppress("DEPRECATION", "ParamsComparedByRef")
-//@Previews
+@Previews
 @Composable
 fun NsdItem(
     modifier: Modifier = Modifier,
-    device: NsdDevice,
-//    pingDelay: Long = 30000,
+    device: NsdDevice= NsdDevice.EMPTY,
     onCallClick: () -> Unit = {},
     onDeviceClick: () -> Unit = {},
     showCallButton: Boolean = isPreview,
 ) = PhoneTheme {
-    val context = LocalContext.current
     Box(
         modifier = modifier.wrapContentHeight(),
     ) {
@@ -66,17 +65,17 @@ fun NsdItem(
         ) {
             Text(
                 color = phoneColors.colorText,
-                text = device.label,
+                text = device.label ?: phoneStrings.labelUnknownDevice,
                 fontSize = 13.sp
             )
             Text(
                 color = phoneColors.colorText,
-                text = device.address,
+                text = device.address ?: phoneStrings.labelUnknownDeviceAddress,
                 fontSize = 11.sp
             )
             Text(
                 color = phoneColors.colorText,
-                text = device.details,
+                text = device.details ?: "",
                 fontSize = 11.sp
             )
         }
@@ -112,14 +111,8 @@ fun NsdItem(
                 .padding(2.dp)
                 .clickable(onClick = onCallClick),
             contentDescription = "",
-            painter = phoneIcons.itemCallIcon,
+            imageVector = phoneIcons.itemCallIcon,
             tint = phoneColors.colorIconTint,
         )
     }
-//    LaunchedEffect(device) {
-//        delay(pingDelay)
-//        context.nsdDevice { caller ->
-//            device?.sendAction(SDPGetState(caller))
-//        }
-//    }
 }

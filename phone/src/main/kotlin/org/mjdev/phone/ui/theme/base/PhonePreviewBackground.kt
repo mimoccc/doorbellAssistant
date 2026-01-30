@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import org.mjdev.phone.extensions.ModifierExt.dashedBorder
 import org.mjdev.phone.helpers.Previews
 
-// todo
 @Suppress("unused")
 @Previews
 @Composable

@@ -51,7 +51,6 @@ fun VideoCall(
     modifier: Modifier = Modifier,
     caller: NsdDevice = NsdDevice.EMPTY,
     callee: NsdDevice = NsdDevice.EMPTY,
-    ringtone: String = "ringtone/ringtone.ogg",
     isCaller: Boolean = false,
     calleeVisible: Boolean = true,
     callerVisible: Boolean = true,
@@ -156,7 +155,6 @@ fun VideoCall(
                     modifier = Modifier.fillMaxSize(),
                     caller = caller,
                     callee = callee,
-                    ringtone = ringtone,
                     onAccept = {
                         isAccepted = true
                         callManager?.unmute()

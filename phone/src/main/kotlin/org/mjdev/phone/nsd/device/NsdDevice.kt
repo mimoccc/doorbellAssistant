@@ -23,10 +23,10 @@ import org.mjdev.phone.nsd.device.NsdType.Companion.serviceTypeName
 @Suppress("UNCHECKED_CAST")
 @Serializable
 class NsdDevice {
-    var serviceId: String
-    var address: String
+    var serviceId: String?
+    var address: String?
     var port: Int
-    var serviceTypeName: String
+    var serviceTypeName: String?
     var attributes: MutableMap<String, String>
 
     // todo, user picture from device
@@ -56,7 +56,7 @@ class NsdDevice {
     fun toNsdServiceInfo(): NsdServiceInfo = NsdServiceInfo().apply {
         serviceName = serviceId
         serviceType = this@NsdDevice.serviceType.serviceTypeName
-        host = address.toInetAddress()
+        host = address?.toInetAddress()
         port = this@NsdDevice.port
         this@NsdDevice.attributes.forEach { (k, v) ->
             if (v.length > 255) {
@@ -83,11 +83,12 @@ class NsdDevice {
         val NsdDevice.imageVector: ImageVector
             get() = serviceType.imageVector
 
-        val NsdDevice.label: String
+        val NsdDevice.label: String?
             get() = serviceType.label
 
-        val NsdDevice.details: String
-            get() = "${device.manufacturer.uppercase()} - ${device.model.uppercase()}"
+        val NsdDevice.details: String?
+            get() = if (device.isEmpty()) null
+            else "${device.manufacturer.uppercase()} - ${device.model.uppercase()}"
 
         val NsdDevice.isAutoAnswerCall: Boolean
             get() = serviceType.isAutoAnswerCall

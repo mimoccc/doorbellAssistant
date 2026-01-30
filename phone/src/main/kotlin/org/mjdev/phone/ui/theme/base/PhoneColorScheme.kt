@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.ui.theme.base
 
 import org.mjdev.phone.ui.theme.DefaultDarkColors
@@ -7,16 +17,12 @@ data class PhoneColorScheme(
     var style: PhoneColorsStyle = PhoneColorsStyle.AUTO,
     var colorsLight: PhoneColors = DefaultLightColors,
     var colorsDark: PhoneColors = DefaultDarkColors,
-    // todo
     var paddings: PhonePaddings = PhonePaddings(),
-    // todo
     var alignments: PhoneAlignments = PhoneAlignments(),
-    // todo
     var shapes : PhoneShapes = PhoneShapes(),
-    // todo
     var icons : PhoneIcons = PhoneIcons(),
-    // todo
-    var strings: PhoneStrings = PhoneStrings()
+    var strings: PhoneStrings = PhoneStrings(),
+    var assets: PhoneAssets = PhoneAssets(),
 ) {
     fun getColors(
         isDarkTheme: Boolean

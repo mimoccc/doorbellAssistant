@@ -19,19 +19,19 @@ import androidx.compose.ui.unit.dp
 import org.mjdev.phone.extensions.ComposeExt.rememberAssetImagePainter
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
+import org.mjdev.phone.ui.theme.base.phoneAssets
 
 @Previews
 @Suppress("unused")
 @Composable
 fun BackgroundLayout(
     modifier: Modifier = Modifier,
-    assetImageFile: String = "avatar/avatar_yellow.png",
-    imagePainter: Painter = rememberAssetImagePainter(assetImageFile),
-    contentDescription: String = "",
     showImage: Boolean = true,
     imageScale: ContentScale = ContentScale.Inside,
     content: @Composable () -> Unit = {},
 ) = PhoneTheme {
+    val assetImageFile = phoneAssets.avatarImage
+    val imagePainter: Painter = rememberAssetImagePainter(assetImageFile)
     MovieCard(
         modifier = modifier,
         borderSize = 0.dp,

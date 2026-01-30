@@ -81,6 +81,13 @@ val phoneStrings: PhoneStrings
         return colorScheme.strings
     }
 
+val phoneAssets: PhoneAssets
+    @Composable
+    get() {
+        val colorScheme = phoneColorScheme
+        return colorScheme.assets
+    }
+
 @Suppress("ParamsComparedByRef")
 @Composable
 fun shouldBeDarkTheme(
@@ -106,7 +113,7 @@ fun PhoneTheme(
     val actualTheme = if (isEmptyTheme) colorScheme.copy(style = style) else current
     CompositionLocalProvider(LocalPhoneColors provides actualTheme) {
         PhonePreviewBackground(
-            isPreviewMode=isPreviewMode,
+            isPreviewMode = isPreviewMode,
             isEmptyTheme = isEmptyTheme
         ) {
             content(colorScheme)

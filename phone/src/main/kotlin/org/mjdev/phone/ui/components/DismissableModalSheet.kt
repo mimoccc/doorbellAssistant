@@ -19,7 +19,6 @@ import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,13 +26,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogWindowProvider
-import androidx.core.graphics.drawable.toDrawable
-import androidx.core.view.WindowCompat
+import org.mjdev.phone.extensions.ComposeExt.SetBarsOnSheetDialogWindow
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
@@ -42,9 +37,9 @@ import org.mjdev.phone.ui.theme.base.phoneColors
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DismissableModalSheet(
+    modifier: Modifier = Modifier,
     isShown: Boolean = true,
     onDismissRequest: () -> Unit = {},
-    modifier: Modifier = Modifier,
     sheetGesturesEnabled: Boolean = true,
     shape: Shape = BottomSheetDefaults.ExpandedShape,
     containerColor: Color = BottomSheetDefaults.ContainerColor,
@@ -85,31 +80,5 @@ fun DismissableModalSheet(
                 content()
             }
         )
-    }
-}
-
-@Suppress("DEPRECATION")
-@Composable
-private fun SetBarsOnSheetDialogWindow(
-    navigationBarColor: Color,
-    lightNavIcons: Boolean,
-) {
-    val view = LocalView.current
-    DisposableEffect(navigationBarColor, lightNavIcons) {
-        val dialogWindow = (view.parent as? DialogWindowProvider)?.window
-        if (dialogWindow != null) {
-            dialogWindow.decorView.setBackgroundDrawable(0.toDrawable())
-            val oldColor = dialogWindow.navigationBarColor
-            val controller = WindowCompat.getInsetsController(dialogWindow, view)
-            val oldIcons = controller.isAppearanceLightNavigationBars
-            dialogWindow.navigationBarColor = navigationBarColor.toArgb()
-            controller.isAppearanceLightNavigationBars = lightNavIcons
-            onDispose {
-                dialogWindow.navigationBarColor = oldColor
-                controller.isAppearanceLightNavigationBars = oldIcons
-            }
-        } else {
-            onDispose { }
-        }
     }
 }

@@ -17,10 +17,10 @@ val DefaultLightColors = PhoneColors(
     colorPreviewBackground = Color.White,
     colorBackground = Color.White,
     colorText = Color.Black,
-    colorIconsBackground = Color.DarkGray,
+    colorIconsBackground = Color.LightGray,
     colorLabelsBackground = Color.Gray,
     colorCallerIconBorder = Color.LightGray,
-    colorIconTint = Color.LightGray,
+    colorIconTint = Color.DarkGray,
     colorLabelText = Color.Black,
     colorVideoControlsBackground = Color.DarkGray,
     colorCallerBackground = Color.DarkGray.copy(0.3f),
@@ -33,17 +33,18 @@ val DefaultLightColors = PhoneColors(
     colorGlow = Color.Black,
     colorCallScreenText = Color.DarkGray,
     colorButtonColor = Color.DarkGray,
-    colorScrim = Color.White.copy(alpha = 0.3f)
+    colorScrim = Color.White.copy(alpha = 0.3f),
+    modalHandleColor = Color.Black,
 )
 
 val DefaultDarkColors = PhoneColors(
     colorPreviewBackground = Color.Black,
     colorBackground = Color.DarkGray,
     colorText = Color.Black,
-    colorIconsBackground = Color.White,
+    colorIconsBackground = Color.DarkGray,
     colorLabelsBackground = Color.Gray,
     colorCallerIconBorder = Color.Gray,
-    colorIconTint = Color.DarkGray,
+    colorIconTint = Color.LightGray,
     colorLabelText = Color.LightGray,
     colorVideoControlsBackground = Color.DarkGray,
     colorCallerBackground = Color.White.copy(0.3f),
@@ -56,5 +57,6 @@ val DefaultDarkColors = PhoneColors(
     colorGlow = Color.White,
     colorCallScreenText = Color.LightGray,
     colorButtonColor = Color.LightGray,
-    colorScrim = Color.Black.copy(alpha = 0.3f)
+    colorScrim = Color.Black.copy(alpha = 0.3f),
+    modalHandleColor = Color.White,
 )

@@ -25,8 +25,8 @@ open class NsdType(
     @DontSerialize
     val imageVector: ImageVector = Icons.Filled.DeviceUnknown,
 
-    val uid: String,
-    val label: String,
+    val uid: String? = null,
+    val label: String? = null,
     val isAutoAnswerCall: Boolean = false,
     val micMutedAtStart: Boolean = false,
     val speakerOnAtStart: Boolean = false,

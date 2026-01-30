@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.ui.components
 
 import androidx.compose.foundation.layout.Row
@@ -22,6 +32,7 @@ import org.mjdev.phone.ui.theme.base.PhoneTheme
 import org.mjdev.phone.ui.theme.base.phoneColors
 import org.mjdev.phone.ui.theme.base.phoneIcons
 
+@Suppress("ParamsComparedByRef")
 @Previews
 @Composable
 fun VideoCallControls(
@@ -47,7 +58,7 @@ fun VideoCallControls(
         ) {
             Icon(
                 modifier = Modifier.size(24.dp),
-                painter = if (isMuted) phoneIcons.buttonMicOff
+                imageVector = if (isMuted) phoneIcons.buttonMicOff
                 else phoneIcons.buttonMicOn,
                 contentDescription = "",
                 tint = if (isMuted) phoneColors.colorControlsButtonDisabledIcon
@@ -66,7 +77,7 @@ fun VideoCallControls(
         ) {
             Icon(
                 modifier = Modifier.size(24.dp),
-                painter = if (isVideoEnabled) phoneIcons.buttonVideocamOn
+                imageVector = if (isVideoEnabled) phoneIcons.buttonVideocamOn
                 else phoneIcons.buttonVideocamOff,
                 contentDescription = "",
                 tint = if (isVideoEnabled) phoneColors.colorControlsButtonEnabledIcon
@@ -84,7 +95,7 @@ fun VideoCallControls(
         ) {
             Icon(
                 modifier = Modifier.size(24.dp),
-                painter = phoneIcons.buttonCameraSwitch,
+                imageVector = phoneIcons.buttonCameraSwitch,
                 contentDescription = "",
                 tint = phoneColors.colorControlsButtonEnabledIcon
             )
@@ -101,7 +112,7 @@ fun VideoCallControls(
         ) {
             Icon(
                 modifier = Modifier.size(24.dp),
-                painter = if (isSpeakerOn) phoneIcons.buttonVolumeUp
+                imageVector = if (isSpeakerOn) phoneIcons.buttonVolumeUp
                 else phoneIcons.buttonVolumeDown,
                 contentDescription = "",
                 tint = phoneColors.colorControlsButtonEnabledIcon
@@ -123,7 +134,7 @@ fun VideoCallControls(
                 modifier = Modifier
                     .size(38.dp)
                     .padding(4.dp),
-                painter = phoneIcons.buttonCallEnd,
+                imageVector = phoneIcons.buttonCallEnd,
                 contentDescription = "",
                 tint = phoneColors.colorControlsButtonCallIcon
             )

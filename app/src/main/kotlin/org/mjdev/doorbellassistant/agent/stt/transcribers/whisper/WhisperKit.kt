@@ -13,7 +13,9 @@ package org.mjdev.doorbellassistant.agent.stt.transcribers.whisper
 import android.content.Context
 import kotlinx.coroutines.CloseableCoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
@@ -28,10 +30,11 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
 
+@OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 class WhisperKit(
     private val context: Context,
     private val filesDir: File? = context.filesDir,
-    private val whisperContext: CloseableCoroutineDispatcher = newSingleThreadContext("VoskKit"),
+    private val whisperContext: CloseableCoroutineDispatcher = newSingleThreadContext(WhisperKit::class.simpleName!!),
     private val whisperScope: CoroutineScope = CoroutineScope(whisperContext),
 ) : DataBus<ITKitResult>(
     scopeContext = whisperContext,

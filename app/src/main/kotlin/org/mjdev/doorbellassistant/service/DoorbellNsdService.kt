@@ -72,7 +72,7 @@ class DoorbellNsdService : CallNsdService(
                     onClick = { hide() }
                 )
             }
-            device.serviceId.let { serviceId ->
+            device.serviceId?.let { serviceId ->
                 lastAlerts
                     .filter { w -> w.key == serviceId }
                     .map { d -> d.value }

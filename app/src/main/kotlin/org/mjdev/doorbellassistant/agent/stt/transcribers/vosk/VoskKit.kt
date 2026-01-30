@@ -38,7 +38,7 @@ import java.util.zip.ZipInputStream
 class VoskKit @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class) constructor(
     private val context: Context,
     private val filesDir: File? = context.filesDir,
-    private val voskContext: CloseableCoroutineDispatcher = newSingleThreadContext("VoskKit"),
+    private val voskContext: CloseableCoroutineDispatcher = newSingleThreadContext(VoskKit::class.simpleName!!),
     private val voskScope: CoroutineScope = CoroutineScope(voskContext),
 ) : DataBus<ITKitResult>(
     scopeContext = voskContext,

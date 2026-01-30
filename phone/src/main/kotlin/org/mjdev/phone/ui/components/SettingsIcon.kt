@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) Milan Jurkulák 2026.
+ * Contact:
+ * e: mimoccc@gmail.com
+ * e: mj@mjdev.org
+ * w: https://mjdev.org
+ * w: https://github.com/mimoccc
+ * w: https://www.linkedin.com/in/milan-jurkul%C3%A1k-742081284/
+ */
+
 package org.mjdev.phone.ui.components
 
 import androidx.compose.foundation.clickable
@@ -32,7 +42,7 @@ fun SettingsIcon(
                 .clip(shape)
                 .clickable(onClick = onClickSettings),
             contentDescription = "",
-            painter = phoneIcons.buttonSettings,
+            imageVector = phoneIcons.buttonSettings,
             tint = phoneColors.colorIconTint,
         )
     }

@@ -10,10 +10,7 @@
 
 package org.mjdev.phone.ui.theme.base
 
-import androidx.compose.ui.Alignment
-
-data class PhoneAlignments (
-    var callerAlignment: Alignment = Alignment.Center,
-    var calleeAlignment: Alignment = Alignment.BottomEnd,
-    var controlsAlignment: Alignment = Alignment.BottomCenter
+data class PhoneAssets (
+    var ringtoneAssetFile: String = "ringtone/ringtone.ogg",
+    var avatarImage : String = "avatar/avatar_yellow.png",
 )

@@ -52,6 +52,7 @@ import org.mjdev.phone.helpers.AudioPlayer
 import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.nsd.device.NsdDevice
 import org.mjdev.phone.ui.theme.base.PhoneTheme
+import org.mjdev.phone.ui.theme.base.phoneAssets
 import org.mjdev.phone.ui.theme.base.phoneColors
 
 @Suppress("ParamsComparedByRef")
@@ -61,7 +62,6 @@ fun CallScreen(
     modifier: Modifier = Modifier,
     caller: NsdDevice = NsdDevice.EMPTY,
     callee: NsdDevice = NsdDevice.EMPTY,
-    ringtone: String = "ringtone/ringtone.ogg",
     buttonSize: Dp = 48.dp,
     callerSize: Dp = 120.dp,
     onAccept: () -> Unit = {},
@@ -69,6 +69,7 @@ fun CallScreen(
 ) = PhoneTheme {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val ringtone = phoneAssets.ringtoneAssetFile
     var ringtoneJob by remember { mutableStateOf<Job?>(null) }
     val audioPlayer = remember {
         AudioPlayer(

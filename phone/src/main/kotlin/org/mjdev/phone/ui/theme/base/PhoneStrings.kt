@@ -12,8 +12,11 @@
 
 package org.mjdev.phone.ui.theme.base
 
-import org.mjdev.phone.helpers.StringDelegate.Companion.provideDelegate
-
-class PhoneStrings {
-    val labelListDevices by "Devices"
-}
+class PhoneStrings(
+    var labelListDevices: String = "Devices",
+    var labelName: String = "Name",
+    var labelUnknownDevice: String = "Unknown device",
+    var labelUnknownDeviceAddress:String = "No address associated",
+    var buttonSelectPicture: String = "Select photo",
+    var buttonClose: String = "Close",
+)

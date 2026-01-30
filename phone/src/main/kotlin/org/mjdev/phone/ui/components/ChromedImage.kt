@@ -38,12 +38,13 @@ import androidx.compose.ui.semantics.semantics
 import org.mjdev.phone.extensions.ComposeExt.rememberAssetImagePainter
 import org.mjdev.phone.extensions.CustomExt.toImageBitmap
 import org.mjdev.phone.helpers.Previews
+import org.mjdev.phone.ui.theme.base.phoneAssets
 
 @Previews
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun ChromedImage(
-    painter: Painter = rememberAssetImagePainter("avatar/avatar_yellow.png"),
+    painter: Painter = previewPainter(),
     contentDescription: String? = "",
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Inside,
@@ -133,3 +134,8 @@ fun ChromedImage(
         }
     }
 }
+
+@Composable
+private fun previewPainter (
+    assetImage: String = phoneAssets.avatarImage,
+) : Painter = rememberAssetImagePainter(assetImage)

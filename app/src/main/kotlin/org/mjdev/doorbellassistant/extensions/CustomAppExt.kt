@@ -123,7 +123,7 @@ object CustomAppExt {
     @Suppress("ParamsComparedByRef")
     @Composable
     fun rememberDeviceCapture(
-        device: NsdDevice? = null,
+        device: NsdDevice,
         delayTime: Long = 40L,
     ): State<Bitmap?> = produceStateInLifeCycleRepeated(
         EmptyBitmap,
@@ -131,7 +131,7 @@ object CustomAppExt {
         device,
     ) {
         runCatching {
-            device?.getFrame()
+            device.getFrame()
         }.onFailure { e ->
             Log.e("DeviceCapture", "Frame error", e)
         }.getOrNull() ?: EmptyBitmap

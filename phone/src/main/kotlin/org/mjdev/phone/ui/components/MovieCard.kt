@@ -58,6 +58,7 @@ import org.mjdev.phone.helpers.Previews
 import org.mjdev.phone.ui.theme.base.PhoneTheme
 import kotlin.math.min
 
+// todo image preview error
 @Suppress("unused")
 @Previews
 @Composable
